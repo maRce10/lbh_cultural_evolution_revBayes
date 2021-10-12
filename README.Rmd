@@ -26,8 +26,6 @@ knitr::opts_chunk$set(
 ```
 
 
-![Example figure](./img/example_fig.png)
-
 ## Table of contents
 * [General info](#general-info)
   * [Analyses](#Analyses)
@@ -70,14 +68,5 @@ Project is: _in progress_
 
 ## Contact
 Created by [Marcelo Araya-Salas](https://marceloarayasalas.weebly.com/)
-
-
-<!-- #### discusion -->
-
-  <!-- # title: Cultural evolution hummingbirds  -->
-
-  <!-- do alignments matter? compare convergence across aligent methods (prank, all equal, optimal) -->
-
-  <!-- hacer machote para el aticulo -->
 
 
