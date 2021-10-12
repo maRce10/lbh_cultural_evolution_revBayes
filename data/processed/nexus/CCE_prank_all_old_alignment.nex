@@ -1,0 +1,59 @@
+#NEXUS
+Begin data;
+dimensions ntax=51 nchar=71;
+format datatype=standard gap=- missing=? symbols="dfmpsu";
+matrix
+
+CCE-C1-1969	------------------------uuummmmmpmp---------uummmm--mpm----------------
+CCE-C1-1970	------------------------uuummmmmpmp---------uummmm--mpm----------------
+CCE-C1-1971	------------------------uuummmmmpmp---------uummmm--mpm----------------
+CCE-I5-2018	--------------------------ummmmdpup---------mummmmdpupm----------------
+CCE-I4-2018	--------------------------pmmmmdffp---------fummmmdffpu----------------
+CCE-J1-2011	----------------------------mmmdpmm---------mdpmmmdpmmmdp--------------
+CCE-J1-2012	----------------------------mmmdpmm---------mdpmmmdpmmmdp--------------
+CCE-J1-2013	----------------------------mmmdpmm---------mdpmmmdpmmmdp--------------
+CCE-J1-2014	----------------------------mmmdpmm---------mdpmmmdpmmmdp--------------
+CCE-I3-2011	----------------------------mmppdum---------mddmmppdmmddu--------------
+CCE-C3-1971	---------------------------------umfusmfpmdpmdpmmpp--md----------------
+CCE-F1-1982	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1983	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1984	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1985	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1986	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1987	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1988	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-F1-1989	--------------sssfddssssfpsmmmfddm-------------------------------------
+CCE-K1-2011	----------psfddusfddssfddds---fdd--------------------------------------
+CCE-E1-1970	-sss----sspufffssssssufff----------------------------------------------
+CCE-E1-1971	-sss----sspufffssssssufff----------------------------------------------
+CCE-H1-2008	-sss----sssssssssssssssss----------------------------------------------
+CCE-H1-2009	-sss----sssssssssssssssss----------------------------------------------
+CCE-G1-1989	psss----sssmffpffsssmmff-----------------------------------------------
+CCE-F2-1982	------------ffffffppppfff-----------------------------------fffpdff----
+CCE-F5-1989	--------puffffffffpupsfff-----------------------------------fff--------
+CCE-C2-1970	--------ummmffffdfpsssfff-----------------------------------fff--------
+CCE-F4-1989	--------usmmffffppusssfff-----------------------------------ffd--------
+CCE-A1-1969	--------sssmmfffdssssmfff-----------------------------------fps--------
+CCE-A1-1970	--------sssmmfffdssssmfff-----------------------------------fps--------
+CCE-A1-1971	--------sssmmfffdssssmfff-----------------------------------fps--------
+CCE-F3-1989	--------usssffdfffummmffp-----------------------------------fff--------
+CCE-J2-2014	-----fffpffffpffffdf--fff-----------------------------------df---------
+CCE-I2-2008	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-I2-2009	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-I2-2010	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-I2-2011	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-I2-2012	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-I2-2013	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-I2-2014	------ffpffffdffffdd--fff-----------------------------------dff--------
+CCE-D1-1969	----uffupufffpuffppu--ffu-----------------------------------p----------
+CCE-D1-1970	----uffupufffpuffppu--ffu-----------------------------------p----------
+CCE-D1-1971	----uffupufffpuffppu--ffu-----------------------------------p----------
+CCE-I1-2008	---------------fffddduffd--------------------------------dddfff----dddd
+CCE-I1-2009	---------------fffddduffd--------------------------------dddfff----dddd
+CCE-I1-2010	---------------fffddduffd--------------------------------dddfff----dddd
+CCE-I1-2011	---------------fffddduffd--------------------------------dddfff----dddd
+CCE-I1-2012	---------------fffddduffd--------------------------------dddfff----dddd
+CCE-I1-2013	---------------fffddduffd--------------------------------dddfff----dddd
+CCE-I1-2014	---------------fffddduffd--------------------------------dddfff----dddd
+;
+end;

@@ -1,0 +1,29 @@
+#NEXUS
+Begin data;
+dimensions ntax=21 nchar=58;
+format datatype=standard gap=- missing=? symbols="dfmpsu";
+matrix
+
+CCE-A1-1969	---------------------------------sssmmfffdssssm---ffffps--
+CCE-C1-1969	u--uummmmmpmpuummmmmpm------------------------------------
+CCE-C2-1970	-------------------------------ummmffffdfpsssff---ffff----
+CCE-C3-1971	umfusmfpmdpm---dpmmppmd-----------------------------------
+CCE-D1-1969	--------------------------------uffupufffpuffpp---uffup---
+CCE-E1-1970	-------------------------------ssssspufffssssss---ufff----
+CCE-F1-1982	--------------------------------sss-----fddssssfpsmmmfddm-
+CCE-F2-1982	-----------------------------------ffffffppppff---ffffpdff
+CCE-F3-1989	-------------------------------usssffdfffummmff---pfff----
+CCE-F4-1989	-------------------------------usmmffffppusssff---fffd----
+CCE-F5-1989	-------------------------------puffffffffpupsff---ffff----
+CCE-G1-1989	-----------------------------pssssssmffpffsssmm---ff------
+CCE-H1-2008	--------------------------ssssssssssssssssssss------------
+CCE-I1-2008	--------------------------------------fffddduffddddfffdddd
+CCE-I2-2008	----------------------------------ffpffffdffffd---dfffdff-
+CCE-I3-2011	-------mmppdummddmmppdmmddu-------------------------------
+CCE-I4-2018	----pmmmmdffpfummmmdffpu----------------------------------
+CCE-I5-2018	----ummmmdpupmummmmdpupm----------------------------------
+CCE-J1-2011	------mmmdpmmmdpmmmdpmmmdp--------------------------------
+CCE-J2-2014	---------------------------------fffpffffpffffd---ffffdf--
+CCE-K1-2011	---------------------------------psfddusfddssfd---ddsfdd--
+;
+end;
