@@ -2,4 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
-./MCMC_diagnostic_plots/**
+./output/MCMC_diagnostic_plots/**
