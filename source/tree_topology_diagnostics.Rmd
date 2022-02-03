@@ -9,7 +9,7 @@ output:
     toc: yes
     toc_depth: 4
     toc_float:
-      collapsed: yes
+      collapsed: no
       smooth_scroll: yes
 fontsize: 12pt 
 editor_options: 
@@ -19,7 +19,7 @@ editor_options:
 ```{r clean session, eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE}
 
 ## vector with package names
-x <- c("pbapply", "viridis", "knitr", "kableExtra", "ggplot2", "ape")
+x <- c("pbapply", "viridis", "knitr", "kableExtra", "ggplot2", "ape", "PhenotypeSpace", "lmerTest", "brms")
 
 aa <- lapply(x, function(y) {
   
@@ -41,7 +41,7 @@ knitr::opts_chunk$set(dpi = 38, fig.width = 18, fig.height = 10, echo = TRUE)
 
 options(knitr.kable.NA = '')
 
-source('~/Dropbox/Projects/lbh_cultural_evolution/source/custom_treespace.R')
+source('~/Dropbox/Projects/lbh_cultural_evolution_revBayes/source/custom_treespace.R')
 
 theme_set(theme_classic(base_size = 22))
 
@@ -173,7 +173,7 @@ ggs
 ```
 
 #### New data set
-```{r plot tree distances ggplots new  all fossils, eval = TRUE, warning=FALSE}
+```{r plot tree distances ggplots new all fossils, eval = TRUE, warning=FALSE}
 
 ggs <- lapply(pnts_lks, function(X) {
      
@@ -194,6 +194,81 @@ ggs <- lapply(pnts_lks, function(X) {
 
 ggs
 ```
+
+#### Summary boxplots
+
+Values were mean-centered within lek
+```{r, eval = TRUE, message=FALSE, warning=FALSE}
+
+out <- lapply(pnts_lks, function(x){
+  
+  Y <- space_size(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE)
+  Y$mean.c.size <- Y$size - mean(Y$size)
+  # Y$size <- Y$size / max(Y$size)
+ 
+  return(Y)  
+})
+
+topo_size_all <- do.call(rbind, out)
+
+topo_size_all$alignment <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_size_all$data.set <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_size_all$fossils <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_size_all$models <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+topo_size_all$lek <- substr(rownames(topo_size_all), 0 , 3)
+
+ggplot(topo_size_all, aes(x = alignment, y = mean.c.size)) + 
+  geom_boxplot(fill = viridis(10, alpha = 0.2)[4]) +
+  theme(axis.text.x = element_text(size=14, angle=45, hjust = 1, vjust = 1)) + 
+  labs(x = "Alignment", y = "Topologic space size") +
+  facet_wrap(~ data.set + models)
+
+
+
+
+# similarity
+
+out <- lapply(pnts_lks, function(x){
+  
+  Y <- space_similarity(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE, type = "proportional.overlap")
+  
+  Y$mean.c.overlap <- Y$overlap -  mean(Y$overlap)
+  # Y$overlap <- Y$overlap / max(Y$overlap)
+  
+  return(Y)  
+})
+
+topo_similarity_all <- do.call(rbind, out)
+
+topo_similarity_all2 <- topo_similarity_all
+names(topo_similarity_all2) <- c("group.2", "group.1", "mean.c.overlap", "overlap")
+
+topo_similarity_all <- rbind(topo_similarity_all, topo_similarity_all2)[, c( "group.1", "mean.c.overlap", "overlap")]
+
+topo_similarity_all$alignment <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_similarity_all$data.set <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_similarity_all$fossils <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_similarity_all$models <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+
+topo_similarity_all$lek <- substr(rownames(topo_similarity_all), 0 , 3)
+
+
+ggplot(topo_similarity_all, aes(x = alignment, y = mean.c.overlap)) + 
+  geom_boxplot(fill = viridis(10, alpha = 0.2)[4]) +
+  theme(axis.text.x = element_text(size=14, angle=45, hjust = 1, vjust = 1)) + 
+  labs(x = "Alignment", y = "Topologic space similarity") +
+  facet_wrap(~ data.set + models)
+
+```
+
 
 ### Clumping molecular clocks
 
@@ -353,6 +428,75 @@ ggs
 
 ```
 
+#### Summary boxplots 
+Values were mean-centered within lek
+
+```{r, eval = TRUE, message=FALSE, warning=FALSE}
+
+out <- lapply(pnts_lks, function(x){
+  
+  Y <- space_size(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE)
+  Y$mean.c.size <- Y$size - mean(Y$size)
+  # Y$size <- Y$size / max(Y$size)
+  
+  return(Y)  
+})
+
+topo_size_early <- do.call(rbind, out)
+
+topo_size_early$alignment <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_size_early$data.set <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_size_early$fossils <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_size_early$models <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+topo_size_early$lek <- substr(rownames(topo_size_early), 0 , 3)
+
+ggplot(topo_size_early, aes(x = alignment, y = mean.c.size)) + 
+  geom_boxplot(fill = viridis(10, alpha = 0.2)[4]) +
+  theme(axis.text.x = element_text(size=14, angle=45, hjust = 1, vjust = 1)) + 
+  labs(x = "Alignment", y = "Topologic space size") +
+  facet_wrap(~ data.set + models)
+
+# similarity
+
+out <- lapply(pnts_lks, function(x){
+  
+  Y <- space_similarity(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE, type = "proportional.overlap")
+  Y$mean.c.overlap <- Y$overlap - mean(Y$overlap)
+  # Y$overlap <- Y$overlap / max(Y$overlap)
+  
+  return(Y)  
+})
+
+topo_similarity_early <- do.call(rbind, out)
+
+topo_similarity_early2 <- topo_similarity_early
+names(topo_similarity_early2) <- c("group.2", "group.1", "mean.c.overlap", "overlap")
+
+topo_similarity_early <- rbind(topo_similarity_early, topo_similarity_early2)[, c( "group.1",  "mean.c.overlap", "overlap")]
+
+topo_similarity_early$alignment <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_similarity_early$data.set <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_similarity_early$fossils <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_similarity_early$models <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+topo_similarity_early$lek <- substr(rownames(topo_similarity_early), 0 , 3)
+
+ggplot(topo_similarity_early, aes(x = alignment, y = mean.c.overlap)) + 
+  geom_boxplot(fill = viridis(10, alpha = 0.2)[4]) +
+  theme(axis.text.x = element_text(size=14, angle=45, hjust = 1, vjust = 1)) + 
+  labs(x = "Alignment", y = "Topologic space similarity") +
+  facet_wrap(~ data.set + models)
+
+```
+
+
 ### Clumping molecular clocks
 
 #### Old data set
@@ -403,6 +547,81 @@ ggs <- lapply(pnts_lks, function(X) {
 
 ggs
 ```
+
+# Stats
+
+## Size of the topological space
+```{r, eval = FALSE}
+# combine data sets
+topo_size_all$fossils <- "all"
+topo_size_early$fossils <- "early"
+topo_size <- rbind(topo_size_all, topo_size_early)
+
+iterations <- 5000
+
+priors <- c(set_prior("normal(0, 1.5)", class = "Intercept"), set_prior("normal(0, 1.5)", class = "b"))
+
+size_mod <- brm(size ~ alignment + data.set + models + fossils, data = topo_size, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5)
+
+
+priors <- c(set_prior("normal(0, 1.5)", class = "b"))
+
+# without intercept 
+size_mod_no_intercept <- brm(size ~ alignment + data.set + models + fossils -1, data = topo_size, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5)
+
+saveRDS(list(size_mod = size_mod, size_mod_no_intercept = size_mod_no_intercept), "./data/processed/regression_results_topological_size.RDS")
+
+```
+
+Intercept-included model:
+```{r, eval = TRUE}
+
+size_mods <- readRDS("./data/processed/regression_results_topological_size.RDS")
+
+size_mods$size_mod
+```
+
+Contrasts for alignment strategies:
+```{r, eval = TRUE}
+
+aligment_contrasts <- c(prnk_vs_agnostic = "alignmentprank - alignmentall.equal = 0", prnk_vs_optimal = "alignmentprank - alignmentoptimal = 0", optimal_vs_agnostic = "alignmentoptimal - alignmentall.equal = 0")
+
+hypothesis(size_mods$size_mod_no_intercept, aligment_contrasts)
+
+```
+
+
+## Similarity of the topological space
+```{r, eval = FALSE}
+topo_similarity_all$fossils <- "all"
+topo_similarity_early$fossils <- "early"
+
+topo_similarity <- rbind(topo_similarity_all, topo_similarity_early)
+
+similarity_mod <- brm(overlap ~ alignment + data.set + models + fossils, data = topo_similarity, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5)
+
+# without intercept 
+similarity_mod_no_intercept <- brm(overlap ~ alignment + data.set + models + fossils -1, data = topo_similarity, iter = iterations, chains = 3, silent = 2, seed = 5)
+
+
+saveRDS(list(similarity_mod = similarity_mod, similarity_mod_no_intercept = similarity_mod_no_intercept), "./data/processed/regression_results_topological_similiarity.RDS")
+
+```
+
+Intercept-included model:
+```{r, eval = TRUE}
+similarity_mods <- readRDS("./data/processed/regression_results_topological_similiarity.RDS")
+
+similarity_mods$similarity_mod
+```
+
+Contrasts for alignment strategies:
+```{r, eval = TRUE}
+
+hypothesis(similarity_mods$similarity_mod_no_intercept, aligment_contrasts)
+
+```
+
 
 <font size="4">R session information</font>
 
