@@ -6,15 +6,15 @@ author:
 - Alejandro Rico-Guevara (colibri@uw.edu)^5^
 date: "`r Sys.Date()`"
 output:
-  word_document:
-    toc: yes
-    toc_depth: '3'
   html_document:
     toc: yes
     toc_depth: 3
     toc_float:
       collapsed: no
       smooth_scroll: no
+  word_document:
+    toc: yes
+    toc_depth: '3'
 bibliography: combined_bibs.bib
 citation-style: sysbio.csl
 link-citations: yes
@@ -103,6 +103,9 @@ library(viridis)
 
 segments_by_song_type <- read.csv("../data/raw/segments_by_song_type.csv")
 
+knitr::opts_chunk$set(message = FALSE, warning = FALSE) 
+
+
 ```
 
 ^1^ Centro de Investigación en Neurociencias, Universidad de Costa Rica
@@ -180,7 +183,7 @@ Alignment of behavioural sequences is complicated by the challenge of establishi
 
 Our second alignment strategy also used the MAFFT L-INS-i method and default gap penalties, but we made the assumption that when long-billed hermits modify pre-existing songs they are more likely to replace a trill by a different type of trill and a tone by a different type of tone than to change from trills to pure tones or vice versa. This seems more biologically meaningful as different biomechanics are involved in producing trills and pure tones [@Elemans2007]. We implemented this assumption by enforcing a higher cost of mismatches between sound categories than within either trills or pure tones. To determine an appropriate difference in mismatch scores, we made use of previously documented pattern of higher song similarity within lek than between leks [@Araya-Salas2019] and the observation of no song type sharing among four leks in close proximity during a ten year period (M.A.S. pers. obs.), suggesting little cultural transmission across leks. <!-- add (see Limitations section)?-->. ~~Because insertions and deletions of song segments occur independently among individuals~~ <!-- not sure if true, an alternative process is that insertions/deletions occur in 1 individual and then spreads from there-->~~,~~ Alignment length should increase as sequences are more distantly related [@Loeytynoja2012]. We would thus expect longer alignments in data sets composed of song sequences from different leks than in data sets composed of sequences from the same lek, as these sequences have a more recent common ancestor. Following this logic, we selected mismatch scores for substitutions within and between sound categories (trill vs. pure tone) that maximize the alignment length for pools of sequences from different leks relative to the alignment length sequences originating from the same lek, using a data set of 184 song sequences from 12 leks. We hereafter refer to this alignment strategy as ‘MAFFT-optimal’.
 
-For our third alignment strategy, we used the phylogenetically informed alignment program PRANK [@loytynoja2005algorithm; @loytynoja2008phylogeny]. PRANK also uses a progressive algorithm but handles the placement of insertions and deletions differently, by using outgroup information in the subsequent alignment step. PRANK thus uses the sequence phylogeny to differentiate insertions from deletions, and thereby avoids site overmatching by penalizing insertions in a single stage of the alignment [@loytynoja2005algorithm]. Unlike MAFFT, PRANK is an evolutionary aware program in that insertions, deletions and substitutions are modelled explicitly on a phylogenetic tree. However, PRANK does not currently support customized alphabets and substitution-rate matrices. To use PRANK we assumed that pure tones can be treated as ambiguous between upward and downward tones, and medium_paced trills can similarly be treated and ambiguous between fast and slow trills. We therefore used IUPAC ambiguity code for DNA nucleotides to rename song segments, with tones as purines and trills as pyrimidines. As per PRANK’s defaults we used a TN93 nucleotide substitution model with empirical base frequencies and transition/transversion rate ratio (κ) = 2. Therefore, as in the ‘MAFFT-optimal’ alignment, in the ‘PRANK-TN93’ alignment we explicitly assumed a higher transition rate within vibratory and pure sound categories than between them. For this alignment we used the default gap-opening rate and extension probabilities (0.025 and 0.75 respectively) and we omitted the -F option that fixes inferred insertions but increases sensitivity to guide-tree accuracy.
+For our third alignment strategy, we used the phylogenetically informed alignment program PRANK [@loytynoja2005algorithm; @loytynoja2008phylogeny]. PRANK also uses a progressive algorithm but handles the placement of insertions and deletions differently, by using outgroup information in the subsequent alignment step. PRANK thus uses the sequence phylogeny to differentiate insertions from deletions, and thereby avoids site overmatching by penalizing insertions in a single stage of the alignment [@loytynoja2005algorithm]. Unlike MAFFT, PRANK is an evolutionary aware program in that insertions, deletions and substitutions are modelled explicitly on a phylogenetic tree. However, PRANK does not currently support customized alphabets and substitution-rate matrices. To use PRANK we assumed that pure tones can be treated as ambiguous between upward and downward tones, and medium-paced trills can similarly be treated and ambiguous between fast and slow trills. We therefore used IUPAC ambiguity code for DNA nucleotides to rename song segments, with tones as purines and trills as pyrimidines. As per PRANK’s defaults we used a TN93 nucleotide substitution model with empirical base frequencies and transition/transversion rate ratio (κ) = 2. Therefore, as in the ‘MAFFT-optimal’ alignment, in the ‘PRANK-TN93’ alignment we explicitly assumed a higher transition rate within vibratory and pure sound categories than between them. For this alignment we used the default gap-opening rate and extension probabilities (0.025 and 0.75 respectively) and we omitted the -F option that fixes inferred insertions but increases sensitivity to guide-tree accuracy.
   
 
 ### Phylogenetic analysis (BW)
@@ -189,6 +192,28 @@ All phylogenetic analyses were conducted in RevBayes v. 1.0.12 and v. 1.1.0, a c
 
 Our dataset on historical records of songs in hummingbird leks has three advantages in comparison to most fossil datasets used in phylogenetic analyses. First, there is no stratigraphic uncertainty. We can be certain that historical songs occurred in the year when they were recorded. Second, there are no partial fossils. Songs recorded in the past are just as complete as the most recent ones, creating no additional ambiguity in character states of historical songs. Third, the historical record is relatively rich. In all leks, there are multiple years sampled consecutively and in two leks (SUR and CCE) historical records go back to 1969 (Fig. 1d). Because leks are small, long-billed hermits are constantly singing throughout the day and just a few seconds of recording are neccesary to fully register their single song-type repertoire, we can assume detection is nearly perfect and thus there little or no missing taxa in any of the sampled years.
 
+```{r load-packages, message=FALSE, results='hide', eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+x <-
+  c(
+    "tidyr",
+    "ggplot2",
+    "viridis",
+    "coda",
+    "treeio",
+    "phytools",
+    "plyr", 
+    "kableExtra"
+  )
+
+lapply(x, function(y) {
+  # check if installed, if not install
+  if (!y %in% installed.packages()[, "Package"])
+    install.packages(y)
+  
+  # load package
+  try(require(y, character.only = T), silent = T)
+})
+```
 
 ```{r, echo=FALSE}
 fs <- read.csv("../data/processed/fossil_series.csv", header = T, sep = ",")
@@ -224,7 +249,7 @@ We conducted two independent MCMC runs for each analyses, with 150 000 generatio
 
 ### Model reliability (BW)
 
-We used predictive data simulations to test for absolute model fit, also implemented in RevBayes [@hohna2018p3]. During parameter inference, a Stochastic-Variable-Monitor stored the stochastic variable values for each posterior sample. Then, these values were used to simulate new datasets based on the inference model. We specified a thinning of 2 for the stochastic variable trace, thus simulating 3 000 datasets for the ‘large’ models (CCE, SUR) and 1 500 datasets for the ‘small’ models (BR1, HC1, TR1).<!--double check numbers with MAS--><!--MAS: I couldn't find the scripts with those parameters-->
+We used predictive data simulations to test for absolute model fit, also implemented in RevBayes [@hohna2018p3]. During parameter inference, a Stochastic-Variable-Monitor stored the stochastic variable values for each posterior sample. Then, these values were used to simulate new datasets based on the inference model. We specified a thinning of 2 for the stochastic variable trace, thus simulating 3 000 datasets for the ‘large’ models (CCE, SUR) and 1 500 datasets for the ‘small’ models (BR1, HC1, TR1).
  
 We present data-based test statistics comparing simulated to empirical datasets, as tests of absolute model fit. We calculated 10 such statistics: 1) the number of invariant sites in the alignment, 2) the number of segregating sites in the alignment, 3) the maximum length of invariant blocks, 4) the maximum length of variable blocks, 5) the number of invariant blocks, 6) the maximum pairwise difference between two sequences in an alignment, 7) the minimum pairwise difference between two sequences in an alignment, and three measurements of genetic diversity: 8) Watterson’s θ, an estimate of “"population mutation rate” [@watterson1975number], 9) Tajima’s D, a measurement of whether a population evolves neutrally [@tajima1989statistical], 10) $\pi$, the average number of pairwise differences in the alignment, used to calculate Tajima’s D. For more details about these statics and how they are calculated see Höhna et al.[-@hohna2018p3].
 
@@ -234,7 +259,7 @@ For each test, we report a posterior predictive effect size (PPES) and a two-tai
 
 We explored tree topology congruence of different models by comparing topological distances between high posterior probability trees. Topologies were compared with the Robinson-Foulds distance [@Robinson] with the R package phangorn [@Schliep2011]. Only tree tips shared by all trees were included in the analysis. Topological distances were projected in a bidimensional space using Classic Multidimentional Scalling in order to quantify topological space. We estimated the overall spread of the topological space (i.e. space size) for different models as a metric of within-model topological congruence <!--does it make sense?-->. We also calculated between-model topological congruence as the overlap of the topological space of a model to the spaces from other models. Space overlap was estimated as the proportion of the joint area of two spaces that was shared. Topological congruence descriptors were calculated using the R package PhenotypeSpace [@Araya-Salas2022]. Within-model congruence was  mean-centered by lek to allow comparisons across leks. The effect of different model specifications on these two topological space descriptors was evaluated using Bayesian lineal regression models with each descriptor as the response variable and model alignment strategy, use of historical data, historical record completeness, and clock model as predictors. Regression models were run in Stan [@Carpenter2017] through the R platform [@Team2021] using the package brms [@Burkner2017]. We present effect sizes as median posterior estimates and 95% credibility intervals (CI) as the highest posterior density interval. Parameters in which credible intervals did not include zero were regarded as having an effect on the response variable. Models were run on three chains for 2500 iterations, following a warm-up of 2500 iterations. Effective sample size was kept above 3000 for all parameters. Performance was checked visually by plotting the trace and distribution of posterior estimates for all chains. We also plotted the autocorrelation of successive sampled values to evaluate independence of posterior samples. Potential scale reduction factor was used to assess model convergence and kept below 1.05 for all parameter estimates.
 
-We also asked if inferences of diversification dynamics and song evolution were influenced by the use of different alignment strategies. To do this we compared the posterior distributions of parameter estimates between the MAFFT-agnostic, MAFFT-optimal and PRANK-TN93 alignment strategies. For diversification dynamics we compared speciation, extinction and net diversification rates, and for song evolution we focussed on substitutions rates between broad sound categories (vibratory trill to pure tone and vice versa) and substitution rates within sound categories (e.g. between fast and slow trills). We considered parameter estimates sensitive to alignment strategies if their 95% highest posterior density (HPD) intervals did not overlap. We similarly explored sensitivity to fossil use and clock models in the Supporting Material.<!--We have not done this! But I'm on it--> 
+We also asked if inferences of diversification dynamics and song evolution were influenced by the use of different alignment strategies. To do this we compared the posterior distributions of parameter estimates between the MAFFT-agnostic, MAFFT-optimal and PRANK-TN93 alignment strategies. For diversification dynamics we compared speciation and extinction rates, as well as the age of the MRCA of all songs (including extinct lineages) and the age of the MRCA of only extant songs (those present in the last year of sampling). For song evolution, we focused on substitutions rates between broad sound categories (trill to pure tone and vice versa), substitution rates within sound categories (e.g. between fast and slow trills), and stationary frequencies of sound categories. We considered parameter estimates to differ between a "query" and "target" alignment strategies if more than 5% of the posterior distribution of the parameter under the "query" alignment fell outside the95% highest posterior density (HPD) interval of the parameter estimate under the "target" alignment. We similarly explored sensitivity of diversification parameters to fossil use and clock models.<!--We have not done this! But I'm on it--> 
 
 ## Results
 
@@ -246,13 +271,108 @@ We also asked if inferences of diversification dynamics and song evolution were 
 ### Clock model selection
 <!--can be renamed-->
 
-### Treespace congruence, song evolution and diversification dynamics
+Support for a relaxed clock model of song evolution (in which different son lineages evolve at different rates) depended on the historical record and sampling strategy. When historical data was excluded, there was no increase in ML by relaxing the clock model. However, the use of historical songs akin to fossils resulted in a higher fit of the relaxed model, particularly when all historical records, including identical song sequences sampled in consecutive years are incorporate in the macroevolutionary process. While this trend was present in most leks and data sets, it tended to be stronger under the PRANK-TN93 alignment, especially in the historically largest lek (SUR) <!--double check accuracy with MAS-->
+
+```{r, include=FALSE, eval=TRUE}
+source("../source/ML.table.R", local = knitr::knit_global())
+```
+
+```{r, warning=FALSE, echo=FALSE}
+ML.plot
+```
+
+### Treespace congruence
 <!--can be renamed-->
 The congruence of topologies within a model was only affected by the use of historical records: the spread of the topological space for tree tips shared across all models increased when including historical data (effect size: 0.02, 95% CI= 0.01 _ 0.02). Topological congruence between models was lower when using the PRANK-TN93 alignment strategy compared to both MAFFT-agnostic (effect size: -0.09, 95% CI= -0.13 _ -0.06) and MAFFT-optimal strategies (effect size: -0.06, 95% CI= -0.10 _ -0.03). The use of historical records also generated decreased topological congruence to other models (effect size: -0.11, 95% CI= -0.14 _ -0.08). 
 
 
+
+### Diversification dynamics
+<!--can be renamed, so far I've vomited this section-->
+```{r, include=FALSE}
+source("../source/Parameter_sensitivity.R", local = knitr::knit_global())
+```
+
+Diversification rates were not super sensitive to alignment strategy, with exception of SUR, where PRANK infers slower turnover. Age of extant taxa is VERY sensitive to alignment for leks with large gaps in their historical record (CCE, HC1, SUR). In SUR, only PRANK results imply that more than a single lineage from earliest sampling years has survived to the present. In HC1 both PRANK and MAFFT-optimal make this inference and in CCE, all alignments result in a recent origin of extant songs. Origin times of all songs are not so sensitive to alignment strategy, but PRANK tends to infer older ages.
+
+```{r plot-div-aln-h, echo=FALSE}
+p_div_h_clock_prank
+```
+
+Diversification rates were also very sensitive to historical information. In the three leks in which analyses without fossils could be conducted (BR1, TR1, SUR), fossil-free inference resulted in much slower diversification rates and markedly uncertain origin times in comparison to analyses including historical songs. For the three leks in which a long but gapped historical record could be contrasted with a shorter but complete one (CCE, HC1 and SUR) including more ancient records resulted in older age estimates for the MRCA of both extant and extant + historical songs. Here we show this for PRANK, but the same pattern holds for alternative alignments (Supporting Material).
+
+<!--sensitivity of diversification and age parameters to historical record under PRANK-->
+```{r plot-div-h-record-prank, echo=FALSE}
+p_div_h_record_prank
+```
+
+Diversification inference was also sensitive to how consecutive historical records are incorporated into the analysis. Including all consecutive samplings of identical songs resulted in higher turnover (higher speciation and extinction). Generally, age estimates were not so sensitive, with the exception of CCE and SUR (leks with longer historical sampling), in which considering only the earliest appearance of a historical song caused greater uncertainty and older estimates in the origin time of all songs (extant and historical). Here we show this for PRANK, but the same pattern holds for alternative alignments (Supporting Material).
+
+<!--sensitivity of diversification and age parameters to historical sampling under PRANK-->
+
+```{r plot-div-h-sampling-prank, echo=FALSE}
+p_div_h_sampling_prank
+```
+
+
+### Song evolution
+<!--can be renamed-->
+We looked at how the parameters of substitution models were influenced by alignment strategies. Different alignment strategies create different assumptions about sequence homology. Here leks are VERY idiosyncratic. The stationary frequencies of sound types vary across leks and they can be highly sensitive to the alignment strategy in some leks but not others. For example, pure tones are more frequent in HC1 than in other leks, but the estimated frequency varies markedly among alignment strategies, whereas in TR1 different alignments are congruent. Similarly, the PRANK alignment results in a higher frequency of medium trills and a lower frequency of fast and slow trills in SUR and CCE, compared to MAFFT-optimal. However in CCE and TR1  PRANK alignment results in a higher frequency of slow trills. <!-- these are just a couple of examples to show that each lek is doing its own thing--->
+
+```{r plot-evol-h-freq-aln, echo=FALSE}
+p_freq_h_aln
+```
+
+
+A similar scenario arises in substitution rate estimates, where the sensitivity of rate estimates and the effects of particular alignment strategies vary vastly across leks, with HC1 being particularly prone to incongruence between alignment strategies (Supporting Material?).
+
 ## Discusion
 
+## Supporting Material
+
+How sensitive are diversification rates to alignment strategies?
+```{r aln-div-sensitivity, eval=TRUE, echo=FALSE}
+p_div_h_clock_optimal
+```
+
+Sensitivity to clock model under MAFFT-agnostic
+```{r plot-div-h-clock-agnostic, echo=FALSE}
+p_div_h_clock_all.equal
+```
+
+Sensitivity to fossil record under MAFFT-optimal
+```{r plot-div-h-record-optimal, echo=FALSE}
+p_div_h_record_optimal
+```
+
+Sensitivity to fossil record under MAFFT-agnostic
+```{r plot-div-h-record-agnostic, echo=FALSE}
+p_div_h_record_all.equal
+```
+
+Sensitivity to fossil sampling under MAFFT-optimal
+```{r plot-div-h-sampling-optimal, echo=FALSE}
+p_div_h_sampling_optimal
+```
+
+Sensitivity to fossil sampling under MAFFT-agnostic
+```{r plot-div-h-sampling-agnostic, echo=FALSE}
+p_div_h_sampling_all.equal
+```
+
+Substitution rates within sound classes
+
+Assuming a relaxed clock, sampling all historical records and using old fossils (gapped historical record) when available.
+```{r plot-evol-h-evolw-aln, echo=FALSE}
+p_evolw_h_aln
+```
+
+Substitution rates between sound classes
+
+Assuming a relaxed clock, sampling all historical records and using old fossils (gapped historical record) when available.
+```{r plot-evol-h-evolb-aln, echo=FALSE}
+p_evolb_h_aln
+```
 
 
 ## References
