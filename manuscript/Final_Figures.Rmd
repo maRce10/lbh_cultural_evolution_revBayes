@@ -1,0 +1,1013 @@
+---
+title: "Final cultural evolution figures"
+author: "Beatriz Willink"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: united
+    highlight: tango
+    number_sections: false
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+# Introduction
+
+This document provides scripts for all figures included in the manuscript entitled "*Understanding cultural evolution in hummingbird leks through the fossilized birth-death process*" by Araya-Salas et al. (2023). Figures are plotted in the order they appear in the manuscript. Panels are plotted separately in some cases and arranged as a multipanel figures in others. Multipanel assembly, insertion of photos and illustrations, and minor esthetic changes were made in [Inkscape](https://inkscape.org/) v. 0.91. 
+
+Load required packages.
+```{r load-packages, message=FALSE}
+require(ggplot2)
+require(viridis)
+require(tidyr)
+require(kableExtra)
+require(coda)
+```
+# Figure 1 - panel d historical sampling
+
+```{r fig1d}
+fs <- read.csv("../data/processed/fossil_series.csv", header = T, sep = ",")
+
+pal <- viridis(10)
+
+ggplot(fs, aes(Year, Lek)) +
+  geom_tile(colour = NA, aes(fill = Sampled)) +
+  scale_fill_gradient(low = "white",
+                      high = pal[5],
+                      breaks = seq(0, 1, 1)) +
+  theme_bw(base_size = 8) +
+  theme(panel.grid.major.x = element_blank()) +
+  theme(panel.grid.major.y  = element_blank()) +
+  theme(legend.position = "none") +
+  labs(title = "d)")  + theme(plot.title = element_text(face = "bold")) +
+  theme(plot.title.position = "plot")
+```
+# Figure 2: MAP trees
+
+Forthcoming!
+
+# Figure 3: Relative fit of clock models
+
+Read first three ML reps
+```{r read-ml-data}
+# Read model names
+m <- read.table(file = "../output/stdout/dataset.txt", header = F)
+# Read three replicates of ML estimates under the stepping stone algorithm
+ss.r1 <- read.table(file = "../output/stdout/SteppingStone.txt", header = F, sep = ",")
+ss.r2 <- read.table(file = "../output/stdout/SteppingStoneR2.txt", header = F, sep = ",")
+ss.r3 <- read.table(file = "../output/stdout/SteppingStoneR3.txt", header = F, sep = ",")
+
+# missing models to NA and failed estimations to "Repeat"
+n = 3 # currently three replicates
+
+# make df
+m.ml <- m
+for (i in 1:n) {
+  m.ml <- cbind(m.ml, eval(parse(text = paste0("ss.r", i))))
+}
+colnames(m.ml) <- c("Model", paste0("ss",c(1:n)))
+
+
+for(i in 1:n) {
+  m.ml[, i + 1] <- as.factor( m.ml[, i + 1])
+  levels( m.ml[, i + 1]) <- c(levels( m.ml[, i + 1]),"Repeat")
+  for (j in 1:nrow(m.ml)) {
+        if (grepl(pattern = "This typically refers",
+              x =  as.character(m.ml[j, i + 1]),
+              fixed =  TRUE)) {
+      m.ml[j, i + 1] <- "Repeat"
+    }
+    if (grepl(pattern = "Problem processing",
+              x =  m.ml[j, i + 1],
+              fixed =  TRUE)) {
+      m.ml[j, i + 1] <- "Repeat"
+    }
+    if (grepl(pattern = "Could not open",
+              x =  m.ml[j, i + 1],
+              fixed =  TRUE)) {
+      m.ml[j, i + 1] <- NA
+    }
+  }
+  m.ml[,i+1] <- droplevels(m.ml[,i+1])
+}
+
+```
+
+Read in repeats of failed approximations
+```{r read-ml-repeats, warning=FALSE}
+m.rep<- read.table(file = "../output/stdout/datasetRepeats.txt", header = F)
+
+ss.rep <- read.table(file = "../output/stdout/SteppingStoneRepeat.txt", header = F, sep = ",")
+
+m.ml.rep <-cbind(m.rep, ss.rep)
+colnames(m.ml.rep) <- c("Model", "ss")
+
+# match name format
+m.ml.rep$Model <- gsub(pattern = "_", replacement = ".", x = m.ml.rep$Model)
+m.ml.rep$Model <- gsub(pattern = ".global", replacement = "._global", x = m.ml.rep$Model)
+m.ml.rep$Model <- gsub(pattern = ".Uexp", replacement = "._Uexp", x = m.ml.rep$Model)
+
+#Replace repeat for ML value
+m.ml$ss1 <- as.character(m.ml$ss1)
+m.ml$ss2 <- as.character(m.ml$ss2)
+m.ml$ss3 <- as.character(m.ml$ss3)
+
+for (i in 1:nrow(m.ml)) {
+  for (j in 1:nrow(m.ml.rep)) {
+    if (m.ml$Model[i] == m.ml.rep$Model[j] & m.ml$ss1[i] == "Repeat") {
+      m.ml$ss1[i] <-  m.ml.rep$ss[j]
+    }
+    if (m.ml$Model[i] == m.ml.rep$Model[j] & m.ml$ss2[i] == "Repeat") {
+      m.ml$ss2[i] <-  m.ml.rep$ss[j]
+    }
+    if (m.ml$Model[i] == m.ml.rep$Model[j] & m.ml$ss3[i] == "Repeat") {
+      m.ml$ss3[i] <-  m.ml.rep$ss[j]
+    }
+  }
+}
+
+m.ml$ss1 <- as.numeric(m.ml$ss1)
+m.ml$ss2 <- as.numeric(m.ml$ss2)
+m.ml$ss3 <- as.numeric(m.ml$ss3)
+```
+
+Make final table
+```{r make-ml-table, warning=F}
+# remove "." from alignment name
+m.ml$Model <- gsub(pattern = "all.equal", replacement = "allequal", x = m.ml$Model )
+
+# split name into columns
+m.ml <- m.ml %>% separate(Model, c("Lek", "Align", "Record", "Fossils", "Clock"))
+
+# long to wide and rearrange
+m.ml <-
+  pivot_wider(
+    data = m.ml,
+    names_from = Clock,
+    values_from =  paste0("ss", c(1:n))
+  )
+
+m.ml <-
+  m.ml[, c(
+    "Lek",
+    "Align",
+    "Record",
+    "Fossils",
+    paste0("ss", c(1:n), "_global"),
+    paste0("ss", c(1:n), "_Uexp")
+  )]
+
+m.ml <- m.ml[complete.cases(m.ml[,5:10]),]
+
+m.ml  %>%
+  kbl(digits = 2) %>%
+  kable_minimal()
+```
+
+Plot results
+```{r make-ml-plot, warning=FALSE}
+# while missing data make numeric
+m.ml$ss1_diff <- as.numeric(m.ml$ss1_Uexp) - as.numeric(m.ml$ss1_global)
+m.ml$ss2_diff <- as.numeric(m.ml$ss2_Uexp) - as.numeric(m.ml$ss2_global)
+m.ml$ss3_diff <- as.numeric(m.ml$ss3_Uexp) - as.numeric(m.ml$ss3_global)
+
+# make long data frame
+ml.long <- m.ml[,c(1:4,11:13)]
+ml.long <-
+  pivot_longer(data = ml.long,
+               cols = paste0("ss", c(1:n), "_diff"),
+               names_to = "run")
+
+ml.long$Lek <-  factor(ml.long$Lek, levels=c('BR1','TR1','CCE','HC1', 'SUR'))
+ml.long$Record <- factor(ml.long$Record, levels = c("old", "new"), ordered = T)
+
+# new facet label names for fossil record
+Record.labs <- c("Old gapped record",  "Recent complete record")
+names(Record.labs) <- c( "old", "new")
+
+# plot
+ML.plot <-
+  ggplot(data = ml.long, aes(
+    x = Fossils,
+    y = value,
+    #shape = Record,
+    colour = Align
+    )) +
+  geom_jitter(size = 2,
+              alpha = 0.7,
+              width = 0.2) +
+  facet_grid(Record ~ Lek,
+             scales = "free",
+             labeller = labeller(Record = Record.labs)) +
+  theme_light(base_size = 8) +
+  labs(y = "Differencce in marginal likelihood \nbetween clock models (relaxed - global)", colour = "Alignment", x = "Historical records per song") +
+  #scale_shape_discrete(guide = "none") +
+  scale_colour_manual(
+    values = viridis(3, direction = -1),
+    labels = c("MAFFT-agnostic", "MAFFT-optimal", "PRANK")
+  ) +
+  scale_x_discrete(labels = c("all", "earliest"))
+
+ML.plot
+```
+
+Export ML plot
+```{r export-ML, warning=FALSE, eval=FALSE}
+ggtree::ggsave(filename = "./Figures/Fig3_V1.png", plot = ML.plot, device = "png", dpi = 600, units = "mm", width = 180, height = 100)
+```
+
+# Figs 4-6 and S3-S32 Absolute model fit
+
+Read P3 results
+```{r process-p3-results}
+p3_output_files <- list.files(path = "../output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
+
+p3_results_l <- lapply(p3_output_files, function(x){
+  
+  Y <- read.csv(file.path(x))
+  Y$model <- sapply(strsplit(x, "Results/", fixed = TRUE), "[", 2)
+  
+  return(Y)
+})
+
+p3_results <- do.call(rbind, p3_results_l)
+
+
+p3_results$Lek <- sapply(p3_results$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][2], USE.NAMES = FALSE)
+p3_results$Lek <- factor(p3_results$Lek, levels = c("BR1", "TR1", "CCE", "HC1", "SUR"))
+
+p3_results$Align <- sapply(p3_results$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][3], USE.NAMES = FALSE)
+p3_results$Align <- factor(p3_results$Align, levels = c("all.equal", "optimal", "prank"))
+Align.labs <- c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93")
+names(Align.labs) <- c("all.equal", "optimal", "prank")
+
+p3_results$Sampling <- sapply(p3_results$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][5], USE.NAMES = FALSE)
+p3_results$Sampling[p3_results$Sampling == "full.process"] <- "none"
+p3_results$Sampling <- factor(p3_results$Sampling, levels = c("all", "early", "none"))
+Sampling.labs <- c("all", "earliest", "none")
+names(Sampling.labs) <- c("all", "early", "none") 
+
+p3_results$Record <- sapply(p3_results$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][4], USE.NAMES = FALSE)
+p3_results$Record <- factor(p3_results$Record, levels= c("old", "new", "no.fossils"))
+Record.labs <- c("Old gapped record",  "Recent complete record", "No historical record")
+names(Record.labs) <- c( "old", "new", "no.fossils")
+```
+
+Plot posterior predictive effect sizes
+```{r effect-size-plots, echo=TRUE}
+ggs <- lapply(unique(p3_results$Statistic), function(x){
+  ggplot(data = p3_results[p3_results$Statistic == x, ], aes(
+    x = Sampling,
+    y = Effect.Size,
+    colour = Align,
+  )) +
+    geom_jitter(size = 3,
+                alpha = 0.7,
+                width = 0.12) +
+    facet_grid(Record ~ Lek,
+               scales = "fixed",
+               labeller = labeller(Record = Record.labs)) +
+    theme_light(base_size = 8) +
+    labs(y = "Effect size", colour = "Alignment", x = "Sampling of historical songs") +
+    scale_shape_discrete(guide = "none") +
+    scale_colour_manual(
+      values = viridis(3, direction = -1),
+      labels = Align.labs
+    ) +
+    scale_x_discrete(labels = Sampling.labs) + 
+    geom_hline(yintercept = 2, lty = 2, col = "gray42") + 
+    theme(axis.text.x = element_text(angle = 35,  hjust = 1))
+})
+
+names(ggs) <- unique(p3_results$Statistic)
+
+ggs$`Number Invariant Sites`
+```
+
+Plot posterior predictive p values
+```{r p-value-plots, echo=TRUE}
+p3_results$signif <- ifelse(p3_results$Two.tailed < 0.05, " < 0.05", " >= 0.05")
+p3_results$Two.tailed.adj <- ifelse(p3_results$Two.tailed > 1, 1, p3_results$Two.tailed)
+p3_results$signif <- factor(p3_results$signif, levels = c(" >= 0.05", " < 0.05"))
+p3_results$alpha <- ifelse(p3_results$Two.tailed < 0.05, 1, 0.95)
+
+ggs2 <- lapply(unique(p3_results$Statistic), function(x){
+ggplot(data = p3_results[p3_results$Statistic == x, ], aes(
+    x = Sampling,
+    y = Two.tailed.adj,
+    colour = Align,
+    fill = Align,
+    size = signif,
+    alpha = signif,
+  )) +
+  geom_jitter(#size = 4,
+              # alpha = 0.7,
+              width = 0.12) +
+  facet_grid(Record ~ Lek,
+             scales = "fixed",
+             labeller = labeller(Record = Record.labs)) +
+  theme_light(base_size = 8) +
+  labs(y = "Two-tailed \"p-value\"", colour = "Alignment", fill = "Alignment", x = "Historical records per song", size = "\"P-value\"", alpha = "\"P-value\"") +
+  # scale_shape_discrete(guide = FALSE) +
+  scale_size_manual(values = c(1.5, 4)) + 
+    scale_alpha_manual(values = c(0.7, 0.7)) +
+    scale_colour_manual(
+    values = viridis(3, direction = -1),
+    labels = Align.labs
+  ) +
+    scale_fill_manual(
+    values = viridis(3, direction = -1), #guide = FALSE,
+    labels = Align.labs
+  ) +
+  scale_x_discrete(labels = Sampling.labs) + 
+    geom_hline(yintercept = 0.05, lty = 2, col = "gray42") + 
+    theme(axis.text.x = element_text(angle = 35,  hjust = 1))
+})
+
+names(ggs2) <- unique(p3_results$Statistic)
+
+ggs2$`Number Invariant Sites`
+```
+
+Read posterior predictive simulations
+```{r process-sim-dat}
+p3_empirical_files <- list.files(path = "/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/output/P3_Results/", recursive = TRUE, pattern = "empirical", full.names = TRUE)
+
+p3_empirical_l <- lapply(p3_empirical_files, function(x){
+  
+  Y <- read.csv(file.path(x))
+  Y$stat <- "mean"
+  Y$data <- "empirical"
+  Y$model <- sapply(strsplit(x, "Results//results_", fixed = TRUE), "[", 2)
+  Y$model <- sapply(strsplit(Y$model, "/empirical", fixed = TRUE), "[", 1)
+  
+  
+  return(Y)
+})
+
+p3_empirical <- do.call(rbind, p3_empirical_l)
+
+p3_simulated_files <- list.files(path = "../output/P3_Results/", recursive = TRUE, pattern = "simulated", full.names = TRUE)
+
+p3_simulated_l <- lapply(p3_simulated_files, function(x){
+  
+  Y <- read.csv(file.path(x))
+  n <- nrow(Y)
+  for (i in 1:length(colnames(Y))){
+  Y[n+1,i] <- mean(Y[1:n,i])
+  Y[n+2,i] <- HPDinterval(mcmc(Y[1:n,i]))[1]
+  Y[n+3,i] <- HPDinterval(mcmc(Y[1:n,i]))[2]
+  Y$stat[c((n+1):(n+3))]  <- c("mean", "lower", "upper")
+  }
+  
+  Y$data <- "simulated"
+  Y$model <- sapply(strsplit(x, "Results//results_", fixed = TRUE), "[", 2)  
+  Y$model <- sapply(strsplit(Y$model, "/simulated", fixed = TRUE), "[", 1)
+  
+  return(Y[c((n+1):(n+3)),])
+})
+
+p3_simulated <- do.call(rbind, p3_simulated_l)
+rownames(p3_simulated) <- seq(1:nrow(p3_simulated))
+
+p3_simulated <- rbind(p3_empirical, p3_simulated)
+
+p3_simulated <- pivot_longer(p3_simulated, cols = c(1:16), names_to = "Statistic", values_to = "value")
+
+p3_simulated <- pivot_wider(p3_simulated, names_from = "stat", values_from = "value")
+
+p3_simulated$Lek <- sapply(p3_simulated$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][1], USE.NAMES = FALSE)
+p3_simulated$Lek <- factor(p3_simulated$Lek, levels = c("BR1", "TR1", "CCE", "HC1", "SUR"))
+
+p3_simulated$Align <- sapply(p3_simulated$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][2], USE.NAMES = FALSE)
+p3_simulated$Align <- factor(p3_simulated$Align, levels = c("all.equal", "optimal", "prank"))
+Align.labs <- c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93")
+names(Align.labs) <- c("all.equal", "optimal", "prank")
+
+p3_simulated$Sampling <- sapply(p3_simulated$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][4], USE.NAMES = FALSE)
+p3_simulated$Sampling[p3_simulated$Sampling == "full.process"] <- "none"
+p3_simulated$Sampling <- factor(p3_simulated$Sampling, levels = c("all", "early", "none"))
+Sampling.labs <- c("all", "earliest", "none")
+names(Sampling.labs) <- c("all", "early", "none") 
+
+p3_simulated$Record <- sapply(p3_simulated$model, function(x)
+  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][3], USE.NAMES = FALSE)
+p3_simulated$Record <- factor(p3_simulated$Record, levels= c("old", "new", "no.fossils"))
+Record.labs <- c("Old gapped record",  "Recent complete record", "No historical record")
+names(Record.labs) <- c( "old", "new", "no.fossils")
+```
+
+Plot simulated vs empirical data
+```{r plot-sim-data, warning=FALSE}
+ggs3 <- lapply(unique(p3_simulated$Statistic), function(x){
+ggplot(data = p3_simulated[p3_simulated$Statistic == x, ], aes(
+    x = Sampling,
+    y = mean,
+    colour = Align,
+    fill = Align, 
+    shape = data
+  )) +
+  geom_pointrange(aes(ymin = lower, ymax = upper), alpha = 0.7, position = position_dodge(width = 0.5)) +
+  facet_grid(Record ~ Lek,
+             scales = "fixed",
+             labeller = labeller(Record = Record.labs)) +
+  theme_light(base_size = 8) +
+  labs(y = gsub("\\.", " ", x) , colour = "Alignment", fill = "Alignment", x = "Historical records per song")+
+  scale_shape_manual(values = c ("triangle", "circle" ), name = "Data") +
+    scale_colour_manual(
+    values = viridis(3, direction = -1),
+    labels = Align.labs
+  ) +
+    scale_fill_manual(
+    values = viridis(3, direction = -1), #guide = FALSE,
+    labels = Align.labs
+  ) 
+})
+
+names(ggs3) <- unique(p3_simulated$Statistic)
+
+ggs3$Number.Invariant.Sites
+
+```
+
+Export main text figures 4-6 
+```{r plot-main-sim, warning=FALSE, eval=FALSE}
+figs <- list(ggs3$Number.Invariant.Sites, ggs3$Tajima.Pi, ggs3$Max.Pairwise.Difference)
+
+for (i in 1:length(figs)) {
+    ggtree::ggsave(
+        filename = paste0(
+            "./Figures/Fig",
+            i + 3,
+            "_V1.png"),
+            plot = figs[[i]],
+            device = "png",
+            dpi = 600,
+            units = "mm",
+            width = 180,
+            height = 100
+        )
+}
+```
+
+Export supporting figures S3-S32
+```{r plot-all-sim, warning=FALSE, eval=FALSE}
+sfigs <- list(ggs3[[1]],  ggs[[1]],  ggs2[[1]],
+              ggs3[[13]], ggs[[13]], ggs2[[13]],
+              ggs3[[3]],  ggs[[3]],  ggs2[[3]],
+              ggs3[[7]],  ggs[[7]],  ggs2[[7]],
+              ggs3[[11]], ggs[[11]], ggs2[[11]],
+              ggs3[[5]],  ggs[[5]],  ggs2[[5]],
+              ggs3[[9]],  ggs[[9]],  ggs2[[9]],
+              ggs3[[14]], ggs[[14]], ggs2[[14]],
+              ggs3[[15]], ggs[[15]], ggs2[[15]],
+              ggs3[[16]], ggs[[16]], ggs2[[16]])
+
+for (i in 1:length(sfigs)) {
+    ggtree::ggsave(
+        filename = paste0(
+            "./Figures/FigS",
+            i + 2,
+            "_V1.png"),
+            plot = sfigs[[i]],
+            device = "png",
+            dpi = 600,
+            units = "mm",
+            width = 180,
+            height = 100
+        )
+}
+```
+
+# Parameter sensitivity Figs 7-9 S33-S35
+
+Prepare factor levels
+```{r prep-factors, warning=FALSE}
+# directory of output files
+out_fp <- "../output/revbayes/"
+
+# all the different factors and their levels
+lek <- c("BR1", "CCE", "HC1", "SUR", "TR1")
+aln <- c("all.equal", "optimal", "prank")
+record <- c("old", "new", "no.fossils")
+sampling <- c("all", "early")
+clock <- c("global", "Uexp")
+
+# colours and labels for figures below
+aln_cols <- viridis(3,direction = -1)
+aln_labs <- c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93")
+
+record_cols <- viridis(3,direction = 1, begin = 0.7, end = 1)
+record_labs <- c("old gapped", "recent complete", "no historical")
+
+sampling_cols <-  viridis(2,direction = -1, begin = 0, end = 0.4)
+sampling_labs <- c("all historical", "earliest record")
+
+# what are the parameters of interest?
+div_pars <- c("speciation_rate", "extinction_rate", "diversification", "age_extant", "origin_time") 
+new_pars <-  c("Speciation", "Extinction", "Diversification", "Crown_age", "Root_age") 
+```
+
+Read data from PRANK alignment
+
+```{r read-PRANK-dat}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*prank*all*Uexp_*"),"[0-9]{6}.log","|",glob2rx("*prank*full.process*Uexp_*"),"[0-9]{6}.log"))
+
+dat_prank_record <- data.frame()
+for (i in lek) {
+  if (i == "SUR") {
+    for (j in record) {
+      tmp_file <-
+        grep(pattern = paste(i, "prank", j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      if (j == "no.fossils") {
+        tmp_data$age_extant <- NA
+      }
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$record <- j
+      dat_prank_record <- rbind(dat_prank_record, tmp_data)
+    }
+  } else {
+    if (i == "BR1" | i == "TR1") {
+      for (j in record[2:3]) {
+        tmp_file <-
+          grep(pattern = paste(i, "prank", j , sep = "_"), file.ls)
+        tmp_data <-
+          read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+        if (j == "no.fossils") {
+          tmp_data$age_extant <- NA
+        }
+        tmp_data <- tmp_data[, c("Iteration", div_pars)]
+        tmp_data$lek <- i
+        tmp_data$record <- j
+        dat_prank_record <- rbind(dat_prank_record, tmp_data)
+      }
+    } else {
+      for (j in record[1:2]) {
+        tmp_file <-
+          grep(pattern = paste(i, "prank", j , sep = "_"), file.ls)
+        tmp_data <-
+          read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+        tmp_data <- tmp_data[, c("Iteration", div_pars)]
+        tmp_data$lek <- i
+        tmp_data$record <- j
+        dat_prank_record <- rbind(dat_prank_record, tmp_data)
+      }
+    }
+  }
+}
+```
+
+Plot diversification parameters by historical record for PRANK data
+
+```{r plot-div-prank, warning=FALSE}
+colnames(dat_prank_record)[2:6] <- new_pars
+plot_dat <- dat_prank_record[,c("Iteration", new_pars, "lek", "record")]
+
+plot_dat <- pivot_longer(plot_dat, cols = all_of(new_pars), names_to = "par" )
+
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+plot_dat$record = factor(plot_dat$record, levels = c("old", "new", "no.fossils"))
+
+p_div_h_record_prank <- ggplot(data = plot_dat, aes(x = value, fill = record)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = record_cols, labels = record_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil record")
+
+p_div_h_record_prank
+```
+
+Export plot for Fig. 7
+```{r export-record-prank, eval=FALSE}
+ggtree::ggsave(
+    filename = "./Figures/Fig7_V1.png",
+    plot = p_div_h_record_prank,
+    device = "png",
+    dpi = 600,
+    units = "mm",
+    width = 180,
+    height = 100
+)
+```
+
+Read data from MAFFT-optimal alignment
+```{r read-optimal-dat}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*optimal*all*Uexp_*"),"[0-9]{6}.log","|",glob2rx("*optimal*full.process*Uexp_*"),"[0-9]{6}.log"))
+
+dat_optimal_record <- data.frame()
+for (i in lek) {
+  if (i == "SUR") {
+    for (j in record) {
+      tmp_file <-
+        grep(pattern = paste(i, "optimal", j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      if (j == "no.fossils") {
+        tmp_data$age_extant <- NA
+      }
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$record <- j
+      dat_optimal_record <- rbind(dat_optimal_record, tmp_data)
+    }
+  } else {
+    if (i == "BR1" | i == "TR1") {
+      for (j in record[2:3]) {
+        tmp_file <-
+          grep(pattern = paste(i, "optimal", j , sep = "_"), file.ls)
+        tmp_data <-
+          read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+        if (j == "no.fossils") {
+          tmp_data$age_extant <- NA
+        }
+        tmp_data <- tmp_data[, c("Iteration", div_pars)]
+        tmp_data$lek <- i
+        tmp_data$record <- j
+        dat_optimal_record <- rbind(dat_optimal_record, tmp_data)
+      }
+    } else {
+      for (j in record[1:2]) {
+        tmp_file <-
+          grep(pattern = paste(i, "optimal", j , sep = "_"), file.ls)
+        tmp_data <-
+          read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+        tmp_data <- tmp_data[, c("Iteration", div_pars)]
+        tmp_data$lek <- i
+        tmp_data$record <- j
+        dat_optimal_record <- rbind(dat_optimal_record, tmp_data)
+      }
+    }
+  }
+}
+```
+
+Plot diversification parameters by historical record for MAFFT-optimal data
+```{r plot-div-optimal, warning=FALSE}
+colnames(dat_optimal_record)[2:6] <- new_pars
+plot_dat <- dat_optimal_record[,c("Iteration", new_pars, "lek", "record")]
+
+plot_dat <- pivot_longer(plot_dat, cols = all_of(new_pars), names_to = "par" )
+
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+plot_dat$record = factor(plot_dat$record, levels = c("old", "new", "no.fossils"))
+
+p_div_h_record_optimal <- ggplot(data = plot_dat, aes(x = value, fill = record)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = record_cols, labels = record_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil record")
+
+p_div_h_record_optimal
+```
+Read data from MAFFT-agnostic alignment
+```{r read-agnostic-dat}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*all.equal*all*Uexp_*"),"[0-9]{6}.log","|",glob2rx("*all.equal*full.process*Uexp_*"),"[0-9]{6}.log"))
+
+dat_agnostic_record <- data.frame()
+for (i in lek) {
+  if (i == "SUR") {
+    for (j in record) {
+      tmp_file <-
+        grep(pattern = paste(i, "all.equal", j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      if (j == "no.fossils") {
+        tmp_data$age_extant <- NA
+      }
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$record <- j
+      dat_agnostic_record <- rbind(dat_agnostic_record, tmp_data)
+    }
+  } else {
+    if (i == "BR1" | i == "TR1") {
+      for (j in record[2:3]) {
+        tmp_file <-
+          grep(pattern = paste(i, "all.equal", j , sep = "_"), file.ls)
+        tmp_data <-
+          read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+        if (j == "no.fossils") {
+          tmp_data$age_extant <- NA
+        }
+        tmp_data <- tmp_data[, c("Iteration", div_pars)]
+        tmp_data$lek <- i
+        tmp_data$record <- j
+        dat_agnostic_record <- rbind(dat_agnostic_record, tmp_data)
+      }
+    } else {
+      for (j in record[1:2]) {
+        tmp_file <-
+          grep(pattern = paste(i, "all.equal", j , sep = "_"), file.ls)
+        tmp_data <-
+          read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+        tmp_data <- tmp_data[, c("Iteration", div_pars)]
+        tmp_data$lek <- i
+        tmp_data$record <- j
+        dat_agnostic_record <- rbind(dat_agnostic_record, tmp_data)
+      }
+    }
+  }
+}
+```
+
+Plot diversification parameters by historical record for MAFFT-agnostic data
+```{r plot-div-agnostic}
+colnames(dat_agnostic_record)[2:6] <- new_pars
+plot_dat <- dat_agnostic_record[,c("Iteration", new_pars, "lek", "record")]
+
+plot_dat <- pivot_longer(plot_dat, cols = all_of(new_pars), names_to = "par" )
+
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+plot_dat$record = factor(plot_dat$record, levels = c("old", "new", "no.fossils"))
+
+p_div_h_record_agnostic <- ggplot(data = plot_dat, aes(x = value, fill = record)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = record_cols, labels = record_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil record")
+
+p_div_h_record_agnostic
+```
+
+Export supporting figures S33-S35
+```{r plot-aln-div, eval=FALSE}
+sfigs <- list(p_div_h_record_prank, p_div_h_record_optimal, p_div_h_record_agnostic)
+
+for (i in 1:length(sfigs)) {
+    ggtree::ggsave(
+        filename = paste0(
+            "./Figures/FigS",
+            i + 32,
+            "_V1.png"),
+            plot = sfigs[[i]],
+            device = "png",
+            dpi = 600,
+            units = "mm",
+            width = 180,
+            height = 100
+        )
+}
+```
+
+Read data from all alignments and selected historical records
+```{r read-aln-div}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*all_*Uexp*"),"_[0-9]{6}.log"))
+
+dat_com <- data.frame()
+for (i in lek){
+  if (i == "BR1" | i == "TR1" )
+  for (j in aln) {
+    tmp_file <- grep(pattern = paste(i,j,"new", sep = "_"), file.ls)
+    tmp_data <- read.table(paste0(out_fp,file.ls[tmp_file]), header = T)
+    tmp_data$lek <- i
+    tmp_data$aln <- j
+    br_rates <- grep("branch_rates.", colnames(tmp_data))
+    tmp_data <- tmp_data[,-br_rates]
+    dat_com <- rbind(dat_com, tmp_data)
+  } else {
+    for (j in aln) {
+    tmp_file <- grep(pattern = paste(i,j,"old", sep = "_"), file.ls)
+    tmp_data <- read.table(paste0(out_fp,file.ls[tmp_file]), header = T)
+    tmp_data$lek <- i
+    tmp_data$aln <- j
+    br_rates <- grep("branch_rates.", colnames(tmp_data))
+    tmp_data <- tmp_data[,-br_rates]
+    dat_com <- rbind(dat_com, tmp_data)
+    }
+  }
+}
+```
+
+Plot diversification parameters by alignment
+```{r plot-div-aln}
+# subset the data
+plot_dat <- dat_com[,c("Iteration","lek", "aln", div_pars)]
+colnames(plot_dat)[4:8] <- new_pars
+
+# convert to long
+plot_dat <- pivot_longer(plot_dat, cols = c(4:8), names_to = "par" )
+
+# reorder parameters
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+
+# plot
+p_div_h_aln <- ggplot(data = plot_dat, aes(x = value, fill = aln)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = aln_cols, labels = aln_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Alignment")
+p_div_h_aln
+```
+Export plot for Fig. 8
+```{r export-div-aln, eval=FALSE}
+ggtree::ggsave(
+    filename = "./Figures/Fig8_V1.png",
+    plot = p_div_h_aln,
+    device = "png",
+    dpi = 600,
+    units = "mm",
+    width = 180,
+    height = 100
+)
+```
+
+Read record sampling data from PRANK alignment
+```{r read-prank-dat2}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*prank*Uexp_*"),"[0-9]{6}.log"))
+
+dat_prank_sampling <- data.frame()
+for (i in lek) {
+  if (i == "BR1" | i == "TR1") {
+    for (j in sampling) {
+      tmp_file <-
+        grep(pattern = paste(i, "prank", "new" , j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$sampling <- j
+      dat_prank_sampling <- rbind(dat_prank_sampling, tmp_data)
+    }
+  } else {
+    for (j in sampling) {
+      tmp_file <-
+        grep(pattern = paste(i, "prank", "old", j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$sampling <- j
+      dat_prank_sampling <- rbind(dat_prank_sampling, tmp_data)
+    }
+  }
+}
+```
+
+Plot diversification parameters by record sampling for PRANK data
+```{r plot-dic-prank2, warning=FALSE}
+colnames(dat_prank_sampling)[2:6] <- new_pars
+plot_dat <- dat_prank_sampling[,c("Iteration", new_pars, "lek", "sampling")]
+
+plot_dat <- pivot_longer(plot_dat, cols = all_of(new_pars), names_to = "par" )
+
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+
+p_div_h_sampling_prank <- ggplot(data = plot_dat, aes(x = value, fill = sampling)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = sampling_cols, labels = sampling_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil sampling")
+
+p_div_h_sampling_prank
+```
+
+Export plot for Fig. 9
+```{r export-sampling-prank, eval=FALSE}
+ggtree::ggsave(
+    filename = "./Figures/Fig9_V1.png",
+    plot = p_div_h_sampling_prank,
+    device = "png",
+    dpi = 600,
+    units = "mm",
+    width = 180,
+    height = 100
+)
+```
+
+Read record sampling data from MAFFT-optimal alignment
+```{r read-optimal-dat2}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*optimal*Uexp_*"),"[0-9]{6}.log"))
+
+dat_optimal_sampling <- data.frame()
+for (i in lek) {
+  if (i == "BR1" | i == "TR1") {
+    for (j in sampling) {
+      tmp_file <-
+        grep(pattern = paste(i, "optimal", "new" , j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$sampling <- j
+      dat_optimal_sampling <- rbind(dat_optimal_sampling, tmp_data)
+    }
+  } else {
+    for (j in sampling) {
+      tmp_file <-
+        grep(pattern = paste(i, "optimal", "old", j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$sampling <- j
+      dat_optimal_sampling <- rbind(dat_optimal_sampling, tmp_data)
+    }
+  }
+}
+```
+
+Plot diversification parameters by record sampling for MAFFT-optimal data
+```{r plot-optimal-dat2, warning=FALSE}
+colnames(dat_optimal_sampling)[2:6] <- new_pars
+plot_dat <- dat_optimal_sampling[,c("Iteration", new_pars, "lek", "sampling")]
+
+plot_dat <- pivot_longer(plot_dat, cols = all_of(new_pars), names_to = "par" )
+
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+
+p_div_h_sampling_optimal <- ggplot(data = plot_dat, aes(x = value, fill = sampling)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = sampling_cols, labels = sampling_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil sampling")
+
+p_div_h_sampling_optimal
+```
+
+Read record sampling data from MAFFT-agnostic alignment
+```{r read-agnostic-dat2}
+file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*all.equal*Uexp_*"),"[0-9]{6}.log"))
+
+dat_agnostic_sampling <- data.frame()
+for (i in lek) {
+  if (i == "BR1" | i == "TR1") {
+    for (j in sampling) {
+      tmp_file <-
+        grep(pattern = paste(i, "all.equal", "new" , j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$sampling <- j
+      dat_agnostic_sampling <- rbind(dat_agnostic_sampling, tmp_data)
+    }
+  } else {
+    for (j in sampling) {
+      tmp_file <-
+        grep(pattern = paste(i, "all.equal", "old", j , sep = "_"), file.ls)
+      tmp_data <-
+        read.table(paste0(out_fp, file.ls[tmp_file]), header = T)
+      tmp_data <- tmp_data[, c("Iteration", div_pars)]
+      tmp_data$lek <- i
+      tmp_data$sampling <- j
+      dat_agnostic_sampling <- rbind(dat_agnostic_sampling, tmp_data)
+    }
+  }
+}
+```
+
+Plot diversification parameters by record sampling for MAFFT-agnostic data
+```{r, warning=FALSE}
+colnames(dat_agnostic_sampling)[2:6] <- new_pars
+plot_dat <- dat_agnostic_sampling[,c("Iteration", new_pars, "lek", "sampling")]
+
+plot_dat <- pivot_longer(plot_dat, cols = all_of(new_pars), names_to = "par" )
+
+plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
+
+p_div_h_sampling_agnostic <- ggplot(data = plot_dat, aes(x = value, fill = sampling)) + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
+  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  theme_light(base_size = 8) + 
+  scale_fill_manual(values = sampling_cols, labels = sampling_labs) +
+  labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil sampling")
+
+p_div_h_sampling_agnostic
+```
+
+Export supporting figures S36-S38
+```{r plot-sampling-div, eval=FALSE}
+sfigs <- list(p_div_h_sampling_prank, p_div_h_sampling_optimal, p_div_h_sampling_agnostic)
+
+for (i in 1:length(sfigs)) {
+    ggtree::ggsave(
+        filename = paste0(
+            "./Figures/FigS",
+            i + 35,
+            "_V1.png"),
+            plot = sfigs[[i]],
+            device = "png",
+            dpi = 600,
+            units = "mm",
+            width = 180,
+            height = 100
+        )
+}
+```

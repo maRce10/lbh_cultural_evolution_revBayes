@@ -629,4 +629,176 @@
   publisher = {Genetics Soc America},
 }
 
+@Article{Araya-Salas2013,
+  author   = {Araya-Salas, Marcelo and Wright, T.},
+  journal  = {Biology Letters},
+  title    = {{Open-ended song learning in a hummingbird}},
+  year     = {2013},
+  issn     = {1744-9561},
+  month    = {sep},
+  number   = {5},
+  pages    = {20130625},
+  volume   = {9},
+  doi      = {10.1098/rsbl.2013.0625},
+  file     = {:home/m/.local/share/data/Mendeley Ltd./Mendeley Desktop/Downloaded/Araya-Salas, Wright - 2013 - Open-ended song learning in a hummingbird.pdf:pdf},
+  keywords = {behaviour,cognition,ecology,environmental science,evolution,neuroscience},
+  url      = {http://rsbl.royalsocietypublishing.org/cgi/doi/10.1098/rsbl.2013.0625},
+}
+
+@Article{ten2021re,
+  author    = {Ten Cate, Carel},
+  journal   = {Philosophical Transactions of the Royal Society B},
+  title     = {Re-evaluating vocal production learning in non-oscine birds},
+  year      = {2021},
+  number    = {1836},
+  pages     = {20200249},
+  volume    = {376},
+  publisher = {The Royal Society},
+}
+
+@Article{Araya-Salas2019,
+  author   = {Araya-Salas, Marcelo and Smith-vidaurre, Grace and Mennill, Daniel J and Cahill, James and Gonzalez-Gomez, Paulina L. and Wright, Timothy F},
+  journal  = {Proceedings of the Royal Society B: Biological Sciences},
+  title    = {{Social group signatures in hummingbird displays provide evidence of co-occurrence of vocal and visual learning}},
+  year     = {2019},
+  volume   = {286},
+  file     = {:home/m/.local/share/data/Mendeley Ltd./Mendeley Desktop/Downloaded/Araya-Salas et al. - 2019 - Social group signatures in hummingbird displays provide evidence of co-occurrence of vocal and visual learni.pdf:pdf},
+  keywords = {behaviour,evolution,neuroscience},
+}
+
+@Article{muff2021rewriting,
+  author    = {Muff, Stefanie and Nilsen, Erlend B and O’Hara, Robert B and Nater, Chlo{\'e} R},
+  journal   = {Trends in Ecology \& Evolution},
+  title     = {Rewriting results sections in the language of evidence},
+  year      = {2021},
+  owner     = {bwillink},
+  publisher = {Elsevier},
+  timestamp = {2022.12.30},
+}
+
+@Article{richards2018variation,
+  author    = {Richards, Emilie J. and Brown, Jeremy M. and Barley, Anthony J. and Chong, Rebecca A. and Thomson, Robert C.},
+  journal   = {Systematic Biology},
+  title     = {Variation across mitochondrial gene trees provides evidence for systematic error: how much gene tree variation is biological?},
+  year      = {2018},
+  number    = {5},
+  pages     = {847--860},
+  volume    = {67},
+  publisher = {Oxford University Press},
+}
+
+@Article{carstens2022assessing,
+  author    = {Carstens, Bryan C. and Smith, Megan L. and Duckett, Drew J. and Fonseca, Emanuel M. and Thom{\'e}, M. Tereza C.},
+  journal   = {Trends in Ecology \& Evolution},
+  title     = {Assessing model adequacy leads to more robust phylogeographic inference},
+  year      = {2022},
+  publisher = {Elsevier},
+}
+
+@Article{khouri2022evolutionary,
+  author    = {Khouri, Z. and Gillung, J. P. and Kimsey, L. S.},
+  journal   = {BioRxiv},
+  title     = {The evolutionary history of mammoth wasps ({Hymenoptera: Scoliidae})},
+  year      = {2022},
+  publisher = {Cold Spring Harbor Laboratory},
+}
+
+@Article{may2021inferring,
+  author    = {May, Michael R. and Contreras, Dori L. and Sundue, Michael A. and Nagalingum, Nathalie S. and Looy, Cindy V. and Rothfels, Carl J.},
+  journal   = {Systematic Biology},
+  title     = {Inferring the total-evidence timescale of marattialean fern evolution in the face of model sensitivity},
+  year      = {2021},
+  number    = {6},
+  pages     = {1232--1255},
+  volume    = {70},
+  publisher = {Oxford University Press},
+}
+
+@Article{savage2022sequence,
+  author    = {Savage, Patrick E and Passmore, Sam and Chiba, Gakuto and Currie, Thomas E and Suzuki, Haruo and Atkinson, Quentin D},
+  journal   = {Current Biology},
+  title     = {Sequence alignment of folk song melodies reveals cross-cultural regularities of musical evolution},
+  year      = {2022},
+  number    = {6},
+  pages     = {1395--1402},
+  volume    = {32},
+  publisher = {Elsevier},
+}
+
+@Article{jager2015support,
+  author    = {J{\"a}ger, Gerhard},
+  journal   = {Proceedings of the National Academy of Sciences},
+  title     = {Support for linguistic macrofamilies from weighted sequence alignment},
+  year      = {2015},
+  number    = {41},
+  pages     = {12752--12757},
+  volume    = {112},
+  publisher = {National Acad Sciences},
+}
+
+@Article{vialle2018alignment,
+  author    = {Vialle, Ricardo Assun{\c{c}}{\~a}o and Tamuri, Asif U. and Goldman, Nick},
+  journal   = {Molecular Biology and Evolution},
+  title     = {Alignment modulates ancestral sequence reconstruction accuracy},
+  year      = {2018},
+  number    = {7},
+  pages     = {1783--1797},
+  volume    = {35},
+  publisher = {Oxford University Press},
+}
+
+@Book{Wickham2016,
+  author    = {Hadley Wickham},
+  publisher = {Springer-Verlag New York},
+  title     = {ggplot2: Elegant Graphics for Data Analysis},
+  year      = {2016},
+  isbn      = {978-3-319-24277-4},
+  url       = {https://ggplot2.tidyverse.org},
+}
+
+@Article{Yu2017,
+  author    = {Yu, Guangchuang and Smith, David and Zhu, Huachen and Guan, Yi and Lam, Tommy Tsan-Yuk},
+  journal   = {Methods in Ecology and Evolution},
+  title     = {{g}gtree: an {R} package for visualization and annotation of phylogenetic trees with their covariates and other associated data},
+  year      = {2017},
+  number    = {8},
+  pages     = {28--36},
+  volume    = {1},
+  doi       = {doi:10.1111/2041-210X.12628},
+  owner     = {bwillink},
+  timestamp = {2021.09.08},
+}
+
+@Article{schliep2011phangorn,
+  author    = {Schliep, Klaus Peter},
+  journal   = {Bioinformatics},
+  title     = {phangorn: phylogenetic analysis in {R}},
+  year      = {2011},
+  number    = {4},
+  pages     = {592--593},
+  volume    = {27},
+  publisher = {Oxford University Press},
+}
+
+@Article{robinson1981comparison,
+  author    = {Robinson, David F. and Foulds, Leslie R.},
+  journal   = {Mathematical Biosciences},
+  title     = {Comparison of phylogenetic trees},
+  year      = {1981},
+  number    = {1-2},
+  pages     = {131--147},
+  volume    = {53},
+  publisher = {Elsevier},
+}
+
+@Article{carpenter2017stan,
+  author    = {Carpenter, Bob and Gelman, Andrew and Hoffman, Matthew D. and Lee, Daniel and Goodrich, Ben and Betancourt, Michael and Brubaker, Marcus and Guo, Jiqiang and Li, Peter and Riddell, Allen},
+  journal   = {Journal of tatistical software},
+  title     = {Stan: A probabilistic programming language},
+  year      = {2017},
+  number    = {1},
+  volume    = {76},
+  publisher = {Columbia Univ., New York, NY (United States); Harvard Univ., Cambridge, MA~…},
+}
+
 @Comment{jabref-meta: databaseType:bibtex;}
