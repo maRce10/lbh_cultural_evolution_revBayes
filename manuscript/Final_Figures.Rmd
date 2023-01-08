@@ -213,7 +213,7 @@ ML.plot
 ```
 
 Export ML plot
-```{r export-ML, warning=FALSE, eval=FALSE}
+```{r export-ML, warning=FALSE, eval=TRUE}
 ggtree::ggsave(filename = "./Figures/Fig3_V1.png", plot = ML.plot, device = "png", dpi = 600, units = "mm", width = 180, height = 100)
 ```
 
@@ -439,7 +439,7 @@ ggs3$Number.Invariant.Sites
 ```
 
 Export main text figures 4-6 
-```{r plot-main-sim, warning=FALSE, eval=FALSE}
+```{r plot-main-sim, warning=FALSE, eval=TRUE}
 figs <- list(ggs3$Number.Invariant.Sites, ggs3$Tajima.Pi, ggs3$Max.Pairwise.Difference)
 
 for (i in 1:length(figs)) {
@@ -459,7 +459,7 @@ for (i in 1:length(figs)) {
 ```
 
 Export supporting figures S3-S32
-```{r plot-all-sim, warning=FALSE, eval=FALSE}
+```{r plot-all-sim, warning=FALSE, eval=TRUE}
 sfigs <- list(ggs3[[1]],  ggs[[1]],  ggs2[[1]],
               ggs3[[13]], ggs[[13]], ggs2[[13]],
               ggs3[[3]],  ggs[[3]],  ggs2[[3]],
@@ -492,7 +492,7 @@ for (i in 1:length(sfigs)) {
 Prepare factor levels
 ```{r prep-factors, warning=FALSE}
 # directory of output files
-out_fp <- "../output/revbayes/"
+out_fp <- "../output/most_recent_revbayes_models/"
 
 # all the different factors and their levels
 lek <- c("BR1", "CCE", "HC1", "SUR", "TR1")
@@ -590,7 +590,7 @@ p_div_h_record_prank
 ```
 
 Export plot for Fig. 7
-```{r export-record-prank, eval=FALSE}
+```{r export-record-prank, eval=TRUE}
 ggtree::ggsave(
     filename = "./Figures/Fig7_V1.png",
     plot = p_div_h_record_prank,
@@ -744,7 +744,7 @@ p_div_h_record_agnostic
 ```
 
 Export supporting figures S33-S35
-```{r plot-aln-div, eval=FALSE}
+```{r plot-aln-div, eval=TRUE}
 sfigs <- list(p_div_h_record_prank, p_div_h_record_optimal, p_div_h_record_agnostic)
 
 for (i in 1:length(sfigs)) {
@@ -814,7 +814,7 @@ p_div_h_aln <- ggplot(data = plot_dat, aes(x = value, fill = aln)) +
 p_div_h_aln
 ```
 Export plot for Fig. 8
-```{r export-div-aln, eval=FALSE}
+```{r export-div-aln, eval=TRUE}
 ggtree::ggsave(
     filename = "./Figures/Fig8_V1.png",
     plot = p_div_h_aln,
@@ -878,7 +878,7 @@ p_div_h_sampling_prank
 ```
 
 Export plot for Fig. 9
-```{r export-sampling-prank, eval=FALSE}
+```{r export-sampling-prank, eval=TRUE}
 ggtree::ggsave(
     filename = "./Figures/Fig9_V1.png",
     plot = p_div_h_sampling_prank,
@@ -993,7 +993,7 @@ p_div_h_sampling_agnostic
 ```
 
 Export supporting figures S36-S38
-```{r plot-sampling-div, eval=FALSE}
+```{r plot-sampling-div, eval=TRUE}
 sfigs <- list(p_div_h_sampling_prank, p_div_h_sampling_optimal, p_div_h_sampling_agnostic)
 
 for (i in 1:length(sfigs)) {
