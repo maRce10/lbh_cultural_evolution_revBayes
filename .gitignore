@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 output/MCMC_diagnostic_plots/**
+output/revbayes_output_in_single_R_object.RDS
