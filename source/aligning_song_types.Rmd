@@ -1,7 +1,7 @@
 ---
 title: <center><font size="6"><b>Aligning song types</b></font></center>
 subtitle: <center><font size="4"><b>Long-billed hermit song cultural evolution</b></font></center>
-author: <center><font size="4"><a href="http://marceloarayasalas.weebly.com/">Marcelo Araya-Salas, PhD</a></font></center>
+author: <center><font size="4"><a href="https://marce10.github.io/">Marcelo Araya-Salas, PhD</a></font></center>
 date: <center>`r format(Sys.Date(), "%d-%m-%Y")`</center>
 output:
   html_document:

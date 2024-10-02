@@ -1,7 +1,7 @@
 ---
 title: <center><font size="6"><b>Model diagnostics</b></font></center>
 subtitle: <center><font size="4"><b><a href="https://github.com/maRce10/lbh_cultural_evolution">Long-billed hermit song cultural evolution<a></b></font></center>
-author: <center><font size="4"><a href="http://marceloarayasalas.weebly.com/">Marcelo Araya-Salas PhD</a> & <a href="https://scholar.google.com/citations?user=0a8k9T8AAAAJ&hl=es&oi=ao"> Beatriz Willink PhD</a></font></center>
+author: <center><font size="4"><a href="https://marce10.github.io/">Marcelo Araya-Salas PhD</a> & <a href="https://scholar.google.com/citations?user=0a8k9T8AAAAJ&hl=es&oi=ao"> Beatriz Willink PhD</a></font></center>
 date: <center>`r format(Sys.Date(), "%d-%m-%Y")`</center>
 output:
   html_document:
