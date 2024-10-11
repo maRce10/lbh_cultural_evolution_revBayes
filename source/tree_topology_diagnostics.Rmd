@@ -19,7 +19,7 @@ editor_options:
 ```{r clean session, eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE}
 
 ## vector with package names
-x <- c("pbapply", "viridis", "knitr", "kableExtra", "ggplot2", "ape", "PhenotypeSpace", "lmerTest", "brms")
+x <- c("pbapply", "viridis", "knitr", "kableExtra", "ggplot2", "ape", "PhenotypeSpace", "lmerTest", "brms", "brmsish")
 
 aa <- lapply(x, function(y) {
   
@@ -44,6 +44,8 @@ options(knitr.kable.NA = '')
 source('~/Dropbox/Projects/lbh_cultural_evolution_revBayes/source/custom_treespace.R')
 
 theme_set(theme_classic(base_size = 22))
+
+fill_color <- viridis::mako(10, alpha = 0.5)[7]
 
 ```
 
@@ -202,7 +204,7 @@ Values were mean-centered within lek
 
 out <- lapply(pnts_lks, function(x){
   
-  Y <- space_size(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE)
+  Y <- space_size(formula = chain ~ x + y, data = x, pb = FALSE)
   Y$mean.c.size <- Y$size - mean(Y$size)
   # Y$size <- Y$size / max(Y$size)
  
@@ -231,12 +233,11 @@ ggplot(topo_size_all, aes(x = alignment, y = mean.c.size)) +
 
 
 # similarity
-
 out <- lapply(pnts_lks, function(x){
   
-  Y <- space_similarity(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE, type = "proportional.overlap")
+  Y <- space_similarity(formula = chain ~ x + y, data = x, pb = FALSE, type = "proportional.overlap")
   
-  Y$mean.c.overlap <- Y$overlap -  mean(Y$overlap)
+  Y$mean.overlap <- Y$mean.overlap -  mean(Y$mean.overlap)
   # Y$overlap <- Y$overlap / max(Y$overlap)
   
   return(Y)  
@@ -244,10 +245,10 @@ out <- lapply(pnts_lks, function(x){
 
 topo_similarity_all <- do.call(rbind, out)
 
-topo_similarity_all2 <- topo_similarity_all
-names(topo_similarity_all2) <- c("group.2", "group.1", "mean.c.overlap", "overlap")
+topo_similarity_all2 <- topo_similarity_all[, c("group.1",  "group.2", "mean.overlap")]
+names(topo_similarity_all2) <- c("group.2", "group.1", "mean.overlap")
 
-topo_similarity_all <- rbind(topo_similarity_all, topo_similarity_all2)[, c( "group.1", "mean.c.overlap", "overlap")]
+topo_similarity_all <- rbind(topo_similarity_all[, c( "group.1", "group.2", "mean.overlap")], topo_similarity_all2[, c( "group.1", "group.2", "mean.overlap")])
 
 topo_similarity_all$alignment <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
 
@@ -261,7 +262,7 @@ topo_similarity_all$models <- sapply(topo_similarity_all$group.1, function(x) st
 topo_similarity_all$lek <- substr(rownames(topo_similarity_all), 0 , 3)
 
 
-ggplot(topo_similarity_all, aes(x = alignment, y = mean.c.overlap)) + 
+ggplot(topo_similarity_all, aes(x = alignment, y = mean.overlap)) + 
   geom_boxplot(fill = viridis(10, alpha = 0.2)[4]) +
   theme(axis.text.x = element_text(size=14, angle=45, hjust = 1, vjust = 1)) + 
   labs(x = "Alignment", y = "Topologic space similarity") +
@@ -435,7 +436,7 @@ Values were mean-centered within lek
 
 out <- lapply(pnts_lks, function(x){
   
-  Y <- space_size(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE)
+    Y <- space_size(formula = chain ~ x + y, data = x, pb = FALSE)
   Y$mean.c.size <- Y$size - mean(Y$size)
   # Y$size <- Y$size / max(Y$size)
   
@@ -464,8 +465,9 @@ ggplot(topo_size_early, aes(x = alignment, y = mean.c.size)) +
 
 out <- lapply(pnts_lks, function(x){
   
-  Y <- space_similarity(X = x, dimensions = c("x", "y"), group = "chain", pb = FALSE, type = "proportional.overlap")
-  Y$mean.c.overlap <- Y$overlap - mean(Y$overlap)
+  Y <- space_similarity(formula = chain ~ x + y, data = x, pb = FALSE, type = "proportional.overlap")
+  
+  Y$mean.overlap <- Y$mean.overlap -  mean(Y$mean.overlap)
   # Y$overlap <- Y$overlap / max(Y$overlap)
   
   return(Y)  
@@ -473,10 +475,10 @@ out <- lapply(pnts_lks, function(x){
 
 topo_similarity_early <- do.call(rbind, out)
 
-topo_similarity_early2 <- topo_similarity_early
-names(topo_similarity_early2) <- c("group.2", "group.1", "mean.c.overlap", "overlap")
+topo_similarity_all2 <- topo_similarity_all[, c("group.1",  "group.2", "mean.overlap")]
+names(topo_similarity_all2) <- c("group.2", "group.1", "mean.overlap")
 
-topo_similarity_early <- rbind(topo_similarity_early, topo_similarity_early2)[, c( "group.1",  "mean.c.overlap", "overlap")]
+topo_similarity_all <- rbind(topo_similarity_all[, c( "group.1", "group.2", "mean.overlap")], topo_similarity_all2[, c( "group.1", "group.2", "mean.overlap")])
 
 topo_similarity_early$alignment <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
 
@@ -488,7 +490,7 @@ topo_similarity_early$models <- sapply(topo_similarity_early$group.1, function(x
 
 topo_similarity_early$lek <- substr(rownames(topo_similarity_early), 0 , 3)
 
-ggplot(topo_similarity_early, aes(x = alignment, y = mean.c.overlap)) + 
+ggplot(topo_similarity_early, aes(x = alignment, y = mean.overlap)) + 
   geom_boxplot(fill = viridis(10, alpha = 0.2)[4]) +
   theme(axis.text.x = element_text(size=14, angle=45, hjust = 1, vjust = 1)) + 
   labs(x = "Alignment", y = "Topologic space similarity") +
@@ -563,30 +565,40 @@ priors <- c(set_prior("normal(0, 1.5)", class = "Intercept"), set_prior("normal(
 
 size_mod <- brm(size ~ alignment + data.set + models + fossils, data = topo_size, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5)
 
-
-priors <- c(set_prior("normal(0, 1.5)", class = "b"))
-
-# without intercept 
-size_mod_no_intercept <- brm(size ~ alignment + data.set + models + fossils -1, data = topo_size, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5)
-
-saveRDS(list(size_mod = size_mod, size_mod_no_intercept = size_mod_no_intercept), "./data/processed/regression_results_topological_size.RDS")
-
 ```
 
 Intercept-included model:
 ```{r, eval = TRUE}
 
-size_mods <- readRDS("./data/processed/regression_results_topological_size.RDS")
+size_mods <- readRDS("./data/processed/regression_results_topological_size.rds")
 
-size_mods$size_mod
+extended_summary(
+    size_mods,
+    n.posterior = 1000,
+    fill =  viridis(10)[7],
+    trace.palette = viridis,
+    remove.intercepts = TRUE,
+    highlight = TRUE,
+    trace = TRUE,
+    return = FALSE
+)
+
 ```
 
 Contrasts for alignment strategies:
 ```{r, eval = TRUE}
 
-aligment_contrasts <- c(prnk_vs_agnostic = "alignmentprank - alignmentall.equal = 0", prnk_vs_optimal = "alignmentprank - alignmentoptimal = 0", optimal_vs_agnostic = "alignmentoptimal - alignmentall.equal = 0")
-
-hypothesis(size_mods$size_mod_no_intercept, aligment_contrasts)
+# contrasts
+contrasts(
+    fit = size_mods,
+    predictor = "alignment",
+    n.posterior = 2000,
+    level.sep = " VS ",
+    html.table = TRUE,
+    plot = TRUE,
+    highlight = TRUE,
+    fill = fill_color
+)
 
 ```
 
@@ -596,29 +608,50 @@ hypothesis(size_mods$size_mod_no_intercept, aligment_contrasts)
 topo_similarity_all$fossils <- "all"
 topo_similarity_early$fossils <- "early"
 
-topo_similarity <- rbind(topo_similarity_all, topo_similarity_early)
+shared_columns <- intersect(names(topo_similarity_all), names(topo_similarity_early))
 
-similarity_mod <- brm(overlap ~ alignment + data.set + models + fossils, data = topo_similarity, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5)
+topo_similarity <- rbind(topo_similarity_all[, shared_columns], topo_similarity_early[, shared_columns])
 
-# without intercept 
-similarity_mod_no_intercept <- brm(overlap ~ alignment + data.set + models + fossils -1, data = topo_similarity, iter = iterations, chains = 3, silent = 2, seed = 5)
-
-
-saveRDS(list(similarity_mod = similarity_mod, similarity_mod_no_intercept = similarity_mod_no_intercept), "./data/processed/regression_results_topological_similiarity.RDS")
+similarity_mod <- brm(mean.overlap ~ alignment + data.set + models + fossils, data = topo_similarity, prior = priors, iter = iterations, chains = 3, silent = 2, seed = 5, file = "./data/processed/regression_results_topological_similiarity")
 
 ```
 
 Intercept-included model:
 ```{r, eval = TRUE}
-similarity_mods <- readRDS("./data/processed/regression_results_topological_similiarity.RDS")
 
-similarity_mods$similarity_mod
+similarity_mod <- readRDS("./data/processed/regression_results_topological_similiarity.rds")
+
+
+extended_summary(
+    similarity_mod,
+    n.posterior = 1000,
+    fill =  viridis(10)[7],
+    trace.palette = viridis,
+    remove.intercepts = TRUE,
+    highlight = TRUE,
+    trace = TRUE,
+    return = FALSE
+)
+
+
 ```
 
 Contrasts for alignment strategies:
 ```{r, eval = TRUE}
 
-hypothesis(similarity_mods$similarity_mod_no_intercept, aligment_contrasts)
+# contrasts
+contrasts(
+    fit = similarity_mod,
+    predictor = "alignment",
+    n.posterior = 2000,
+    level.sep = " VS ",
+    html.table = TRUE,
+    plot = TRUE,
+    highlight = TRUE,
+    fill = fill_color
+)
+
+
 
 ```
 

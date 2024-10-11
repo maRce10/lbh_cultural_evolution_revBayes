@@ -1,0 +1,761 @@
+---
+title: <font size="6"><b>Tree topology diagnostics</b></font>
+subtitle: Long-billed hermit song cultural evolution
+author: <font size="4"><a href="https://marce10.github.io/">Marcelo Araya-Salas PhD</a></font>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 5
+toc-location: left
+number-sections: true
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-tools: true
+    css: qmd.css
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r set root directory}
+#| eval: true
+#| echo: false
+
+# set working directory 
+knitr::opts_knit$set(root.dir =  "..")
+
+```
+
+```{r add link to github repo}
+#| eval: true
+#| output: asis
+#| echo: false
+
+# print link to github repo if any
+if (file.exists("./.git/config")){
+  config <- readLines("./.git/config")
+  url <- grep("url",  config, value = TRUE)
+  url <- gsub("\\turl = |.git$", "", url)
+  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
+  }
+
+```
+
+## Load packages {.unnumbered .unlisted}
+```{r clean session}
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+
+## vector with package names
+x <- c("pbapply", "viridis", "knitr", "kableExtra", "ggplot2", "ape", "PhenotypeSpace", "brms", "brmsish", "cowplot", "ggridges")
+
+aa <- lapply(x, function(y) {
+  
+  # check if installed, if not then install 
+  if (!y %in% installed.packages()[,"Package"]) 
+    install.packages(y) 
+
+  # load package
+  try(require(y, character.only = T), silent = T)
+})
+
+```
+
+## Custom functions and global options {.unnumbered .unlisted}
+```{r functions and parameters}
+#| eval: true
+#| 
+knitr::opts_chunk$set(out.width = "100%", out.height = "100%", echo = TRUE) 
+
+source('~/Dropbox/Projects/lbh_cultural_evolution_revBayes/source/custom_treespace.R')
+
+theme_set(theme_classic(base_size = 10))
+
+fill_color <- viridis::mako(10, alpha = 0.5)[7]
+
+iterations <- 5000
+chains <- 4
+priors <- c(set_prior("normal(0, 1.5)", class = "Intercept"), set_prior("normal(0, 1.5)", class = "b"))
+
+# to create several posterior predictive check plots out of a brms fit
+custom_ppc1 <- function(fit, group = NULL, ndraws = 30) {
+  
+    ppc_dens <-
+        pp_check(fit,
+                 ndraws = ndraws,
+                 type = 'dens_overlay_grouped',
+                 group = group)  # shows dens_overlay plot by default
+    pp_mean <-
+        pp_check(
+            fit,
+            type = "stat_grouped",
+            stat = "mean",
+            group = group,
+            ndraws = ndraws
+        )
+    pp_scat <-
+        pp_check(fit,
+                 type = "scatter_avg_grouped",
+                 group = group,
+                 ndraws = ndraws)
+    pp_stat2 <- pp_check(fit, type = "stat_2d", ndraws = ndraws)
+    pp_loo <- pp_check(fit, type = "loo_pit_qq", ndraws = ndraws)
+    pp_error <-
+        pp_check(fit,
+                 type = "error_scatter_avg_grouped",
+                 ndraws = ndraws,
+                 group = group)
+    plot_l <-
+        list(ppc_dens, pp_mean, pp_scat, pp_error,  pp_stat2, pp_loo)
+    
+    plot_l[c(1, 3:length(plot_l))] <-
+        lapply(plot_l[c(1, 3:length(plot_l))], function(x)
+            x  + scale_color_viridis_d(
+                begin = 0.1,
+                end = 0.8,
+                alpha = 0.5
+            ) + scale_fill_viridis_d(
+                begin = 0.1,
+                end = 0.8,
+                alpha = 0.5
+            ) + theme_classic())     
+
+    print(plot_grid(plotlist = plot_l, ncol = 2))
+}
+
+custom_ppc <- function(...) suppressMessages(custom_ppc1(...))
+
+```
+
+## Read data {.unnumbered .unlisted}
+```{r, eval = FALSE, echo = FALSE}
+
+# read revbayes output 
+rb.trees <- load.multi("~/Dropbox/Projects/lbh_cultural_evolution/output/most_recent_revbayes_models/", format = "revbayes")
+
+saveRDS(rb.trees, "./output/revbayes_output_in_single_R_object.RDS")
+
+```
+
+
+```{r}
+#| eval: false
+
+rb.trees <- readRDS("./output/revbayes_output_in_single_R_object.RDS")
+
+rb.trees <- rb.trees[grep("run_", names(rb.trees), invert = TRUE, value = TRUE)]
+
+trees_diags <- data.frame(model = names(rb.trees))
+
+# get lek name
+trees_diags$lek <- sapply(strsplit(trees_diags$model, "_", fixed = TRUE), "[", 1)
+
+# substitution model
+trees_diags$subs <- sapply(strsplit(trees_diags$model, "_", fixed = TRUE), "[", 2)
+
+# period
+trees_diags$period <- sapply(strsplit(trees_diags$model, "_", fixed = TRUE), "[", 3)
+
+# and which fossils were used
+trees_diags$fossils <- sapply(strsplit(trees_diags$model, "_", fixed = TRUE), "[", 4)
+
+trees_diags$align <- sapply(strsplit(trees_diags$model, "_", fixed = TRUE), "[", 5)
+
+trees_diags$n_trees <- sapply(rb.trees, function(x) length(x$trees))
+
+# Number of models by iterations and lek
+kbl <-
+    knitr::kable(as.matrix(table(trees_diags$lek, trees_diags$n_trees)), caption = "Number of models with a specific number of trees by lek")
+
+kableExtra::kable_styling(kbl)
+
+# Number of models by iterations and lek
+kbl <-
+    knitr::kable(as.matrix(table(trees_diags$lek, trees_diags$subs)), caption = "Number of models with a specific number of trees by lek")
+
+kableExtra::kable_styling(kbl)
+
+
+```
+
+# Topological space estimation
+
+* Pairwise topological distance between all trees for each lek
+* 100 trees for each model evenly spaced along the chain
+* Comparing based on shared song types (pairwise shared tips)
+* Some trees were removed if NAs were produced when comparing topologies (i.e. non-comparable topologies)
+
+## All fossils
+```{r make tree distances all fossils, eval = FALSE}
+
+#selected leks
+sel_leks <- c("SUR", "CCE", "HC1", "BR1", "TR1")
+
+tree_names <- grep("early", names(rb.trees), invert = TRUE, value = TRUE)
+
+pnts_lks <- lapply(sel_leks, function(i) {
+  
+  print(i)
+  lek_trees <- grep(i, tree_names, value = TRUE)
+  
+  multi_list <- lapply(lek_trees, function(x) read.tree(file.path("./output/most_recent_revbayes_models/", x), keep.multi = TRUE))
+  
+  names(multi_list) <- sapply(basename(lek_trees), function(x) paste(strsplit(x, "_", fixed = TRUE)[[1]][1:5], collapse = "_"))
+  
+  pnts <- try(custom_treespace(multi_list, n.points = 100, method = "RF", cl = 10), silent = TRUE)
+
+  if (!is(pnts, "try-error")) 
+    return(pnts) else
+      return(NULL)
+})
+
+names(pnts_lks) <- sel_leks
+
+sapply(pnts_lks, is.null)
+
+saveRDS(pnts_lks, file = "./output/topology/tree_distance_all_fossils_pairwise_shared.RDS")
+
+
+```
+
+## Early fossils
+```{r make tree distances early fossils, eval = FALSE}
+
+#selected leks
+sel_leks <- c("SUR", "CCE", "HC1", "BR1", "TR1")
+# sel_leks <- c("SUR", "TR1")
+
+tree_names <- grep("early", names(rb.trees), value = TRUE)
+
+pnts_lks <- lapply(sel_leks, function(i) {
+  
+  print(i)
+  lek_trees <- grep(i, tree_names, value = TRUE)
+  
+  multi_list <- lapply(lek_trees, function(x) read.tree(file.path("./output/most_recent_revbayes_models/", x), keep.multi = TRUE))
+  
+  names(multi_list) <- sapply(basename(lek_trees), function(x) paste(strsplit(x, "_", fixed = TRUE)[[1]][1:5], collapse = "_"))
+  
+  pnts <- try(custom_treespace(multi_list, n.points = 100, method = "RF", cl = 10), silent = TRUE)
+
+  if (!is(pnts, "try-error")) 
+    return(pnts) else
+      return(NULL)
+})
+
+names(pnts_lks) <- sel_leks
+
+sapply(pnts_lks, is.null)
+
+saveRDS(pnts_lks, file = "./output/topology/tree_distance_early_fossils_pairwise_shared.RDS")
+
+```
+
+# Plot topological spaces
+
+## All fossils
+
+### New and old data sets
+```{r plot tree distances ggplots all fossils, eval = TRUE, warning=FALSE}
+
+pnts_lks <- readRDS("./output/topology/tree_distance_all_fossils_pairwise_shared.RDS")
+
+ggs <- lapply(pnts_lks, function(X) {
+
+    ggplot(data = X, aes(x = x, y = y, fill = generation)) +
+    geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
+    scale_colour_gradient(low = "red", high = "yellow") +
+    geom_point(shape = 21, size = 4, colour = "white", alpha = 0.6) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, ncol = 2) +
+      scale_fill_gradientn(colours = mako(256)) +
+      labs(x = "MDS_v1", y = "MDS_v2") + 
+      ggtitle(label = sprintf("Tree space for %d trees", nrow(X) / length(unique(X$chain)))) 
+    })
+
+ggs
+```
+
+### Old data set
+```{r plot tree distances ggplots old all fossils, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("old", X$chain), ]   
+  
+  if (nrow(X) > 0)
+  ggplot(data = X, aes(x = x, y = y, fill = generation)) +
+    geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
+    scale_colour_gradient(low = "red", high = "yellow") +
+    geom_point(shape = 21, size = 4, colour = "white", alpha = 0.6) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_fill_gradientn(colours = mako(256)) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %1.0f trees", nrow(X) / length(unique(X$chain))))
+    })
+
+ggs
+```
+
+### New data set
+```{r plot tree distances ggplots new all fossils, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("new", X$chain), ]   
+  
+  ggplot(data = X, aes(x = x, y = y, fill = generation)) +
+    geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
+    scale_colour_gradient(low = "red", high = "yellow") +
+    geom_point(shape = 21, size = 4, colour = "white", alpha = 0.6) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_fill_gradientn(colours = mako(256)) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %d trees", nrow(X) / length(unique(X$chain))))
+
+    })
+
+ggs
+```
+
+#### Clumping molecular clocks
+
+##### Old data set
+```{r plot tree distances ggplots old all fossils clumped clocks, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("old", X$chain), ]   
+  X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
+  X$chain <- gsub("_global|_Uexp", "", X$chain)
+  
+    if (nrow(X) > 0)
+    ggplot(data = X, aes(x = x, y = y)) +
+    geom_path(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+    geom_point(aes(shape = clock,  col = clock), size = 4) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_color_viridis_d(option = "G", begin = 0.2, end = 0.8, alpha = 0.75) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %d trees", nrow(X) / length(unique(X$chain))))
+
+    })
+
+ggs
+```
+
+##### New data set
+```{r plot tree distances ggplots new all fossils clumped clocks, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("new", X$chain), ]   
+  X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
+  X$chain <- gsub("_global|_Uexp", "", X$chain)
+  
+  ggplot(data = X, aes(x = x, y = y)) +
+    geom_path(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+    geom_point(aes(shape = clock,  col = clock), size = 4) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_color_viridis_d(option = "G", begin = 0.2, end = 0.8, alpha = 0.75) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %d trees", nrow(X) / length(unique(X$chain))))
+
+    })
+
+ggs
+```
+
+
+## Early fossils
+
+### New and old data sets
+```{r plot tree distances ggplots early fossils, eval = TRUE, warning=FALSE}
+
+pnts_lks <- readRDS("./output/topology/tree_distance_early_fossils_pairwise_shared.RDS")
+
+ggs <- lapply(pnts_lks, function(X) {
+
+    ggplot(data = X, aes(x = x, y = y, fill = generation)) +
+    geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
+    scale_colour_gradient(low = "red", high = "yellow") +
+    geom_point(shape = 21, size = 4, colour = "white", alpha = 0.6) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_fill_gradientn(colours = mako(256)) +
+      labs(x = "MDS_v1", y = "MDS_v2") + 
+    ggtitle(label = sprintf("Tree space for %1.0f trees", nrow(X) / length(unique(X$chain)))) 
+
+    })
+
+ggs
+
+```
+
+### New data set
+```{r plot tree distances ggplots new early fossils, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("new", X$chain), ]   
+  
+  ggplot(data = X, aes(x = x, y = y, fill = generation)) +
+    geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
+    scale_colour_gradient(low = "red", high = "yellow") +
+    geom_point(shape = 21, size = 4, colour = "white", alpha = 0.6) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_fill_gradientn(colours = mako(256)) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %1.0f trees", nrow(X) / length(unique(X$chain))))
+  })
+
+ggs
+
+
+```
+
+### Old data set
+```{r plot tree distances ggplots old early fossils, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("old", X$chain), ]   
+  
+  if (nrow(X) > 0)
+  ggplot(data = X, aes(x = x, y = y, fill = generation)) +
+    geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
+    scale_colour_gradient(low = "red", high = "yellow") +
+    geom_point(shape = 21, size = 4, colour = "white", alpha = 0.6) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_fill_gradientn(colours = mako(256)) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %1.0f trees", nrow(X) / length(unique(X$chain))))
+  })
+
+ggs
+
+
+```
+
+### Clumping molecular clocks
+
+#### Old data set
+```{r plot tree distances ggplots old early fossils clumped clocks, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("old", X$chain), ]   
+  X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
+  X$chain <- gsub("_global|_Uexp", "", X$chain)
+  
+    if (nrow(X) > 0)
+    ggplot(data = X, aes(x = x, y = y)) +
+    geom_path(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+    geom_point(aes(shape = clock,  col = clock), size = 4) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_color_viridis_d(option = "G", begin = 0.2, end = 0.8, alpha = 0.75) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %1.0f trees", nrow(X) / length(unique(X$chain))))
+
+    })
+
+ggs
+```
+
+#### New data set
+```{r plot tree distances ggplots new early fossils clumped clocks, eval = TRUE, warning=FALSE}
+
+ggs <- lapply(pnts_lks, function(X) {
+     
+  X <- X[grep("new", X$chain), ]   
+  X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
+  X$chain <- gsub("_global|_Uexp", "", X$chain)
+  
+  ggplot(data = X, aes(x = x, y = y)) +
+    geom_path(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+    geom_point(aes(shape = clock,  col = clock), size = 4) +
+      theme(panel.background = element_blank(), axis.line = element_line(color = "grey"),
+      panel.spacing = unit(0.1, "lines"), axis.title.x = element_text(vjust = -0.5), axis.title.y = element_text(vjust = 1.5)) +
+    facet_wrap(~chain, nrow = 4) +
+      scale_color_viridis_d(option = "G", begin = 0.2, end = 0.8, alpha = 0.75) +
+      labs(x = "MDS_v1", y = "MDS_v2") +
+    ggtitle(label = sprintf("Tree space for %1.0f trees", nrow(X) / length(unique(X$chain))))
+
+    })
+
+ggs
+```
+
+# Topological space dissimilarity
+
+## Observations per lek and alignment
+
+All fossils
+```{r, eval = TRUE, message=FALSE, warning=FALSE}
+# similarity
+out <- lapply(pnts_lks, function(x){
+  
+  Y <- space_similarity(formula = chain ~ x + y, data = x, pb = FALSE, type = "density.overlap")
+  
+  Y$mean.overlap <- Y$mean.overlap #-  mean(Y$mean.overlap)
+  # Y$overlap <- Y$overlap / max(Y$overlap)
+  
+  return(Y)  
+})
+
+topo_similarity_all <- do.call(rbind, out)
+
+topo_similarity_all2 <- topo_similarity_all[, c("group.1",  "group.2", "overlap.1in2")]
+names(topo_similarity_all2) <- c("group.1", "group.2", "mean.overlap")
+
+topo_similarity_all3 <- topo_similarity_all[, c("group.2",  "group.1", "overlap.2in1")]
+names(topo_similarity_all3) <- c("group.2", "group.1", "mean.overlap")
+
+topo_similarity_all <- rbind(topo_similarity_all2, topo_similarity_all3)
+
+topo_similarity_all$alignment <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_similarity_all$data.set <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_similarity_all$fossils <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_similarity_all$models <- sapply(topo_similarity_all$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+
+topo_similarity_all$lek <- substr(rownames(topo_similarity_all), 0 , 3)
+
+tab <- as.data.frame(table(topo_similarity_all$lek, topo_similarity_all$alignment))
+names(tab) <- c("lek", "model", "count")
+
+tab
+```
+
+Early fossils
+```{r}
+out <- lapply(pnts_lks, function(x){
+  
+  Y <- space_similarity(formula = chain ~ x + y, data = x, pb = FALSE, type = "mean.density.overlap")
+  
+  Y$mean.overlap <- Y$mean.overlap -  mean(Y$mean.overlap)
+  # Y$overlap <- Y$overlap / max(Y$overlap)
+  
+  return(Y)  
+})
+
+topo_similarity_early <- do.call(rbind, out)
+
+topo_similarity_early2 <- topo_similarity_early[, c("group.1",  "group.2", "overlap.2in1")]
+names(topo_similarity_early2) <- c("group.2", "group.1", "mean.overlap")
+
+topo_similarity_early3 <- topo_similarity_early[, c("group.1",  "group.2", "overlap.1in2")]
+names(topo_similarity_early3) <- c("group.2", "group.1", "mean.overlap")
+
+topo_similarity_early <- rbind(topo_similarity_early2, topo_similarity_early3)
+
+topo_similarity_early$alignment <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_similarity_early$data.set <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_similarity_early$fossils <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_similarity_early$models <- sapply(topo_similarity_early$group.1, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+topo_similarity_early$lek <- substr(rownames(topo_similarity_early), 0 , 3)
+
+tab <- as.data.frame(table(topo_similarity_early$lek, topo_similarity_early$alignment))
+names(tab) <- c("lek", "model", "count")
+
+tab
+```
+
+
+## Plot dissimilarity by treatment
+```{r}
+#| eval: true
+#| warning: false
+#| out.height: '170%'
+
+ 
+
+topo_similarity_all$fossils <- "all"
+topo_similarity_early$fossils <- "early"
+
+shared_columns <- intersect(names(topo_similarity_all), names(topo_similarity_early))
+
+topo_similarity <- rbind(topo_similarity_all[, shared_columns], topo_similarity_early[, shared_columns])
+
+topo_similarity$dissimilarity <- 1 - topo_similarity$mean.overlap
+
+# raincloud plot:
+ggplot(topo_similarity,
+       aes(x = alignment, y = dissimilarity, fill = alignment)) +
+  # add half-violin from {ggdist} package
+  ggdist::stat_halfeye(
+    # fill = fill_color,
+    alpha = 0.5,
+    # custom bandwidth
+    adjust = .5,
+    # adjust height
+    width = .6,
+    .width = 0,
+    # move geom to the cright
+    justification = -.2,
+    point_colour = NA
+  ) +
+  geom_boxplot(# fill = fill_color,
+    width = .15,
+    # remove outliers
+    outlier.shape = NA) +
+    # add justified jitter from the {gghalves} package
+    gghalves::geom_half_point(
+      # color = fill_color,
+      # draw jitter on the left
+      side = "l",
+      # control range of jitter
+      range_scale = .4,
+      # add some transparency
+      alpha = .5,
+      transformation = ggplot2::position_jitter(height = 0)
+    ) +
+      scale_fill_viridis_d(option = "G",
+                           end = 0.8,
+                           alpha = 0.6) +
+           scale_x_discrete(labels = c(
+        "natural" = "Natural",
+        "artificial" = "Artificial",
+        "simulated" = "Simulated"
+      )) +
+      theme(legend.position = "none") +
+      facet_wrap(~ data.set + models + fossils, ncol = 2) +
+  labs(x = "Alignment", y = "Topologic space dissimilarity") 
+
+```
+
+## Stats
+
+### Dissimilarity of the topological space
+```{r, eval = FALSE}
+
+# topo_similarity$dissimilarity[topo_similarity$dissimilarity <= 0] <- 0.001 
+
+topo_similarity$alignment <- factor(topo_similarity$alignment, levels = c("all.equal", "optimal", "prank"))
+
+topo_similarity$data.set <- factor(topo_similarity$data.set, levels = c("new", "old"))
+
+topo_similarity$models <- factor(topo_similarity$models, levels = c("Uexp", "global"))
+
+topo_similarity$fossils <- factor(topo_similarity$fossils, levels = c("early", "all"))
+
+mod <- brm(
+  formula = dissimilarity ~ alignment + data.set + models + fossils + (1 | lek), 
+  data = topo_similarity,
+  iter = iterations,
+  family = gaussian(),
+  chains = chains,
+  cores = chains,
+   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  file = "./data/processed/regression_results_topological_similiarity",
+  file_refit = "always")
+
+mod <- add_criterion(mod, criterion = c("loo"))
+
+null_mod <- brm(
+  formula = dissimilarity ~ 1, 
+  data = topo_similarity,
+  iter = iterations,
+  family = gaussian(),
+  chains = chains,
+  cores = chains,
+   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  file = "./data/processed/null_regression_results_topological_similiarity",
+  file_refit = "always"
+)
+
+null_mod <- add_criterion(null_mod, criterion = c("loo"))
+
+```
+
+Model selection:
+```{r}
+#| results: asis
+
+mod <- readRDS("./data/processed/regression_results_topological_similiarity.rds")
+
+null_mod <- readRDS("./data/processed/null_regression_results_topological_similiarity.rds")
+
+loo_diff <- loo::loo_compare(mod, null_mod)
+
+as.data.frame(loo_diff[,1:2], row.names = c("model", "null model"))
+```
+
+```{r}
+#| eval: true
+#| results: asis
+
+extended_summary(fit = mod,
+    n.posterior = 1000,
+    fill =  mako(10)[7],
+    trace.palette = viridis,
+    remove.intercepts = TRUE,
+    highlight = TRUE,
+    trace = TRUE,
+    return = FALSE, 
+    print.name = FALSE
+)
+
+
+```
+
+Contrasts for alignment strategies:
+```{r}
+#| eval: true
+#| results: asis
+
+# contrasts
+contrasts(
+    fit = mod,
+    sort.levels = c("prank", "optimal", "all.equal"),
+    predictor = "alignment",
+    n.posterior = 2000,
+    level.sep = " VS ",
+    html.table = TRUE,
+    plot = TRUE,
+    highlight = TRUE,
+    fill = mako(10)[7]
+)
+
+```
+
+```{r}
+#| warning: false
+
+custom_ppc(fit = mod, group = "alignment")
+
+```
+
+# Session information {.unnumbered .unlisted}
+
+```{r session info, echo=F}
+
+sessionInfo()
+
+```

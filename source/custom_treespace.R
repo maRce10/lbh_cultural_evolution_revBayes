@@ -1,6 +1,6 @@
 
 # multi_list = a named list of multiphylo objects, names are used for labeling chains
-custom_treespace <- function (multi_list, n.points = 100, thinning = 5000, method = "RF", cl = 1){
+custom_treespace <- function (multi_list, n.points = 100, thinning = 5000, method = "RF", cl = 1, k = 2){
 
     # get subset of n.points for each list
     if (!is.infinite(n.points))
@@ -45,11 +45,11 @@ custom_treespace <- function (multi_list, n.points = 100, thinning = 5000, metho
     y <- rep(0, length(alltrees))
     mds <- data.frame(x = x, y = y)
   } else
-  mds <- cmdscale(d, k = 2)
+  mds <- cmdscale(d, k = k)
 
   points <- as.data.frame(mds)
   row.names(points) <- seq(nrow(points))
-  names(points) <- c("x", "y")
+  names(points) <- paste("x", 1:k, sep = "")
   points$lek <- substr(colnames(d), 0, 3)
   points$chain <- gsub("[[:digit:]]", "", substr(colnames(d), 5, 100))
   points$sample <- as.numeric(gsub("[^0-9.-]|\\.", "", substr(colnames(d), 5, 100)))

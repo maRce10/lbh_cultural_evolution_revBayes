@@ -206,7 +206,7 @@ ggplot(fs, aes(Year, Lek)) +
 
 \begin{figure}
   \centering
-  \includegraphics{/media/bwillink/HD710 PRO/Investigacion/lbh_cultural_evolution_revBayes/manuscript/Fig1_V1.png}
+  \includegraphics{/home/m/Dropbox/Projects/lbh_cultural_evolution_revBayes/manuscript/Fig1_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 1. } Socially transmitted songs in the lekking long-billed hermit. \textbf{a)} A male Long-billed hermit. \textbf{b)} Spectrograms of three songs from different males in the SUR lek, sampled in 2019. The \textit{colour} arrow head shows a pure tone and the \textit{another colour} arrow head shows a vibratory sound. \textbf{c)} Locations of the study leks in the Caribbean lowlands of Costa Rica. \textbf{d)} Sampling of historical song records in the study leks. }
 \end{figure}
