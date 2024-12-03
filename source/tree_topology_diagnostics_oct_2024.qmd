@@ -197,7 +197,7 @@ sel_leks <- c("SUR", "CCE", "HC1", "BR1", "TR1")
 
 tree_names <- grep("early", names(rb.trees), invert = TRUE, value = TRUE)
 
-pnts_lks <- lapply(sel_leks, function(i) {
+pnts_lks_all <- lapply(sel_leks, function(i) {
   
   print(i)
   lek_trees <- grep(i, tree_names, value = TRUE)
@@ -213,11 +213,11 @@ pnts_lks <- lapply(sel_leks, function(i) {
       return(NULL)
 })
 
-names(pnts_lks) <- sel_leks
+names(pnts_lks_all) <- sel_leks
 
-sapply(pnts_lks, is.null)
+sapply(pnts_lks_all, is.null)
 
-saveRDS(pnts_lks, file = "./output/topology/tree_distance_all_fossils_pairwise_shared.RDS")
+saveRDS(pnts_lks_all, file = "./output/topology/tree_distance_all_fossils_pairwise_shared.RDS")
 
 
 ```
@@ -231,7 +231,7 @@ sel_leks <- c("SUR", "CCE", "HC1", "BR1", "TR1")
 
 tree_names <- grep("early", names(rb.trees), value = TRUE)
 
-pnts_lks <- lapply(sel_leks, function(i) {
+pnts_lks_early <- lapply(sel_leks, function(i) {
   
   print(i)
   lek_trees <- grep(i, tree_names, value = TRUE)
@@ -247,11 +247,11 @@ pnts_lks <- lapply(sel_leks, function(i) {
       return(NULL)
 })
 
-names(pnts_lks) <- sel_leks
+names(pnts_lks_early) <- sel_leks
 
-sapply(pnts_lks, is.null)
+sapply(pnts_lks_early, is.null)
 
-saveRDS(pnts_lks, file = "./output/topology/tree_distance_early_fossils_pairwise_shared.RDS")
+saveRDS(pnts_lks_early, file = "./output/topology/tree_distance_early_fossils_pairwise_shared.RDS")
 
 ```
 
@@ -262,9 +262,9 @@ saveRDS(pnts_lks, file = "./output/topology/tree_distance_early_fossils_pairwise
 ### New and old data sets
 ```{r plot tree distances ggplots all fossils, eval = TRUE, warning=FALSE}
 
-pnts_lks <- readRDS("./output/topology/tree_distance_all_fossils_pairwise_shared.RDS")
+pnts_lks_all <- readRDS("./output/topology/tree_distance_all_fossils_pairwise_shared.RDS")
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_all, function(X) {
 
     ggplot(data = X, aes(x = x, y = y, fill = generation)) +
     geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
@@ -284,7 +284,7 @@ ggs
 ### Old data set
 ```{r plot tree distances ggplots old all fossils, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_all, function(X) {
      
   X <- X[grep("old", X$chain), ]   
   
@@ -307,7 +307,7 @@ ggs
 ### New data set
 ```{r plot tree distances ggplots new all fossils, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_all, function(X) {
      
   X <- X[grep("new", X$chain), ]   
   
@@ -332,7 +332,7 @@ ggs
 ##### Old data set
 ```{r plot tree distances ggplots old all fossils clumped clocks, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_all, function(X) {
      
   X <- X[grep("old", X$chain), ]   
   X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
@@ -357,7 +357,7 @@ ggs
 ##### New data set
 ```{r plot tree distances ggplots new all fossils clumped clocks, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_all, function(X) {
      
   X <- X[grep("new", X$chain), ]   
   X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
@@ -384,9 +384,9 @@ ggs
 ### New and old data sets
 ```{r plot tree distances ggplots early fossils, eval = TRUE, warning=FALSE}
 
-pnts_lks <- readRDS("./output/topology/tree_distance_early_fossils_pairwise_shared.RDS")
+pnts_lks_early <- readRDS("./output/topology/tree_distance_early_fossils_pairwise_shared.RDS")
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_early, function(X) {
 
     ggplot(data = X, aes(x = x, y = y, fill = generation)) +
     geom_path(alpha = 0.25, aes(colour = generation), size = 0.75, show.legend = FALSE) +
@@ -408,7 +408,7 @@ ggs
 ### New data set
 ```{r plot tree distances ggplots new early fossils, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_early, function(X) {
      
   X <- X[grep("new", X$chain), ]   
   
@@ -432,7 +432,7 @@ ggs
 ### Old data set
 ```{r plot tree distances ggplots old early fossils, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_early, function(X) {
      
   X <- X[grep("old", X$chain), ]   
   
@@ -459,7 +459,7 @@ ggs
 #### Old data set
 ```{r plot tree distances ggplots old early fossils clumped clocks, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_early, function(X) {
      
   X <- X[grep("old", X$chain), ]   
   X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
@@ -484,7 +484,7 @@ ggs
 #### New data set
 ```{r plot tree distances ggplots new early fossils clumped clocks, eval = TRUE, warning=FALSE}
 
-ggs <- lapply(pnts_lks, function(X) {
+ggs <- lapply(pnts_lks_early, function(X) {
      
   X <- X[grep("new", X$chain), ]   
   X$clock <- ifelse(grepl("global", X$chain), "Global", "Uexp")
@@ -505,6 +505,298 @@ ggs <- lapply(pnts_lks, function(X) {
 ggs
 ```
 
+# Topological space size
+
+## Observations per lek and alignment
+
+All fossils
+```{r, eval = TRUE, message=FALSE, warning=FALSE}
+# size
+
+out <- lapply(pnts_lks_all, function(x){
+  
+    Y <- space_size(formula = chain ~ x + y, data = x, pb = FALSE, method = "density")
+  Y$mean.c.size <- Y$size# - mean(Y$size)
+ 
+  return(Y)  
+})
+
+topo_size_all <- do.call(rbind, out)
+
+topo_size_all$alignment <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_size_all$data.set <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_size_all$fossils <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_size_all$models <- sapply(topo_size_all$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+topo_size_all$lek <- substr(rownames(topo_size_all), 0 , 3)
+
+tab <- as.data.frame(table(topo_size_all$lek, topo_size_all$alignment))
+names(tab) <- c("lek", "model", "count")
+
+tab
+
+```
+
+Early fossils
+```{r}
+
+out <- lapply(pnts_lks_early, function(x){
+  
+    Y <- space_size(formula = chain ~ x + y, data = x, pb = FALSE, method = "density")
+  Y$mean.c.size <- Y$size# - mean(Y$size)
+  # Y$size <- Y$size / max(Y$size)
+  
+  return(Y)  
+})
+
+topo_size_early <- do.call(rbind, out)
+
+topo_size_early$alignment <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][1])
+
+topo_size_early$data.set <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][2])
+
+topo_size_early$fossils <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][3])
+
+topo_size_early$models <- sapply(topo_size_early$group, function(x) strsplit(x, "_", fixed = TRUE)[[1]][4])
+
+topo_size_early$lek <- substr(rownames(topo_size_early), 0 , 3)
+
+tab <- as.data.frame(table(topo_size_early$lek, topo_size_early$alignment))
+names(tab) <- c("lek", "model", "count")
+
+tab
+```
+
+## Plot size by treatment
+```{r}
+#| eval: true
+#| warning: false
+#| out.height: '170%'
+
+
+topo_size_all$fossils <- "all"
+topo_size_early$fossils <- "early"
+
+shared_columns <- intersect(names(topo_size_all), names(topo_size_early))
+
+topo_size <- rbind(topo_size_all[, shared_columns], topo_size_early[, shared_columns])
+
+# raincloud plot:
+ggplot(topo_size,
+       aes(x = alignment, y = size, fill = alignment)) +
+  # add half-violin from {ggdist} package
+  ggdist::stat_halfeye(
+    # fill = fill_color,
+    alpha = 0.5,
+    # custom bandwidth
+    adjust = .5,
+    # adjust height
+    width = .6,
+    .width = 0,
+    # move geom to the cright
+    justification = -.2,
+    point_colour = NA
+  ) +
+  geom_boxplot(# fill = fill_color,
+    width = .15,
+    # remove outliers
+    outlier.shape = NA) +
+    # add justified jitter from the {gghalves} package
+    gghalves::geom_half_point(
+      # color = fill_color,
+      # draw jitter on the left
+      side = "l",
+      # control range of jitter
+      range_scale = .4,
+      # add some transparency
+      alpha = .5,
+      transformation = ggplot2::position_jitter(height = 0)
+    ) +
+      scale_fill_viridis_d(option = "G",
+                           end = 0.8,
+                           alpha = 0.6) +
+           scale_x_discrete(labels = c(
+        "natural" = "Natural",
+        "artificial" = "Artificial",
+        "simulated" = "Simulated"
+      )) +
+      theme(legend.position = "none") +
+      facet_wrap(~ data.set + models + fossils, ncol = 2) +
+  labs(x = "Alignment", y = "Topologic space dissimilarity") 
+
+```
+
+## Stats
+
+### Size of the topological space
+```{r, eval = FALSE}
+
+topo_size$alignment <- factor(topo_size$alignment, levels = c("all.equal", "optimal", "prank"))
+
+topo_size$data.set <- factor(topo_size$data.set, levels = c("new", "old"))
+
+topo_size$models <- factor(topo_size$models, levels = c("Uexp", "global"))
+
+topo_size$fossils <- factor(topo_size$fossils, levels = c("early", "all"))
+
+# weakly informative priors
+priors <- c(
+  prior(normal(0, 5), class = "Intercept"),
+  prior(normal(0, 2), class = "b"),
+  prior(exponential(1), class = "sd")
+)
+
+mod <- brm(
+  formula = size ~ alignment + data.set + models + fossils + (1|lek), 
+  data = topo_size,
+  iter = iterations,
+  family = gaussian(),
+  chains = chains,
+  cores = chains,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  file = "./data/processed/regression_results_topological_size",
+  file_refit = "always")
+
+mod <- add_criterion(mod, criterion = c("loo"))
+
+# weakly informative priors
+priors <- c(
+  prior(normal(0, 5), class = "Intercept"),
+  prior(normal(0, 2), class = "b"),
+  prior(exponential(1), class = "sd")
+)
+
+sub_mod <- brm(
+  formula = size ~ data.set + fossils + (1|lek), 
+  data = topo_size,
+  iter = iterations,
+  family = gaussian(),
+  chains = chains,
+  cores = chains,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  file = "./data/processed/regression_results_topological_size_submodel",
+  file_refit = "always")
+
+sub_mod <- add_criterion(sub_mod, criterion = c("loo"))
+
+
+# weakly informative priors
+priors <- c(
+  prior(normal(0, 5), class = "Intercept"),
+  prior(exponential(1), class = "sd")
+)
+
+null_mod <- brm(
+  formula = size ~ 1 + (1|lek), 
+  data = topo_size,
+  iter = iterations,
+  family = gaussian(),
+  chains = chains,
+  cores = chains,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  file = "./data/processed/null_regression_results_topological_size",
+  file_refit = "always"
+)
+
+null_mod <- add_criterion(null_mod, criterion = c("loo"))
+
+```
+
+Model selection:
+```{r}
+#| results: asis
+
+mod <- readRDS("./data/processed/regression_results_topological_size.rds")
+
+sub_mod <- readRDS("./data/processed/regression_results_topological_size_submodel.rds")
+
+null_mod <- readRDS("./data/processed/null_regression_results_topological_size.rds")
+
+loo_diff <- loo::loo_compare(mod, sub_mod, null_mod)
+
+as.data.frame(loo_diff[,1:2], row.names = c("model", "sub_model", "null model"))
+
+looic_df <- as.data.frame(rbind(loo(mod)$estimates[3, ], loo(sub_mod)$estimates[3, ], loo(null_mod)$estimates[3, ]),row.names = c("model", "sub_model", "null model"))
+
+names(looic_df)[1] <- "LOOIC"
+
+looic_df$delta <- looic_df$LOOIC - min(looic_df$LOOIC)
+
+looic_df
+
+```
+
+Bayes factor:
+```{r}
+
+# Calculate Bayes factor
+bf <- bayes_factor(mod, null_mod)
+
+bf$bf
+
+sbf <- bayes_factor(sub_mod, null_mod)
+
+sbf$bf
+
+```
+
+
+```{r}
+#| eval: true
+#| results: asis
+
+extended_summary(fit = mod,
+    n.posterior = 1000,
+    fill =  mako(10)[7],
+    trace.palette = viridis,
+    remove.intercepts = TRUE,
+    highlight = TRUE,
+    trace = TRUE,
+    return = FALSE, 
+    print.name = FALSE, 
+    spread.type = "HPDI"
+)
+
+
+```
+
+Contrasts for alignment strategies:
+```{r}
+#| eval: true
+#| results: asis
+
+# contrasts
+contrasts(
+    fit = mod,
+    sort.levels = c("prank", "optimal", "all.equal"),
+    predictor = "alignment",
+    n.posterior = 2000,
+    level.sep = " VS ",
+    html.table = TRUE,
+    plot = TRUE,
+    highlight = TRUE,
+    fill = mako(10)[7]
+)
+
+```
+
+```{r}
+#| warning: false
+
+custom_ppc(fit = mod, group = "alignment")
+
+```
+
+
 # Topological space dissimilarity
 
 ## Observations per lek and alignment
@@ -512,7 +804,7 @@ ggs
 All fossils
 ```{r, eval = TRUE, message=FALSE, warning=FALSE}
 # similarity
-out <- lapply(pnts_lks, function(x){
+out <- lapply(pnts_lks_all, function(x){
   
   Y <- space_similarity(formula = chain ~ x + y, data = x, pb = FALSE, type = "density.overlap")
   
@@ -551,7 +843,7 @@ tab
 
 Early fossils
 ```{r}
-out <- lapply(pnts_lks, function(x){
+out <- lapply(pnts_lks_early, function(x){
   
   Y <- space_similarity(formula = chain ~ x + y, data = x, pb = FALSE, type = "mean.density.overlap")
   
@@ -665,6 +957,13 @@ topo_similarity$models <- factor(topo_similarity$models, levels = c("Uexp", "glo
 
 topo_similarity$fossils <- factor(topo_similarity$fossils, levels = c("early", "all"))
 
+# weakly informative priors
+priors <- c(
+  prior(normal(0, 5), class = "Intercept"),
+  prior(normal(0, 2), class = "b"),
+  prior(exponential(1), class = "sd")
+)
+
 mod <- brm(
   formula = dissimilarity ~ alignment + data.set + models + fossils + (1 | lek), 
   data = topo_similarity,
@@ -672,20 +971,30 @@ mod <- brm(
   family = gaussian(),
   chains = chains,
   cores = chains,
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
    control = list(adapt_delta = 0.99, max_treedepth = 15),
   file = "./data/processed/regression_results_topological_similiarity",
   file_refit = "always")
 
 mod <- add_criterion(mod, criterion = c("loo"))
 
+# weakly informative priors
+priors <- c(
+  prior(normal(0, 5), class = "Intercept"),
+  prior(exponential(1), class = "sd")
+)
+
 null_mod <- brm(
-  formula = dissimilarity ~ 1, 
+  formula = dissimilarity ~ 1 + (1 | lek), 
   data = topo_similarity,
   iter = iterations,
   family = gaussian(),
   chains = chains,
   cores = chains,
-   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  prior = priors,
+  save_pars = save_pars(all = TRUE),
+  control = list(adapt_delta = 0.99, max_treedepth = 15),
   file = "./data/processed/null_regression_results_topological_similiarity",
   file_refit = "always"
 )
@@ -705,7 +1014,26 @@ null_mod <- readRDS("./data/processed/null_regression_results_topological_simili
 loo_diff <- loo::loo_compare(mod, null_mod)
 
 as.data.frame(loo_diff[,1:2], row.names = c("model", "null model"))
+
+looic_df <- as.data.frame(rbind(loo(mod)$estimates[3, ],  loo(null_mod)$estimates[3, ]),row.names = c("model", "null model"))
+
+names(looic_df)[1] <- "LOOIC"
+
+looic_df$delta <- looic_df$LOOIC - min(looic_df$LOOIC)
+
+looic_df
 ```
+
+Bayes factor:
+```{r}
+
+# Calculate Bayes factor
+bf <- bayes_factor(mod, null_mod)
+
+bf$bf
+
+```
+
 
 ```{r}
 #| eval: true
@@ -719,7 +1047,8 @@ extended_summary(fit = mod,
     highlight = TRUE,
     trace = TRUE,
     return = FALSE, 
-    print.name = FALSE
+    print.name = FALSE,
+    spread.type = "HPDI"    
 )
 
 

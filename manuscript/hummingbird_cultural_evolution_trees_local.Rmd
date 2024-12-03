@@ -149,7 +149,7 @@ Here, we used the FBDP to model cultural diversification in five leks of Long-bi
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig1_V1.png}
+  \includegraphics{./Figures/Fig1_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 1. } Socially transmitted songs in the Long-billed Hermit. \textbf{a)} A male Long-billed Hermit. \textbf{b)} Spectrograms of two songs from different males in the SUR lek, sampled in 2019. The \textit{colour} arrow shows a pure tone and the \textit{another colour} arrow show a vibratory sound. \textbf{c)} Locations of the study leks in the Caribbean lowlands of Costa Rica. \textbf{d)} Historical sampling of song records in each lek. }
 \end{figure}
@@ -198,7 +198,7 @@ We conducted two independent MCMC runs for each analyses, with 150 000 iteration
 
 ### Model reliability
 
-We used predictive data simulations to test for absolute model fit, also implemented in RevBayes [@hohna2018p3]. During parameter inference, a Stochastic-Variable-Monitor stored the stochastic variable values for each posterior sample. Then, these values were used to simulate new data sets based on the inference model. We specified a thinning of 2 iterations for the stochastic variable trace, thus simulating 3 000 datasets for the ‘large’ leks (CCE, SUR) and 1 500 datasets for the ‘small’ leks (BR1, HC1, TR1).<!--double check numbers with MAS-->
+We used predictive data simulations to test for absolute model fit, also implemented in RevBayes [@hohna2018p3] <!--version??-->. During parameter inference, a Stochastic-Variable-Monitor stored the stochastic variable values for each posterior sample. Then, these values were used to simulate new data sets based on the inference model. We specified a thinning of 2 iterations for the stochastic variable trace, thus simulating 3 000 datasets for the ‘large’ leks (CCE, SUR) and 1 500 datasets for the ‘small’ leks (BR1, HC1, TR1).<!--double check numbers with MAS-->
  
 We present data-based test statistics comparing simulated to empirical datasets, as tests of absolute model fit. We calculated 10 such statistics: 1) the number of invariant sites in the alignment, 2) the number of segregating sites in the alignment, 3) the maximum length of invariant blocks, 4) the maximum length of variable blocks, 5) the number of invariant blocks, 6) the maximum pairwise difference between two sequences in an alignment, 7) the minimum pairwise difference between two sequences in an alignment, and three measurements of genetic diversity: 8) Watterson’s $\theta$, an estimate of “population mutation rate” [@watterson1975number], 9) Tajima’s D, a measurement of whether a population evolves neutrally [@tajima1989statistical], 10) $\pi$, the average number of pairwise differences in the alignment, used to calculate Tajima’s D, and a measure of character diversity. For more details about these statics and how they are calculated see Höhna et al. [-@hohna2018p3].
 
@@ -206,9 +206,9 @@ For each test, we report a posterior predictive effect size (PPES) and a two-tai
 
 ### Treespace and parameter sensitivity
 
-We explored tree topology congruence of different models by comparing topological distances between high posterior probability trees. Topologies were compared with the Robinson-Foulds distance [@robinson1981comparison] with the R package *phangorn* v 2.10.0 [@schliep2011phangorn]. Only tree tips shared by all trees were included in the analysis. Topological distances were projected in a bidimensional space using Classic Multidimentional Scalling in order to quantify topological space. We estimated the overall spread of the topological space (i.e. space size) for different models as a metric of within-model topological congruence. We also calculated between-model topological congruence as the overlap of the topological space of a model to the spaces from other models. Space overlap was estimated as the proportion of the joint area of two spaces that was shared. Topological congruence descriptors were calculated using the R package PhenotypeSpace [@Araya-Salas2022] <!--REF not included--->. Within-model congruence was mean-centered by lek to allow comparisons across leks.
+We explored tree topology congruence of different models by comparing topological distances between high posterior probability trees. Topologies were compared with the Robinson-Foulds distance [@robinson1981comparison] with the R package *phangorn* v.2.11.1 [@schliep2011phangorn].  Topological distances were projected in a bidimensional space using Classic Multidimentional Scalling in order to quantify topological space. Only tree tips pairwise shared between trees were considered when calculating distances. We estimated the overall spread of the topological space (i.e. space size) for different models as a metric of within-model topological congruence. Topological space size was quantified as the 95% kernel density area. We also calculated between-model topological congruence as the overlap of the topological space of a model to the spaces from other models. Space overlap was estimated as the intersection-over-union of the two 95% kernel density spaces (i.e. proportion of the joint area of two spaces that was shared). Topological congruence descriptors were calculated using the R package PhenotypeSpace v.0.1.0 [@Araya-Salas2022].
 
-The effect of different model specifications on these two topological space descriptors was evaluated using Bayesian lineal regression models with each descriptor as the response variable and model alignment strategy, use of historical data, historical record completeness, and clock model as predictors. Regression models were run in Stan [@carpenter2017stan] through the R platform [@RCT2021] using the package *brms* v.X.X-X [@Burkner2017]<!--update version no.--->. We present effect sizes as median posterior estimates, and report 95%  highest posterior density intervals (HPDIs). <!---I removed: "Parameters in which credible intervals did not include zero were regarded as having an effect on the response variable." because I want us to move away from alpha threshold arbitrariness, see sentence below on using the "language of evidence".---> Models were run on three chains for 2500 iterations, following a warm-up of 2500 iterations. Effective sample size was kept above 3000 for all parameters. Performance was checked visually by plotting the trace and distribution of posterior estimates for all chains. We also plotted the autocorrelation of successive sampled values to evaluate independence of posterior samples. Potential scale reduction factor was used to assess model convergence and kept below 1.05 for all parameter estimates.
+The effect of different model specifications on these two topological space descriptors was evaluated using Bayesian lineal regression models with each descriptor as the response variable (modeled with a gaussian distribution), model alignment strategy, use of historical data, historical record completeness, and clock model as predictors and lek as a varying intercept effect (i.e. random effect). Regression models were run in Stan [@carpenter2017stan] through the R platform [@RCT2021] using the package *brms* v.2.22.0 [@Burkner2017]. We also computed multiple comparisons of alignment strategies (similar to post hoc tests in frequentist statistics) using the joint posterior distribution of the model parameters. We present effect size point estimates as median posterior estimates, and report 95% highest posterior density intervals (HPDIs) as a measure of uncertainty.  We evaluated the predictive performance of all models, measured by the LOO Information Criterion (LOOIC; Vehtari et al. 2017), by comparing each model against its correspondent null model (i.e., a model with no fixed effects). Models were compared using the expected log predictive density (ELPD). Models were run on three chains for 2500 iterations, following a warm-up of 2500 iterations using weakly informative priors. Effective sample size was kept above 3000 for all parameters. Potential scale reduction factor was used to assess model convergence and kept below 1.05 for all parameter estimates. Performance was checked visually by plotting the trace and distribution of posterior estimates for all chains. We also plotted the autocorrelation of successive sampled values to evaluate independence of posterior samples. Posterior predictive check plots were also used to inspect if model predictions aligned with the distribution and variability of the observed data. 
 
 Finally, we asked if inferences of diversification dynamics and song evolution were influenced by the use of different alignment strategies. To do this we compared the posterior distributions of parameter estimates between the MAFFT-agnostic, MAFFT-optimal and PRANK-TN93 alignment strategies. For diversification dynamics we compared speciation, extinction, and net diversification rates, as well as the age of the MRCA of all songs (hereafter 'root age', including extinct lineages) and the age of the MRCA of only extant songs (hereafter 'crown age', including song present in the last year of sampling). <!-- For now, lets not even think about substitution model parameters, it'd be a long a nd messy affair. I removed: "For song evolution, we focused on substitutions rates between broad sound categories (vibratory trill to pure tone and *vice versa*), substitution rates within sound categories (e.g. between fast and slow trills), and stationary frequencies of sound categories."--->Following Muff et al. [-@muff2021rewriting], we communicate our statistical results in the language of evidence.
 
@@ -219,7 +219,7 @@ We used the FBDP to model cultural change and diversification in five independen
 <!--- Maybe this fig will need to be larger than this!--->
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig2_V1.png}
+  \includegraphics{./Figures/Fig2_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 2. } Maximum \textit{a posteriori} (MAP) trees for each lek under a relaxed clock model and utilizing the entire historical song record and a phylogenetically informed alignment algorithm (PRANK). \textbf{a)} BR1, \textbf{b)} TR1, \textbf{c)} HC1, \textbf{d)} CCE, \textbf{e)} SUR. }
 \end{figure}
@@ -229,7 +229,7 @@ A relaxed clock model of song evolution (in which different song lineages evolve
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig3_V1.png}
+  \includegraphics{./Figures/Fig3_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 3. } Relative fit of relaxed and global clock models in phylogenetic inference of song evolution under the FBDP. The fit of alternative clock models was compared in five leks (BR1, TR1, HC1, CCE, and SUR) using marginal likelihood approximation. Two leks (BR1 and TR1) lacked deep historical data (no sampling "including oldest records") and three leks contained enough extant songs to estimate clock model fit using a BDP (without historical data). }
 \end{figure}
@@ -246,7 +246,7 @@ Discrepancies between empirical and simulated data were found in all leks and al
 require(tidyverse)
 require(kableExtra)
 
-p3_output_files <- list.files(path = "/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
+p3_output_files <- list.files(path = "../output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
 
 p3_results_l <- lapply(p3_output_files, function(x){
   
@@ -292,7 +292,7 @@ kable_styling(latex_options =c("striped",  "HOLD_position"))
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig4_V1.png}
+  \includegraphics{./Figures/Fig4_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 4. } Number of invariant sites in empirical song data and posterior predictive data simulations (see Methods). For simulated data, we report the mean and 95$\%$ HPD interval of 1500 (BR1, TR1, HC1) or 3000 (CCE and SUR) simulations. }
   \end{figure}
@@ -300,21 +300,21 @@ kable_styling(latex_options =c("striped",  "HOLD_position"))
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig5_V1.png}
+  \includegraphics{./Figures/Fig5_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 5. } Song element diversity ($\pi$) in empirical song data and posterior predictive data simulations (see Methods). For simulated data, we report the mean and 95$\%$ HPD interval of 1500 (BR1, TR1, HC1) or 3000 (CCE and SUR) simulations. }
   \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig6_V1.png}
+  \includegraphics{./Figures/Fig6_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 6. } Maximum pairwise distance between songs in empirical song data and posterior predictive data simulations (see Methods). For simulated data, we report the mean and 95$\%$ HPD interval of 1500 (BR1, TR1, HC1) or 3000 (CCE and SUR) simulations. }
   \end{figure}
 
 ### Treespace congruence
 
-*Marce writes this section*
+The spread of the topological space increased when including all historical records (effect size: 0.031, uncertainty interval (UI): 0.023 - 0.040) and when including fossils (effect size: 0.012, UI: 0.005 - 0.019), but was not affected by the use of different clock models (effect size: -0.002, UI: -0.009 - 0.005). For the alignment strategy only the MAFFT-optimal alignment increased the spread of the topological space compared to the PRANK-TN93 alignment (effect size: -0.009, UI: -0.018 - 0.000) no other differences in space size were detected between alignment strategies (PRANK-TN93 VS MAFFT-agnostic, effect size: -0.005, UI:-0.014 - 0.003; MAFFT-optimal VS MAFFT-agnostic, effect size: 0.004, UI: -0.005 - 0.013). The dissimilarity of the topological space between models increased by the inclusion of all historical records (effect size: 0.174, UI: 0.130 - 0.224) and fossils (effect size: 0.176, UI: 0.119 - 0.235), but not by the use of different clock models (effect size: 0.030, UI: -0.015 - 0.076). The PRANK-TN93 alignment increased topological space dissimilarity when compared to both MAFFT-optimal (effect size: 0.102, UI: 0.045 - 0.159) and MAFFT-agnostic alignments (effect size: 0.110, UI: 0.043 - 0.180), but did not differ between the MAFFT alignments (effect size: 0.008, UI: -0.049 - 0.067).
 
 ### Diversification dynamics
 
@@ -323,21 +323,21 @@ Diversification rates and divergence times were sensitive to historical informat
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig7_V1.png}
+  \includegraphics{./Figures/Fig7_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 7. } Age and diversification estimates under different sets of historical song records in five leks of the Long-billed Hermit. Histograms show posterior distributions of parameter estimates in models using a relaxed molecular clock and the PRANK-TN93 alignment strategy. For data sets including historical song records, all occurrences of such record are included in the analysis. }
   \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig8_V1.png}
+  \includegraphics{./Figures/Fig8_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 8. } Age and diversification estimates under different alignment strategies in five leks of the Long-billed Hermit. Histograms show posterior distributions of parameter estimates in models using a relaxed molecular clock and all historical records. All available historical records are included in the analysis. }
   \end{figure}
   
 \begin{figure}
   \centering
-  \includegraphics{/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/manuscript/Figures/Fig9_V1.png}
+  \includegraphics{./Figures/Fig9_V1.png}
   \captionsetup{labelformat=empty}
   \caption{\textbf{Figure 9. } Age and diversification estimates of songs in five leks of the Long-billed Hermit. Histograms show posterior distributions of parameter estimates in models using a relaxed molecular clock and the PRANK-TN93 alignment strategy. We compare analyses using all occurrences of historical songs, including identical songs sampled serially, and analyses including each unique song at its earliest occurrence. }
   \end{figure}
