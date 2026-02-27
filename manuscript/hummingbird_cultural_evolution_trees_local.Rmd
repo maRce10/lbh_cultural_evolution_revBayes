@@ -23,6 +23,7 @@ citation-style: sysbio.csl
 link-citations: true
 ---
 
+
 ```{r, fixing citation .bib files, eval = TRUE, echo = FALSE, message=FALSE, warning=FALSE,results='hide'}
 
 # how to cite in Rmarkdown
@@ -96,6 +97,19 @@ if (anyDuplicated(keys)){
 
 ```
 
+```{r set root directory}
+#| eval: true
+#| echo: false
+
+# install knitr package if not installed
+if (!requireNamespace("knitr", quietly = TRUE)) {
+  install.packages("knitr")
+}
+
+# set working directory 
+knitr::opts_knit$set(root.dir =  "..")
+
+```
 
 ^1^ Centro de Investigación en Neurociencias, Universidad de Costa Rica
 
@@ -246,47 +260,75 @@ Discrepancies between empirical and simulated data were found in all leks and al
 require(tidyverse)
 require(kableExtra)
 
-p3_output_files <- list.files(path = "../output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
+p3_output_files <- list.files(path = "./output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
 
 p3_results_l <- lapply(p3_output_files, function(x){
   
   Y <- read.csv(file.path(x))
-  Y$model <- sapply(strsplit(x, "Results/", fixed = TRUE), "[", 2)
+  Y$model <- sapply(strsplit(x, "/results_", fixed = TRUE), "[", 2)
+  Y$model <- sapply(strsplit(Y$model, "/data", fixed = TRUE), "[", 1)
   
   return(Y)
 })
 
 p3_results <- do.call(rbind, p3_results_l)
 
-
-p3_results$Lek <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][2], USE.NAMES = FALSE)
+p3_results$Lek <- sapply(strsplit(p3_results$model, "_"), "[[", 1)
 p3_results$Lek <- factor(p3_results$Lek, levels = c("BR1", "TR1", "CCE", "HC1", "SUR"))
 
-p3_results$Align <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][3], USE.NAMES = FALSE)
+p3_results$Align <- sapply(strsplit(p3_results$model, "_"), "[[", 2)
 p3_results$Align <- factor(p3_results$Align, levels = c("all.equal", "optimal", "prank"), labels = c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93"))
 
-p3_results$Sampling <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][5], USE.NAMES = FALSE)
+p3_results$Sampling <- sapply(strsplit(p3_results$model, "_"), "[[", 4)
 p3_results$Sampling[p3_results$Sampling == "full.process"] <- "none"
 p3_results$Sampling <- factor(p3_results$Sampling, levels = c("all", "early", "none"))
 Sampling.labs <- c("all", "earliest", "none")
 names(Sampling.labs) <- c("all", "early", "none") 
 
-p3_results$Record <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][4], USE.NAMES = FALSE)
+p3_results$Record <- sapply(strsplit(p3_results$model, "_"), "[[", 3)
 p3_results$Record <- factor(p3_results$Record, levels= c("old", "new", "no.fossils"), labels = c("Old gapped",  "Recent complete", "None"))
 
 p3_results$signif <- ifelse(p3_results$Two.tailed < 0.05, " < 0.05", " >= 0.05")
 p3_results$Two.tailed.adj <- ifelse(p3_results$Two.tailed > 1, 1, p3_results$Two.tailed)
 p3_results$signif <- factor(p3_results$signif, levels = c(" >= 0.05", " < 0.05"))
 
-p3_summ <- p3_results %>% group_by(Align,Record) %>% summarise(mean = mean(Effect.Size, na.rm = T), sd = sd(Effect.Size, na.rm = T), min = min(Effect.Size, na.rm=T), max = max(Effect.Size, na.rm = T), percent = length(signif[signif == " >= 0.05"])/n())
+# First, get the summary statistics except percent
+p3_summ_base <- aggregate(
+  Effect.Size ~ Align + Record,
+  data = p3_results,
+  FUN = function(x) c(
+    mean = mean(x, na.rm = TRUE),
+    sd = sd(x, na.rm = TRUE),
+    min = min(x, na.rm = TRUE),
+    max = max(x, na.rm = TRUE)
+  )
+)
 
-p3_summ %>%
-kbl(booktabs =T, linesep="", row.names = F, align = c("l", "l", "r", "r", "r", "r", "r"), col.names = c("Alignment", "Historical record", "Mean PPE", "SD", "Min", "Max", "Percent P-value > 0.05"), digits = 2 ) %>%
+# Convert the matrix columns to separate columns
+p3_summ_base <- cbind(
+  p3_summ_base[, c("Align", "Record")],
+  as.data.frame(p3_summ_base$Effect.Size)
+)
+
+# Calculate percent separately
+percent_data <- aggregate(
+  signif ~ Align + Record,
+  data = p3_results,
+  FUN = function(x) length(x[x == " >= 0.05"]) / length(x)
+)
+
+# Rename the percent column
+colnames(percent_data)[3] <- "percent"
+
+# Merge the two dataframes
+p3_summ <- merge(p3_summ_base, percent_data, by = c("Align", "Record"))
+
+p3_summ <- p3_summ[order(p3_summ$Align, p3_summ$Record),]
+
+p3_summ |>
+kbl(booktabs =T, linesep="", row.names = F, align = c("l", "l", "r", "r", "r", "r", "r"), col.names = c("Alignment", "Historical record", "Mean PPE", "SD", "Min", "Max", "Percent P-value > 0.05"), digits = 2 ) |>
 kable_styling(latex_options =c("striped",  "HOLD_position"))
+
 ```
 
 

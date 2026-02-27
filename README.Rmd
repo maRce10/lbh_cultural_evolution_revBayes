@@ -62,6 +62,19 @@ Code used for creating long-billed hermit song cultural evolution trees and anal
 * Run RevBayes with no fossils
 * Check aligment convergence
 
+## To-do list 3-12-2024
+
+Marcelo:
+- combinar graficos de distribuciones posteriores (decidir si dejar reloj)
+- hacer figura 1 (poner espectrograma con panel con secuencia de sonidos sobre el espectrograma)
+- materiales suplementarios con ejemplos de codigo para alineamientos y modelos
+- hacer un nuevo repositorio (leer el manuscrito y asegurarse q los codigos de cada cosa estan representados)
+- Agregar texto suplementario sobre como se midio repetibilidad y agregar valor de repitilibidad al texto principal
+- meter en materiales suppl diagnosticos de modelos de reconstruccion (https://rpubs.com/marcelo-araya-salas/722260)
+- Rhat y prsf son lo mismo, usar solo uno
+
+- 
+
 
 ## Status
 Project is: _in progress_

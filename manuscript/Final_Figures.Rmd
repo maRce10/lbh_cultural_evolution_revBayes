@@ -12,6 +12,21 @@ output:
     toc_depth: 3
 ---
 
+```{r set root directory}
+#| eval: true
+#| echo: false
+
+# install knitr package if not installed
+if (!requireNamespace("knitr", quietly = TRUE)) {
+  install.packages("knitr")
+}
+
+# set working directory 
+knitr::opts_knit$set(root.dir =  "..")
+
+```
+
+
 # Introduction
 
 This document provides scripts for all figures included in the manuscript entitled "*Understanding cultural evolution in hummingbird leks through the fossilized birth-death process*" by Araya-Salas et al. (2023). Figures are plotted in the order they appear in the manuscript. Panels are plotted separately in some cases and arranged as a multipanel figures in others. Multipanel assembly, insertion of photos and illustrations, and minor esthetic changes were made in [Inkscape](https://inkscape.org/) v. 0.91. 
@@ -23,11 +38,14 @@ require(viridis)
 require(tidyr)
 require(kableExtra)
 require(coda)
+require(treeio)
+require(ggtree)
+require(gridExtra)
 ```
 # Figure 1 - panel d historical sampling
 
 ```{r fig1d}
-fs <- read.csv("../data/processed/fossil_series.csv", header = T, sep = ",")
+fs <- read.csv("./data/processed/fossil_series.csv", header = T, sep = ",")
 
 pal <- viridis(10)
 
@@ -42,21 +60,67 @@ ggplot(fs, aes(Year, Lek)) +
   theme(legend.position = "none") +
   labs(title = "d)")  + theme(plot.title = element_text(face = "bold")) +
   theme(plot.title.position = "plot")
+
+fig_cols <- viridis::mako(3, begin = 0.2, end = 0.8, direction = -1)
+
 ```
+
 # Figure 2: MAP trees
 
-Forthcoming!
+```{r, warning=FALSE}
+
+tree_list <-
+    list.files("./data/processed/map_trees", full.names = TRUE)
+
+tree_data_list <- lapply(tree_list, read.beast)
+
+names(tree_data_list) <- substr(basename(tree_list), 1, 3)
+
+tips <- sapply(tree_data_list, Ntip)
+
+tree_data_list <- tree_data_list[order(tips)]
+
+phylos <- lapply(seq_along(tree_data_list), function(i) {
+    tree <- tree_data_list[[i]]
+    ggtree(tree, mrsd = "2016-01-01", color = "black", lwd = 1.3, layout = "roundrect") +
+  # geom_nodelab(size = 4, nudge_y = 0.4) +
+  # geom_tiplab(size = 4) +
+  geom_tippoint(aes(colour = posterior), size = 2, show.legend = F) +
+  geom_nodepoint(aes(colour = posterior), size = 2, show.legend = if (i == 5) TRUE else FALSE) +
+  scale_color_viridis() +
+  labs(title = names(tree_data_list)[i], color = "Posterior\nprobability") +
+  theme_tree2() +
+            theme(
+    plot.title = element_text(color = "black", size = 30) 
+  )
+})  
+
+
+# make layout matrix
+P_all <- grid.arrange(
+  grobs = phylos,
+  layout_matrix = rbind(c(1, 1, 1, 2, 2, 2, 3, 3, 3),
+                        c(1, 1, 1, 2, 2, 2, 3, 3, 3),
+                        c(4, 4, 4, 4, 5, 5, 5, 5, 5),
+                        c(4, 4, 4, 4, 5, 5, 5, 5, 5),
+                        c(4, 4, 4, 4, 5, 5, 5, 5, 5))
+)
+
+
+cowplot::save_plot("./Figures/map_trees.jpeg", P_all, base_height = 10, base_width = 20, dpi = 300)
+```
+
 
 # Figure 3: Relative fit of clock models
 
 Read first three ML reps
 ```{r read-ml-data}
 # Read model names
-m <- read.table(file = "../output/stdout/dataset.txt", header = F)
+m <- read.table(file = "./output/stdout/dataset.txt", header = F)
 # Read three replicates of ML estimates under the stepping stone algorithm
-ss.r1 <- read.table(file = "../output/stdout/SteppingStone.txt", header = F, sep = ",")
-ss.r2 <- read.table(file = "../output/stdout/SteppingStoneR2.txt", header = F, sep = ",")
-ss.r3 <- read.table(file = "../output/stdout/SteppingStoneR3.txt", header = F, sep = ",")
+ss.r1 <- read.table(file = "./output/stdout/SteppingStone.txt", header = F, sep = ",")
+ss.r2 <- read.table(file = "./output/stdout/SteppingStoneR2.txt", header = F, sep = ",")
+ss.r3 <- read.table(file = "./output/stdout/SteppingStoneR3.txt", header = F, sep = ",")
 
 # missing models to NA and failed estimations to "Repeat"
 n = 3 # currently three replicates
@@ -96,9 +160,9 @@ for(i in 1:n) {
 
 Read in repeats of failed approximations
 ```{r read-ml-repeats, warning=FALSE}
-m.rep<- read.table(file = "../output/stdout/datasetRepeats.txt", header = F)
+m.rep<- read.table(file = "./output/stdout/datasetRepeats.txt", header = F)
 
-ss.rep <- read.table(file = "../output/stdout/SteppingStoneRepeat.txt", header = F, sep = ",")
+ss.rep <- read.table(file = "./output/stdout/SteppingStoneRepeat.txt", header = F, sep = ",")
 
 m.ml.rep <-cbind(m.rep, ss.rep)
 colnames(m.ml.rep) <- c("Model", "ss")
@@ -204,7 +268,7 @@ ML.plot <-
   labs(y = "Differencce in marginal likelihood \nbetween clock models (relaxed - global)", colour = "Alignment", x = "Historical records per song") +
   #scale_shape_discrete(guide = "none") +
   scale_colour_manual(
-    values = viridis(3, direction = -1),
+    values = fig_cols,
     labels = c("MAFFT-agnostic", "MAFFT-optimal", "PRANK")
   ) +
   scale_x_discrete(labels = c("all", "earliest"))
@@ -221,7 +285,7 @@ ggtree::ggsave(filename = "./Figures/Fig3_V1.png", plot = ML.plot, device = "png
 
 Read P3 results
 ```{r process-p3-results}
-p3_output_files <- list.files(path = "../output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
+p3_output_files <- list.files(path = "./output/P3_Results/", recursive = TRUE, pattern = "effectsizes", full.names = TRUE)
 
 p3_results_l <- lapply(p3_output_files, function(x){
   
@@ -233,29 +297,27 @@ p3_results_l <- lapply(p3_output_files, function(x){
 
 p3_results <- do.call(rbind, p3_results_l)
 
+p3_results$model <- gsub("/results_", "", p3_results$model)
 
-p3_results$Lek <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][2], USE.NAMES = FALSE)
+p3_results$Lek <- sapply(strsplit(p3_results$model, "_"), "[[", 1)
 p3_results$Lek <- factor(p3_results$Lek, levels = c("BR1", "TR1", "CCE", "HC1", "SUR"))
 
-p3_results$Align <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][3], USE.NAMES = FALSE)
-p3_results$Align <- factor(p3_results$Align, levels = c("all.equal", "optimal", "prank"))
+p3_results$Align <- sapply(strsplit(p3_results$model, "_"), "[[", 2)
+p3_results$Align <- factor(p3_results$Align, levels = c("all.equal", "optimal", "prank"), labels = c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93"))
 Align.labs <- c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93")
 names(Align.labs) <- c("all.equal", "optimal", "prank")
 
-p3_results$Sampling <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][5], USE.NAMES = FALSE)
+p3_results$Sampling <- sapply(strsplit(p3_results$model, "_"), "[[", 4)
 p3_results$Sampling[p3_results$Sampling == "full.process"] <- "none"
 p3_results$Sampling <- factor(p3_results$Sampling, levels = c("all", "early", "none"))
 Sampling.labs <- c("all", "earliest", "none")
 names(Sampling.labs) <- c("all", "early", "none") 
 
-p3_results$Record <- sapply(p3_results$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][4], USE.NAMES = FALSE)
-p3_results$Record <- factor(p3_results$Record, levels= c("old", "new", "no.fossils"))
+p3_results$Record <- sapply(strsplit(p3_results$model, "_"), "[[", 3)
+p3_results$Record <- factor(p3_results$Record, levels= c("old", "new", "no.fossils"), labels = c("Old gapped",  "Recent complete", "None"))
 Record.labs <- c("Old gapped record",  "Recent complete record", "No historical record")
 names(Record.labs) <- c( "old", "new", "no.fossils")
+
 ```
 
 Plot posterior predictive effect sizes
@@ -276,7 +338,7 @@ ggs <- lapply(unique(p3_results$Statistic), function(x){
     labs(y = "Effect size", colour = "Alignment", x = "Sampling of historical songs") +
     scale_shape_discrete(guide = "none") +
     scale_colour_manual(
-      values = viridis(3, direction = -1),
+      values = fig_cols,
       labels = Align.labs
     ) +
     scale_x_discrete(labels = Sampling.labs) + 
@@ -291,6 +353,7 @@ ggs$`Number Invariant Sites`
 
 Plot posterior predictive p values
 ```{r p-value-plots, echo=TRUE}
+
 p3_results$signif <- ifelse(p3_results$Two.tailed < 0.05, " < 0.05", " >= 0.05")
 p3_results$Two.tailed.adj <- ifelse(p3_results$Two.tailed > 1, 1, p3_results$Two.tailed)
 p3_results$signif <- factor(p3_results$signif, levels = c(" >= 0.05", " < 0.05"))
@@ -313,11 +376,10 @@ ggplot(data = p3_results[p3_results$Statistic == x, ], aes(
              labeller = labeller(Record = Record.labs)) +
   theme_light(base_size = 8) +
   labs(y = "Two-tailed \"p-value\"", colour = "Alignment", fill = "Alignment", x = "Historical records per song", size = "\"P-value\"", alpha = "\"P-value\"") +
-  # scale_shape_discrete(guide = FALSE) +
-  scale_size_manual(values = c(1.5, 4)) + 
+  scale_size_manual(values = c(1.5, 3)) + 
     scale_alpha_manual(values = c(0.7, 0.7)) +
     scale_colour_manual(
-    values = viridis(3, direction = -1),
+    values = fig_cols,
     labels = Align.labs
   ) +
     scale_fill_manual(
@@ -336,7 +398,7 @@ ggs2$`Number Invariant Sites`
 
 Read posterior predictive simulations
 ```{r process-sim-dat}
-p3_empirical_files <- list.files(path = "/home/bwillink/Dropbox/Collaborations/lbh_cultural_evolution_revBayes/output/P3_Results/", recursive = TRUE, pattern = "empirical", full.names = TRUE)
+p3_empirical_files <- list.files(path = "./output/P3_Results/", recursive = TRUE, pattern = "empirical", full.names = TRUE)
 
 p3_empirical_l <- lapply(p3_empirical_files, function(x){
   
@@ -352,7 +414,7 @@ p3_empirical_l <- lapply(p3_empirical_files, function(x){
 
 p3_empirical <- do.call(rbind, p3_empirical_l)
 
-p3_simulated_files <- list.files(path = "../output/P3_Results/", recursive = TRUE, pattern = "simulated", full.names = TRUE)
+p3_simulated_files <- list.files(path = "./output/P3_Results/", recursive = TRUE, pattern = "simulated", full.names = TRUE)
 
 p3_simulated_l <- lapply(p3_simulated_files, function(x){
   
@@ -381,55 +443,82 @@ p3_simulated <- pivot_longer(p3_simulated, cols = c(1:16), names_to = "Statistic
 
 p3_simulated <- pivot_wider(p3_simulated, names_from = "stat", values_from = "value")
 
-p3_simulated$Lek <- sapply(p3_simulated$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][1], USE.NAMES = FALSE)
+p3_simulated$Lek <- sapply(strsplit(p3_simulated$model, "_"), "[[", 1)
 p3_simulated$Lek <- factor(p3_simulated$Lek, levels = c("BR1", "TR1", "CCE", "HC1", "SUR"))
 
-p3_simulated$Align <- sapply(p3_simulated$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][2], USE.NAMES = FALSE)
-p3_simulated$Align <- factor(p3_simulated$Align, levels = c("all.equal", "optimal", "prank"))
-Align.labs <- c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93")
-names(Align.labs) <- c("all.equal", "optimal", "prank")
+p3_simulated$Align <- sapply(strsplit(p3_simulated$model, "_"), "[[", 2)
+p3_simulated$Align <- factor(p3_simulated$Align, levels = c("all.equal", "optimal", "prank"), labels = c("MAFFT-agnostic", "MAFFT-optimal", "PRANK-TN93"))
 
-p3_simulated$Sampling <- sapply(p3_simulated$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][4], USE.NAMES = FALSE)
+p3_simulated$Sampling <- sapply(strsplit(p3_simulated$model, "_"), "[[", 4)
 p3_simulated$Sampling[p3_simulated$Sampling == "full.process"] <- "none"
 p3_simulated$Sampling <- factor(p3_simulated$Sampling, levels = c("all", "early", "none"))
 Sampling.labs <- c("all", "earliest", "none")
 names(Sampling.labs) <- c("all", "early", "none") 
 
-p3_simulated$Record <- sapply(p3_simulated$model, function(x)
-  strsplit(x, "_", fixed = TRUE, "[[", 1)[[1]][3], USE.NAMES = FALSE)
-p3_simulated$Record <- factor(p3_simulated$Record, levels= c("old", "new", "no.fossils"))
+p3_simulated$Record <- sapply(strsplit(p3_simulated$model, "_"), "[[", 3)
+p3_simulated$Record <- factor(p3_simulated$Record, levels= c("old", "new", "no.fossils"), labels = c("Old gapped",  "Recent complete", "None"))
+
 Record.labs <- c("Old gapped record",  "Recent complete record", "No historical record")
 names(Record.labs) <- c( "old", "new", "no.fossils")
+
 ```
 
 Plot simulated vs empirical data
 ```{r plot-sim-data, warning=FALSE}
-ggs3 <- lapply(unique(p3_simulated$Statistic), function(x){
-ggplot(data = p3_simulated[p3_simulated$Statistic == x, ], aes(
-    x = Sampling,
-    y = mean,
-    colour = Align,
-    fill = Align, 
-    shape = data
-  )) +
-  geom_pointrange(aes(ymin = lower, ymax = upper), alpha = 0.7, position = position_dodge(width = 0.5)) +
-  facet_grid(Record ~ Lek,
-             scales = "fixed",
-             labeller = labeller(Record = Record.labs)) +
-  theme_light(base_size = 8) +
-  labs(y = gsub("\\.", " ", x) , colour = "Alignment", fill = "Alignment", x = "Historical records per song")+
-  scale_shape_manual(values = c ("triangle", "circle" ), name = "Data") +
-    scale_colour_manual(
-    values = viridis(3, direction = -1),
-    labels = Align.labs
+
+ggs3 <- lapply(unique(p3_simulated$Statistic), function(x) {
+  ggplot(
+    data = p3_simulated[p3_simulated$Statistic == x, ],
+    aes(
+      x = Sampling,
+      y = mean,
+      colour = Align,
+      fill = Align,
+      shape = data
+    )
   ) +
+    geom_pointrange(
+      aes(ymin = lower, ymax = upper),
+      alpha = 0.7,
+      position = position_dodge(width = 0.5)
+    ) +
+    facet_grid(
+      Record ~ Lek,
+      scales = "fixed",
+      labeller = labeller(Record = Record.labs)
+    ) +
+    theme_light(base_size = 8) +
+    labs(
+      y = gsub("\\.", " ", x),
+      colour = "Alignment",
+      fill = "Alignment",
+      x = "Historical records per song"
+    ) +
+    scale_shape_manual(
+      values = c("triangle", "circle"),
+      name = "Data",
+      guide = guide_legend(
+        override.aes = list(
+          linetype = c(0, 1),
+          size = c(0.8, 0.8),
+          shape = c("triangle", "circle"),
+          color = "black"
+        )
+      )
+    ) +
+    scale_colour_manual(
+      values = fig_cols,
+      labels = Align.labs,
+       guide = guide_legend(
+        override.aes = list(
+            linetype = c(0, 0, 0),
+            size = c(1, 1, 1),
+          shape = c("circle", "circle", "circle")
+          ))) +
     scale_fill_manual(
-    values = viridis(3, direction = -1), #guide = FALSE,
-    labels = Align.labs
-  ) 
+      values = viridis(3, direction = -1), guide = FALSE,
+      labels = Align.labs
+    )
 })
 
 names(ggs3) <- unique(p3_simulated$Statistic)
@@ -440,6 +529,7 @@ ggs3$Number.Invariant.Sites
 
 Export main text figures 4-6 
 ```{r plot-main-sim, warning=FALSE, eval=TRUE}
+
 figs <- list(ggs3$Number.Invariant.Sites, ggs3$Tajima.Pi, ggs3$Max.Pairwise.Difference)
 
 for (i in 1:length(figs)) {
@@ -492,7 +582,7 @@ for (i in 1:length(sfigs)) {
 Prepare factor levels
 ```{r prep-factors, warning=FALSE}
 # directory of output files
-out_fp <- "../output/most_recent_revbayes_models/"
+out_fp <- "./output/most_recent_revbayes_models/"
 
 # all the different factors and their levels
 lek <- c("BR1", "CCE", "HC1", "SUR", "TR1")
@@ -580,8 +670,8 @@ plot_dat$par_s = factor(plot_dat$par, levels = new_pars)
 plot_dat$record = factor(plot_dat$record, levels = c("old", "new", "no.fossils"))
 
 p_div_h_record_prank <- ggplot(data = plot_dat, aes(x = value, fill = record)) + 
-  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6, size =0.05) +
-  facet_grid(rows = vars(lek), cols = vars(par_s), scales = "free") + 
+  geom_histogram(position = "identity", bins = 50, colour = "white", alpha = 0.6) +
+    facet_grid(lek ~ par_s, scales = "free") + 
   theme_light(base_size = 8) + 
   scale_fill_manual(values = record_cols, labels = record_labs) +
   labs(x = "Parameter value", y = "Posterior frequency", fill = "Fossil record")
@@ -672,6 +762,7 @@ p_div_h_record_optimal <- ggplot(data = plot_dat, aes(x = value, fill = record))
 
 p_div_h_record_optimal
 ```
+
 Read data from MAFFT-agnostic alignment
 ```{r read-agnostic-dat}
 file.ls <- list.files(path=out_fp,pattern=paste0(glob2rx("*all.equal*all*Uexp_*"),"[0-9]{6}.log","|",glob2rx("*all.equal*full.process*Uexp_*"),"[0-9]{6}.log"))
@@ -1011,3 +1102,28 @@ for (i in 1:length(sfigs)) {
         )
 }
 ```
+
+
+<!-- '---' adds a gray vertical line -->
+
+------------------------------------------------------------------------
+
+ 
+
+<!-- add packages used, system details and versions  -->
+
+::: {.callout-note collapse="true"}
+## Session information {.unnumbered .unlisted}
+
+```{r session info}
+#| echo: false
+
+# if devtools is installed use devtools::session_info()
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info()
+} else {
+  sessionInfo()
+}
+
+```
+:::

@@ -1,0 +1,34 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=23;
+	Taxlabels
+		BR1-A1-2011
+		BR1-A1-2012
+		BR1-A1-2013
+		BR1-A1-2014
+		BR1-A2-2014
+		BR1-C1-2011
+		BR1-C1-2012
+		BR1-C1-2013
+		BR1-C1-2014
+		BR1-C2-2014
+		BR1-D1-2011
+		BR1-D1-2012
+		BR1-D1-2013
+		BR1-D2-2013
+		BR1-D2-2014
+		BR1-D3-2013
+		BR1-D4-2013
+		BR1-E1-2012
+		BR1-E1-2013
+		BR1-E1-2014
+		BR1-E2-2014
+		BR1-E3-2014
+		BR1-F1-2014
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R]((((((BR1-E3-2014[&index=8]:1.000001)BR1-D4-2013[&index=24,posterior=0.662224,age_95%_HPD={1,1},sampled_ancestor=0.667638]:0.952879,BR1-D3-2013[&index=10,sampled_ancestor=0.001249,age_95%_HPD={1,1}]:0.952879)[&index=25,posterior=0.666805,age_95%_HPD={1.14038,2.98425}]:0.580119,(BR1-D2-2014[&index=7]:1.000001)BR1-D2-2013[&index=26,posterior=0.669304,age_95%_HPD={1,1},sampled_ancestor=0.670137]:1.532999)[&index=27,posterior=0.702207,age_95%_HPD={1.38813,3.78678}]:1.177391,((BR1-D1-2013[&index=4,sampled_ancestor=0.014161,age_95%_HPD={1,1}]:1.000000)BR1-D1-2012[&index=28,posterior=0.459808,age_95%_HPD={2,2},sampled_ancestor=0.558934]:1.305257,BR1-D1-2011[&index=2,sampled_ancestor=0.791337,age_95%_HPD={3,3}]:0.305257)[&index=29,posterior=0.152436,age_95%_HPD={3.00038,3.93378}]:0.405133)[&index=30,posterior=0.244481,age_95%_HPD={3.00031,4.99891}]:0.728501,(((BR1-E1-2014[&index=17]:1.000001)BR1-E1-2013[&index=31,posterior=0.426072,age_95%_HPD={1,1},sampled_ancestor=0.532695]:1.901951,(BR1-E2-2014[&index=1]:2.000001)BR1-E1-2012[&index=32,posterior=0.003332,age_95%_HPD={2,2},sampled_ancestor=0.813828]:0.901950)[&index=33,posterior=0.009996,age_95%_HPD={2.00892,4.14652}]:1.255962,(BR1-A2-2014[&index=16]:2.133432,BR1-F1-2014[&index=5]:2.133432)[&index=34,posterior=0.015827,age_95%_HPD={0.904715,3.63994}]:2.024481)[&index=35,posterior=0.067472,age_95%_HPD={2.00789,6.50501}]:0.280978)[&index=36,posterior=0.024573,age_95%_HPD={3.02505,5.74724}]:1.854488,((((BR1-A1-2013[&index=12,sampled_ancestor=0.454394,age_95%_HPD={1,1}]:0.398071,BR1-A1-2014[&index=13]:1.398071)[&index=37,posterior=0.297376,age_95%_HPD={1.00083,2.02894}]:0.601929)BR1-A1-2012[&index=38,posterior=0.404831,age_95%_HPD={2,2},sampled_ancestor=0.622657]:1.334467,BR1-A1-2011[&index=11,sampled_ancestor=0.786756,age_95%_HPD={3,3}]:0.334467)[&index=39,posterior=0.267389,age_95%_HPD={3.00007,4.066}]:1.071015,(((BR1-C1-2013[&index=23,sampled_ancestor=0.521866,age_95%_HPD={1,1}]:1.000000)BR1-C1-2012[&index=40,posterior=0.044148,age_95%_HPD={2,2},sampled_ancestor=0.649729]:0.413457,(BR1-C1-2014[&index=22]:0.461261,BR1-C2-2014[&index=21]:0.461261)[&index=41,posterior=0.571429,age_95%_HPD={0.003089,1.21866}]:1.952196)[&index=42,posterior=0.386506,age_95%_HPD={2.00158,2.95748}]:0.586543)BR1-C1-2011[&index=43,posterior=0.547272,age_95%_HPD={3,3},sampled_ancestor=0.812578]:1.405482)[&index=44,posterior=0.042899,age_95%_HPD={3.44052,5.42052}]:1.887897)[&index=45,posterior=1.000000,age_95%_HPD={4.10774,9.25365}]:0.000000;
+End;

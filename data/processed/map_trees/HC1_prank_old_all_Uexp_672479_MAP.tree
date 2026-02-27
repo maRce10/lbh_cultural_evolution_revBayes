@@ -1,0 +1,42 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=31;
+	Taxlabels
+		HC1-A1-1991
+		HC1-A2-1997
+		HC1-C1-1991
+		HC1-C2-1991
+		HC1-C3-1997
+		HC1-C4-2011
+		HC1-C4-2012
+		HC1-C4-2013
+		HC1-D1-1991
+		HC1-E1-1992
+		HC1-F1-1992
+		HC1-F2-1992
+		HC1-F2-1993
+		HC1-F2-1994
+		HC1-F2-1995
+		HC1-F2-1996
+		HC1-F2-1997
+		HC1-F3-1997
+		HC1-G1-1997
+		HC1-H1-1997
+		HC1-I1-1997
+		HC1-J1-1997
+		HC1-K1-2011
+		HC1-K1-2012
+		HC1-K1-2013
+		HC1-K2-2011
+		HC1-K2-2012
+		HC1-K2-2013
+		HC1-K3-2011
+		HC1-L1-2011
+		HC1-M1-2011
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R]((((((((HC1-K2-2013[&index=14]:1.000000)HC1-K2-2012[&index=32,posterior=0.398584,age_95%_HPD={1,1},sampled_ancestor=0.398584]:1.000000)HC1-K2-2011[&index=33,posterior=0.573928,age_95%_HPD={2,2},sampled_ancestor=0.719700]:4.567213,(HC1-K3-2011[&index=15,age_95%_HPD={2,2}]:2.377734,HC1-M1-2011[&index=16,age_95%_HPD={2,2}]:2.377734)[&index=34,posterior=0.499792,age_95%_HPD={2.30818,7.10552}]:2.189479)[&index=35,posterior=0.613911,age_95%_HPD={3.25919,10.8968}]:9.432787)HC1-I1-1997[&index=36,posterior=0.069971,age_95%_HPD={16,16},sampled_ancestor=0.531445]:2.661634,(((HC1-C4-2012[&index=18,sampled_ancestor=0.376510,age_95%_HPD={1,1}]:0.477784,HC1-C4-2013[&index=19]:1.477784)[&index=37,posterior=0.397334,age_95%_HPD={1.00087,2.15056}]:1.278450,HC1-C4-2011[&index=17,sampled_ancestor=0.654727,age_95%_HPD={2,2}]:0.756234)[&index=38,posterior=0.512703,age_95%_HPD={2.00038,4.48141}]:14.568288,HC1-F3-1997[&index=20,sampled_ancestor=0.053728,age_95%_HPD={16,16}]:1.324522)[&index=39,posterior=0.042482,age_95%_HPD={16.0499,18.7375}]:1.337112)[&index=40,posterior=0.836318,age_95%_HPD={16.6654,21.6632}]:5.742613,HC1-E1-1992[&index=21,sampled_ancestor=0.051229,age_95%_HPD={21,21}]:3.404247)[&index=41,posterior=0.120367,age_95%_HPD={21.0109,28.5511}]:3.559302,((((HC1-C1-1991[&index=5,sampled_ancestor=0.728030,age_95%_HPD={22,22}]:0.855169,HC1-H1-1997[&index=6,sampled_ancestor=0.000833,age_95%_HPD={16,16}]:6.855169)[&index=42,posterior=0.225739,age_95%_HPD={22.0018,24.4681}]:1.425239,(HC1-C3-1997[&index=3,sampled_ancestor=0.001666,age_95%_HPD={16,16}]:6.000000)HC1-C2-1991[&index=43,posterior=0.748022,age_95%_HPD={22,22},sampled_ancestor=0.772178]:2.280408)[&index=44,posterior=0.602666,age_95%_HPD={22.4595,26.587}]:1.853989,(HC1-A1-1991[&index=22,sampled_ancestor=0.050812,age_95%_HPD={22,22}]:2.656110,HC1-A2-1997[&index=2,sampled_ancestor=0.002082,age_95%_HPD={16,16}]:8.656110)[&index=45,posterior=0.082466,age_95%_HPD={22.5389,26.7237}]:1.478287)[&index=46,posterior=0.090796,age_95%_HPD={23.7438,28.9877}]:1.155296,HC1-D1-1991[&index=1,sampled_ancestor=0.012078,age_95%_HPD={22,22}]:5.289693)[&index=47,posterior=0.325698,age_95%_HPD={23.9228,31.2835}]:0.673856)[&index=48,posterior=0.059142,age_95%_HPD={24.8685,31.9838}]:2.199278,((((((HC1-K1-2013[&index=9]:2.000000)HC1-K1-2011[&index=49,posterior=0.088713,age_95%_HPD={2,2},sampled_ancestor=0.673886]:0.594479,HC1-K1-2012[&index=10,sampled_ancestor=0.376510,age_95%_HPD={1,1}]:1.594479)[&index=50,posterior=0.473553,age_95%_HPD={2.00015,3.94984}]:2.912117,HC1-L1-2011[&index=11,age_95%_HPD={2,2}]:3.506596)[&index=51,posterior=0.969180,age_95%_HPD={2.2072,10.5146}]:16.082281,HC1-F1-1992[&index=31,sampled_ancestor=0.413161,age_95%_HPD={21,21}]:0.588877)[&index=52,posterior=0.051229,age_95%_HPD={21.0016,22.5778}]:0.691433,((HC1-F2-1995[&index=28,sampled_ancestor=0.507289,age_95%_HPD={18,18}]:1.000000)HC1-F2-1994[&index=53,posterior=0.044565,age_95%_HPD={19,19},sampled_ancestor=0.602249]:0.603453,(HC1-F2-1997[&index=26,sampled_ancestor=0.103290,age_95%_HPD={16,16}]:1.000000)HC1-F2-1996[&index=54,posterior=0.209913,age_95%_HPD={17,17},sampled_ancestor=0.367347]:2.603453)[&index=55,posterior=0.066222,age_95%_HPD={19.0014,20.6843}]:2.676857)[&index=56,posterior=0.002915,age_95%_HPD={21.215,24.0382}]:0.246618,(((HC1-G1-1997[&index=25,sampled_ancestor=0.003748,age_95%_HPD={16,16}]:2.056562,HC1-J1-1997[&index=30,sampled_ancestor=0.004165,age_95%_HPD={16,16}]:2.056562)[&index=57,posterior=0.456060,age_95%_HPD={16.4374,19.9912}]:2.458640,HC1-F2-1993[&index=24,sampled_ancestor=0.674719,age_95%_HPD={20,20}]:0.515203)[&index=58,posterior=0.012911,age_95%_HPD={20.0171,21.1648}]:0.703572,HC1-F2-1992[&index=23,sampled_ancestor=0.788838,age_95%_HPD={21,21}]:0.218775)[&index=59,posterior=0.004581,age_95%_HPD={21.0162,21.3526}]:1.308153)[&index=60,posterior=0.634736,age_95%_HPD={21.0776,24.9431}]:7.635899)[&index=61,posterior=1.000000,age_95%_HPD={25.0258,36.3166}]:0.000000;
+End;

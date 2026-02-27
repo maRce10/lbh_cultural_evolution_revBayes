@@ -1,0 +1,62 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=51;
+	Taxlabels
+		CCE-A1-1969
+		CCE-A1-1970
+		CCE-A1-1971
+		CCE-C1-1969
+		CCE-C1-1970
+		CCE-C1-1971
+		CCE-C2-1970
+		CCE-C3-1971
+		CCE-D1-1969
+		CCE-D1-1970
+		CCE-D1-1971
+		CCE-E1-1970
+		CCE-E1-1971
+		CCE-F1-1982
+		CCE-F1-1983
+		CCE-F1-1984
+		CCE-F1-1985
+		CCE-F1-1986
+		CCE-F1-1987
+		CCE-F1-1988
+		CCE-F1-1989
+		CCE-F2-1982
+		CCE-F3-1989
+		CCE-F4-1989
+		CCE-F5-1989
+		CCE-G1-1989
+		CCE-H1-2008
+		CCE-H1-2009
+		CCE-I1-2008
+		CCE-I1-2009
+		CCE-I1-2010
+		CCE-I1-2011
+		CCE-I1-2012
+		CCE-I1-2013
+		CCE-I1-2014
+		CCE-I2-2008
+		CCE-I2-2009
+		CCE-I2-2010
+		CCE-I2-2011
+		CCE-I2-2012
+		CCE-I2-2013
+		CCE-I2-2014
+		CCE-I3-2011
+		CCE-I4-2018
+		CCE-I5-2018
+		CCE-J1-2011
+		CCE-J1-2012
+		CCE-J1-2013
+		CCE-J1-2014
+		CCE-J2-2014
+		CCE-K1-2011
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R](((((((((CCE-I1-2012[&index=11,sampled_ancestor=0.306811,age_95%_HPD={6,6}]:1.000000)CCE-I1-2011[&index=52,posterior=0.039783,age_95%_HPD={7,7},sampled_ancestor=0.379088]:0.629467,CCE-J1-2013[&index=23,sampled_ancestor=0.164341,age_95%_HPD={5,5}]:2.629468)[&index=53,posterior=0.004999,age_95%_HPD={7.02432,8.24592}]:1.770458,(CCE-I1-2010[&index=15,sampled_ancestor=0.452406,age_95%_HPD={8,8}]:0.863774,CCE-I1-2013[&index=10,sampled_ancestor=0.213497,age_95%_HPD={5,5}]:3.863774)[&index=54,posterior=0.016038,age_95%_HPD={8.01376,10.2683}]:0.536151)[&index=55,posterior=0.000833,age_95%_HPD={9.32331,10.4987}]:1.405062,(((CCE-J1-2011[&index=27,sampled_ancestor=0.421579,age_95%_HPD={7,7}]:0.868239,CCE-J1-2014[&index=21,age_95%_HPD={4,4}]:3.868239)[&index=56,posterior=0.025203,age_95%_HPD={7.00153,9.41274}]:1.131761)CCE-I1-2009[&index=57,posterior=0.001458,age_95%_HPD={9,9},sampled_ancestor=0.515934]:1.506183,(CCE-I1-2014[&index=14,sampled_ancestor=0.109144,age_95%_HPD={4,4}]:6.000000)CCE-I1-2008[&index=58,posterior=0.011873,age_95%_HPD={10,10},sampled_ancestor=0.605915]:0.506183)[&index=59,posterior=0.000417,age_95%_HPD={10.9108,10.9108}]:0.298804)[&index=60,posterior=0.003541,age_95%_HPD={10.1124,11.8374}]:1.054362,CCE-J1-2012[&index=22,sampled_ancestor=0.305561,age_95%_HPD={6,6}]:5.859349)[&index=61,posterior=0.383670,age_95%_HPD={10.0022,14.7718}]:7.578129,((((CCE-I2-2013[&index=18,sampled_ancestor=0.214747,age_95%_HPD={5,5}]:3.000000)CCE-I2-2010[&index=62,posterior=0.033951,age_95%_HPD={8,8},sampled_ancestor=0.463029]:1.875518,CCE-I2-2009[&index=25,sampled_ancestor=0.533847,age_95%_HPD={9,9}]:0.875518)[&index=63,posterior=0.003749,age_95%_HPD={9.001,11.3261}]:1.642560,(CCE-I2-2011[&index=26,sampled_ancestor=0.384712,age_95%_HPD={7,7}]:3.000000)CCE-I2-2008[&index=64,posterior=0.021037,age_95%_HPD={10,10},sampled_ancestor=0.605082]:1.518078)[&index=65,posterior=0.001458,age_95%_HPD={10.1529,12.89}]:1.157867,(((CCE-I5-2018[&index=12]:4.000000)CCE-I2-2014[&index=66,posterior=0.063737,age_95%_HPD={4,4},sampled_ancestor=0.096230]:2.000000)CCE-I2-2012[&index=67,posterior=0.012497,age_95%_HPD={6,6},sampled_ancestor=0.307019]:1.745557,(CCE-I4-2018[&index=13]:5.757308,CCE-J2-2014[&index=28,sampled_ancestor=0.117684,age_95%_HPD={4,4}]:1.757307)[&index=68,posterior=0.079150,age_95%_HPD={4.00025,8.54984}]:1.988249)[&index=69,posterior=0.005624,age_95%_HPD={6.33196,9.14889}]:4.930388)[&index=70,posterior=0.419288,age_95%_HPD={10.0003,17.0136}]:6.761533)[&index=71,posterior=0.817121,age_95%_HPD={13.0043,26.9445}]:20.515345,(CCE-F5-1989[&index=7,sampled_ancestor=0.334722,age_95%_HPD={29,29}]:7.000000)CCE-F2-1982[&index=72,posterior=0.022912,age_95%_HPD={36,36},sampled_ancestor=0.266819]:3.952822)[&index=73,posterior=0.624245,age_95%_HPD={36.0016,45.9597}]:12.674105,((((CCE-C1-1970[&index=4,sampled_ancestor=0.255988,age_95%_HPD={48,48}]:0.543914,CCE-D1-1970[&index=1,sampled_ancestor=0.296813,age_95%_HPD={48,48}]:0.543914)[&index=74,posterior=0.071652,age_95%_HPD={48.0012,49.3938}]:0.200507,CCE-C1-1971[&index=5,sampled_ancestor=0.091023,age_95%_HPD={47,47}]:1.744421)[&index=75,posterior=0.052281,age_95%_HPD={48.0003,49.7248}]:0.766808,CCE-D1-1969[&index=3,sampled_ancestor=0.529265,age_95%_HPD={49,49}]:0.511229)[&index=76,posterior=0.012706,age_95%_HPD={49.0181,50.3005}]:0.810047,(CCE-C1-1969[&index=6,sampled_ancestor=0.479900,age_95%_HPD={49,49}]:0.425492,CCE-D1-1971[&index=2,sampled_ancestor=0.059571,age_95%_HPD={47,47}]:2.425492)[&index=77,posterior=0.014164,age_95%_HPD={49.0115,50.1788}]:0.895785)[&index=78,posterior=0.541970,age_95%_HPD={49.0011,52.3709}]:2.305650)[&index=79,posterior=0.670277,age_95%_HPD={49.0107,57.6459}]:10.903647,(((((((CCE-F1-1987[&index=32,sampled_ancestor=0.305561,age_95%_HPD={31,31}]:1.056017,CCE-F1-1989[&index=40,sampled_ancestor=0.235993,age_95%_HPD={29,29}]:3.056017)[&index=80,posterior=0.050823,age_95%_HPD={31.0077,34.1923}]:2.943983)CCE-F1-1983[&index=81,posterior=0.004791,age_95%_HPD={35,35},sampled_ancestor=0.516351]:1.560125,((CCE-H1-2009[&index=35,sampled_ancestor=0.151843,age_95%_HPD={9,9}]:1.000000)CCE-H1-2008[&index=82,posterior=0.273276,age_95%_HPD={10,10},sampled_ancestor=0.478650]:11.240343,CCE-K1-2011[&index=36,age_95%_HPD={7,7}]:14.240343)[&index=83,posterior=0.207457,age_95%_HPD={12.8059,29.3291}]:15.319783)[&index=84,posterior=0.000833,age_95%_HPD={36.3297,37.1511}]:-0.628254,CCE-F1-1988[&index=33,sampled_ancestor=0.261404,age_95%_HPD={30,30}]:5.931871)[&index=85,posterior=0.001041,age_95%_HPD={35.0025,36.3894}]:2.086529,((CCE-F1-1984[&index=37,sampled_ancestor=0.455114,age_95%_HPD={34,34}]:0.795071,CCE-F1-1985[&index=38,sampled_ancestor=0.406165,age_95%_HPD={33,33}]:1.795071)[&index=86,posterior=0.035201,age_95%_HPD={34.0004,36.1668}]:1.946477,(CCE-F1-1986[&index=41,sampled_ancestor=0.356592,age_95%_HPD={32,32}]:4.000000)CCE-F1-1982[&index=87,posterior=0.016663,age_95%_HPD={36,36},sampled_ancestor=0.625286]:0.741548)[&index=88,posterior=0.002083,age_95%_HPD={36.2649,36.916}]:1.276853)[&index=89,posterior=0.334097,age_95%_HPD={36.0001,41.0363}]:11.543061,(CCE-E1-1971[&index=30,sampled_ancestor=0.248490,age_95%_HPD={47,47}]:1.000000)CCE-E1-1970[&index=90,posterior=0.166424,age_95%_HPD={48,48},sampled_ancestor=0.545511]:1.561462)[&index=91,posterior=0.235576,age_95%_HPD={48.001,52.782}]:8.950186,((((CCE-A1-1971[&index=43,sampled_ancestor=0.037492,age_95%_HPD={47,47}]:1.000000)CCE-A1-1970[&index=92,posterior=0.237451,age_95%_HPD={48,48},sampled_ancestor=0.295147]:1.000000)CCE-A1-1969[&index=93,posterior=0.257238,age_95%_HPD={49,49},sampled_ancestor=0.561550]:3.693937,(CCE-F3-1989[&index=47,sampled_ancestor=0.019163,age_95%_HPD={29,29}]:7.965268,CCE-G1-1989[&index=48,sampled_ancestor=0.123724,age_95%_HPD={29,29}]:7.965268)[&index=94,posterior=0.561550,age_95%_HPD={30.8484,44.4586}]:15.728669)[&index=95,posterior=0.196417,age_95%_HPD={49.0122,57.4745}]:4.010496,((CCE-C3-1971[&index=46,sampled_ancestor=0.468027,age_95%_HPD={47,47}]:1.000000)CCE-C2-1970[&index=96,posterior=0.006249,age_95%_HPD={48,48},sampled_ancestor=0.237659]:3.545532,(CCE-I3-2011[&index=49,age_95%_HPD={7,7}]:22.000000)CCE-F4-1989[&index=97,posterior=0.063737,age_95%_HPD={29,29},sampled_ancestor=0.074984]:22.545531)[&index=98,posterior=0.118100,age_95%_HPD={48.0487,55.6485}]:5.158901)[&index=99,posterior=0.034368,age_95%_HPD={51.1288,62.2539}]:1.807215)[&index=100,posterior=0.358259,age_95%_HPD={52.8173,64.3704}]:5.018926)[&index=101,posterior=1.000000,age_95%_HPD={56.2041,71.5233}]:0.000000;
+End;
