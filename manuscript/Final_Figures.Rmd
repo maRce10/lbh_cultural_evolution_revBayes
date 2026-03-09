@@ -10,6 +10,8 @@ output:
     toc: true
     toc_float: true
     toc_depth: 3
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r set root directory}
@@ -41,31 +43,413 @@ require(coda)
 require(treeio)
 require(ggtree)
 require(gridExtra)
+require(cowplot)
+require(warbleR)
+require(sf)
+require(maptiles)
+require(rnaturalearth)
+require(ggspatial)
+require(patchwork)
+require(magick)
+
+fig_cols <- viridis::mako(3, begin = 0.2, end = 0.8, direction = -1)
 ```
-# Figure 1 - panel d historical sampling
+
+
+# Figure 1: historical sampling + map + bird picture
+
+## Historical sampling pannel
 
 ```{r fig1d}
 fs <- read.csv("./data/processed/fossil_series.csv", header = T, sep = ",")
 
-pal <- viridis(10)
+pal <- mako(10)
 
-ggplot(fs, aes(Year, Lek)) +
+historic_gg <- ggplot(fs, aes(Year, Lek)) +
   geom_tile(colour = NA, aes(fill = Sampled)) +
   scale_fill_gradient(low = "white",
                       high = pal[5],
                       breaks = seq(0, 1, 1)) +
-  theme_bw(base_size = 8) +
+  theme_classic(base_size = 10) +
   theme(panel.grid.major.x = element_blank()) +
   theme(panel.grid.major.y  = element_blank()) +
   theme(legend.position = "none") +
-  labs(title = "d)")  + theme(plot.title = element_text(face = "bold")) +
+  theme(plot.title = element_text(face = "bold")) +
   theme(plot.title.position = "plot")
 
-fig_cols <- viridis::mako(3, begin = 0.2, end = 0.8, direction = -1)
+historic_gg
+```
+
+## Map pannel
+
+```{r}
+# Get Costa Rica boundary
+cr <- ne_countries(
+  country = "Costa Rica",
+  scale = "medium",
+  returnclass = "sf"
+)
+
+# Your point in UTM (Zone 16N likely for Costa Rica)
+point_utm <- st_as_sf(
+  data.frame(x = 827522.5, y = 1154674.9),
+  coords = c("x", "y"),
+  crs = 32616
+)
+
+# Transform point to WGS84
+point_wgs <- st_transform(point_utm, 4326)
+
+coors <- data.frame(
+  site = c(
+    "\nTirimbina (TR1)                            ",
+    "                    La Selva (CCE, SUR)",
+    "Las Brisas (BR1)",
+    "Hitoy Cerere (HC1)             "
+  ),
+  X = c(816606.7, 827536.0, 872224.4, 936731.3),
+  Y = c(1151905.8, 1154611.2, 1122412.8, 1071719.4)
+)
+
+# Convert to sf (UTM zone 16N)
+sites_utm <- st_as_sf(coors, coords = c("X", "Y"), crs = 32616)
+
+# Transform to WGS84 to match satellite tiles
+sites <- st_transform(sites_utm, 4326)
+
+# Get satellite imagery
+sat <- get_tiles(cr, provider = "Esri.WorldImagery", crop = TRUE, zoom = 9)
+
+# Plot map with point
+p <- ggplot() +
+  layer_spatial(sat) +
+  geom_sf(data = sites, color = viridis::mako(10, alpha = 0.6)[9], size = 2) +
+  geom_sf_text(
+    data = sites,
+    aes(label = site),
+    color = "white",
+    size = 3,
+    nudge_y = 0.15
+  ) +
+  annotation_north_arrow(
+    location = "bl",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering(
+    fill = c("white", "black"),
+    line_col = "gray",
+    text_col = "white"
+  ),
+      pad_y = unit(0.7, "cm")) +
+  coord_sf(expand = FALSE) +
+  labs(x = NULL, y = NULL) +
+    annotation_scale(
+  location = "bl",
+  width_hint = 0.3,
+  text_cex = 0.8,
+  line_width = 0.7,
+   fill = c("white", "gray"),
+    line_col = "gray",
+    text_col = "white"
+) + theme_classic(base_size = 10) +
+    theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)
+)
+
+p
+```
+
+## Bird picture pannel
+```{r}
+# Read image
+img <- image_read("./manuscript/Figures/cropped_lbh.jpeg")
+
+# Convert image to ggplot panel
+img_panel <- ggdraw() +
+  draw_image(img) +
+      scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_void() +
+  theme(plot.margin = margin(0,0,0,0))
+
+img_panel
+```
+
+## Combined multipannel figure
+```{r}
+# Combine panels
+final_fig <- ((img_panel | p) + plot_layout(widths = c(1, 2.5))) /
+              historic_gg +
+              plot_layout(heights = c(1, 0.5)) +
+              plot_annotation(tag_levels = "a")
+
+final_fig
+
+# save figure
+ggsave(
+  "./manuscript/Figures/Fig1_V1.png",
+  final_fig,
+  width = 7,
+  height = 6,
+  dpi = 600
+)
+```
+
+
+
+# Figure 2: Spectrograms of segmented songs
+
+Measure repeatability of segment labels
+
+```{r}
+
+# copied from ~/Dropbox/Projects/LBH cult-evo/Song_segment_analysis/complete_segment_analysis_nov-2019.RDS
+sgmt.est <- as.data.frame(readRDS("./data/processed/complete_segment_analysis_nov-2019.RDS"))
+
+# fix segments
+sgmt.est$segment_type <- gsub("/ft", "-ft", sgmt.est$segment_type,  fixed = TRUE)
+sgmt.est$segment_type <- gsub("\\ft", "-ft", sgmt.est$segment_type,  fixed = TRUE)
+sgmt.est$segment_type <- gsub("/mt", "-mt", sgmt.est$segment_type,  fixed = TRUE)
+sgmt.est$segment_type <- gsub("\\mt", "-mt", sgmt.est$segment_type,  fixed = TRUE)
+sgmt.est$segment_type <- gsub("/mt", "-mt", sgmt.est$segment_type,  fixed = TRUE)
+
+
+new.code <- data.frame(
+  old = c("-st", "-ft", "\\p", "/p", "-p", "-mt"),
+  new = c("s","f", "d", "u", "p", "m"),
+  meaning = c("Slow trill", "Fast trill", "Downward\npure tone", "Upward\npure tone", "Flat\npure tone", "Medium\n-paced trill"), stringsAsFactors = FALSE
+)
+
+new.code <- new.code[match(c("s", "m", "f", "d", "p", "u"), new.code$new),]
+
+sgmt.est$segment_type <- sapply(sgmt.est$segment_type, function(x)
+  new.code$new[new.code$old == x]
+  )
+
+
+sgmt.est$lek.song.type.year <- paste(sgmt.est$lek.song.type, sgmt.est$year, sep = "-")
+
+
+dat <- sgm.est[sgm.est$lek %in% c("BR1", "TR1", "CCE", "HC1", "SUR"), ]
+
+fit <- brm(
+  segment_type ~ 1 + (1|lek.song.type.year) + (1|lek.song.type.year:lek),
+  data = dat,
+  family = categorical(),
+  chains = 1,
+  cores = 1
+)
+
+post <- as.data.frame(fit)
+
+# song type variance
+var_song_f <- post$sd_lek.song.type.year__muf_Intercept^2
+var_song_s <- post$sd_lek.song.type.year__mus_Intercept^2
+
+# lek within song type
+var_lek_f <- post$`sd_lek.song.type.year:lek__muf_Intercept`^2
+var_lek_s <- post$`sd_lek.song.type.year:lek__mus_Intercept`^2
+
+# average across categories
+var_song <- (var_song_f + var_song_s)/2
+var_lek  <- (var_lek_f + var_lek_s)/2
+
+# repeatability per category
+R_f <- var_song_f / (var_song_f + var_lek_f + var_resid)
+R_s <- var_song_s / (var_song_s + var_lek_s + var_resid)
+
+# average repeatability across categories
+R_song <- (R_f + R_s)/2
+
+median(R_song)
+quantile(R_song, c(.025,.975))
+
+
+
+###########
+post <- as.data.frame(fit)
+
+var_song <- post$sd_lek.song.type__Intercept^2
+var_lek  <- post$sd_lek.song.type.lek__Intercept^2
+
+    # measure repeatability
+reapt <- irr::kappa2(sgmt.est[, c("segment_type", "segment_type_2")], weight = "unweighted")
+
+data(anxiety)
+kappa2(anxiety2[,1:2], "squared") # predefined set of squared weights
+kappa2(anxiety[,1:2], (0:5)^2)   # same result with own set of squared weights
+
+
+df <- anxiety2[,1:2]
+
+subject <- rep(1:nrow(df), 2)
+rater   <- rep(c("rater1","rater2"), each = nrow(df))
+score   <- c(df$rater1, df$rater2)
+
+long <- data.frame(subject, rater, score)
+
+library(brms)
+
+fit <- brm(
+  score ~ 1 + (1|subject) + (1|rater),
+  data = long,
+  family = cumulative("logit"),
+  chains = 4,
+  cores = 4
+)
+
+post <- as.data.frame(fit)
+
+var_subject <- post$sd_subject__Intercept^2
+
+R <- var_subject / (var_subject + (pi^2/3))
+
+median(R)
+quantile(R, c(0.025,0.975))
 
 ```
 
-# Figure 2: MAP trees
+
+```{r spectrograms}
+
+# copied from /home/m/Dropbox/Projects/LBH cult-evo/data_for_beti/segments_by_song_type.csv
+sgm_final <- read.csv("./data/processed/segments_by_song_type.csv")
+
+sub.sgmt <- sgmt.est[sgmt.est$lek.song.type %in% sgm_final$song.type, ]
+
+# sub.sgmt <- resample_est_waves(sub.sgmt, samp.rate = 44.1)
+sub.sgmt$segment_type[sub.sgmt$sound.files == "CCL-G1-4"][15] <- "d"
+sub.sgmt$end[sub.sgmt$sound.files == "SUR-J2-1"][20] <- sub.sgmt$end[sub.sgmt$sound.files == "SUR-J2-1"][20] + 0.005
+
+
+wl <- 190
+ovlp <- 99
+collevels <- seq(-40, 0, 5)
+pal <- reverse.gray.colors.2
+
+ #if a matrix, then each row describes a screen with values for the left, right, bottom, and top of the screen (in that order) in NDC units, that is 0 at the lower left corner of the device surface, and 1 at the upper right corner.
+sub.sgmt$segment_type[sub.sgmt$sound.files == "SUR-K1-1"][5:6] <- c("p", "u")
+
+song_type <- c("SUR-K1-1", "CCL-G1-4", "SUR-E2-4", "SUR-J2-1")
+
+# HC1-I1-4 HC1-C4-4 "SUR-D1-2"
+tag_cols <- viridis::mako(6, alpha = 0.8, begin = 0.3)
+
+
+m <- rbind(c(0.02, 0.505, 0.5, 1), # top left
+           c(0.505, 0.9, 0.5, 1), # top right
+           c(0.02, 0.505, 0, 0.5), # bottom left
+           c(0.505, 0.9, 0, 0.5), # bottom right
+           c(0, 0.05, 0, 1), # freq label
+           c(0.9, 1, 0, 1) # legend
+           )
+
+out <- split.screen(figs = m)
+  #testing layout screens
+      # for(i in 1:nrow(m))
+      # {screen(i)
+      #   par( mar = rep(0, 4))
+      #   plot(0.5, xlim = c(0,1), ylim = c(0,1), type = "n", axes = FALSE, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+      #   box()
+      #   text(x = 0.5, y = 0.5, labels = i)
+      # }
+      # close.screen(all.screens = T)
+      # 
+
+for (i in 1:length(song_type))
+{
+
+  screen(i)
+  
+  x_est <- sub.sgmt[which(sub.sgmt$sound.files == song_type[i]), ]
+
+  wv <- read_sound_file(x_est, index = 1, from = 0, to = Inf)
+
+  par(mar = c(if(i %in% c(1, 2)) 0 else 1, 
+            if(i %in% c(2, 4)) 0 else 4.15, 
+            if(i %in% c(1, 2)) 1 else 0, 
+            0))
+
+  warbleR:::spectro_wrblr_int2(wv, wl = wl, ovlp = ovlp, palette = pal, collevels = collevels, flim = c(0.2, 12.5), grid = FALSE, axisX = FALSE, flab = NULL, tlab = NULL, axisY =  FALSE)
+  
+  if(!i %in% c(2, 4)) {
+      
+     axis(2, at = seq(2, 10, 4), labels = seq(2, 10, 4), las = 1, cex.axis = 0.8)
+  }
+  
+  polygon(x = rep(c(min(x_est$start), max(x_est$end)), each = 2), y = c(1.5, 11, 11, 1.5), lty = 3, border = "gray", col = NULL, lwd = 1.5)
+  
+  line_pos <- seq(min(x_est$start), max(x_est$end), length.out = 21)
+  
+  
+  # plot # 1
+    text(x = line_pos[1] + (line_pos[2] - line_pos[1]) / 2, y = 2, labels = 1, cex = 0.65)
+  
+  for (e in 2:20){
+    lines(x = rep(line_pos[e], 2), y = c(1.5, 11), lty = 3, lwd = 1.5, col = "gray")
+    if (e %in% seq(5, 20, 5))
+    text(x = line_pos[e] + (line_pos[2] - line_pos[1]) / 2, y = 2, labels = e, cex = 0.65)
+    }
+
+  # draw segment labels
+merge_sgmts <- as.data.frame(x_est[ , c("start", "end", "segment_type")])
+merge_sgmts$start <- line_pos[1:20]
+merge_sgmts$end <- line_pos[2:21]
+
+merge_sgmts <- merge_sgmts[merge_sgmts$segment_type != "delete", ]
+merge_sgmts$col <- tag_cols[as.numeric(factor(merge_sgmts$segment_type, levels = c("s", "m", "f", "d", "p", "u")))]
+
+
+for (e in 1:nrow(merge_sgmts)){
+    polygon(x = c(merge_sgmts$start[e], merge_sgmts$end[e], merge_sgmts$end[e], merge_sgmts$start[e]), y = c(11, 11, 12, 12), lty = 1, lwd = 1.5, col = merge_sgmts$col[e], border = "gray")
+
+  # add text label
+  text(x = mean(c(merge_sgmts$start[e], merge_sgmts$end[e])), y = 11.5, labels = toupper(merge_sgmts$segment_type[e]), cex = 0.8)
+  
+  # time bar
+  polygon(x = c(0.01, 0.03, 0.03, 0.01), y = c(0.5, 0.5, 1.2, 1.2), lty = 1, lwd = 1.5, col = "black")
+  
+  # add text label to time bar
+  text(x = 0.015, y = 0.85, labels = "20 ms", cex = 0.65, adj = 0, col = "white")
+}
+
+}
+
+# freq label
+screen(5)
+
+par(mar = c(0, 0, 0, 0), bg = adjustcolor("white", alpha.f = 0), new = T, xpd = NA)
+          plot(1, frame.plot = FALSE, xlim = c(0, 2), ylim = c(0, 2), type = "n", axes = FALSE, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+          text(x = 2, y = 1, "Frequency (kHz)", srt = 90, cex = 1)
+
+screen(6)
+# legend
+par(mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
+          plot(0.5, xlim = c(0, 1), ylim = c(0, 1), type = "n", axes = FALSE, xlab = "", ylab = "", xaxt = "n", yaxt = "n", frame.plot = FALSE)  
+
+    leg_pos <- seq(0.9, 0.03, length.out = length(tag_cols) + 1)
+
+    for (y in 1:(length(tag_cols))){
+    polygon(x = c(0.1, 0.6, 0.6, 0.1), y = c(leg_pos[y] - 0.03, leg_pos[y] - 0.03, leg_pos[y] + 0.03, leg_pos[y] + 0.03), lty = 1, lwd = 1.5, col = tag_cols[y], border = "gray")
+          
+  # add text label 
+      text(x = 0.35, y = leg_pos[y], labels = toupper(new.code$new[y]), cex = 0.6, adj = 0.35, col = "black")
+      
+  # add description    
+      text(x = 0.35, y = leg_pos[y] - 0.07, labels = new.code$meaning[y], cex = 0.6, adj = 0.5, col = "black")
+    }
+    
+invisible(close.screen(all.screens = TRUE))
+
+# Then copy to PNG with your specifications
+dev.copy(png, filename = "./manuscript/Figures/Fig2_V1.png", 
+         width = 180, height = 100, units = "mm", res = 300)
+
+dev.off()
+
+```
+
+
+# Figure 3: MAP trees
 
 ```{r, warning=FALSE}
 
@@ -80,18 +464,17 @@ tips <- sapply(tree_data_list, Ntip)
 
 tree_data_list <- tree_data_list[order(tips)]
 
+options(ignore.negative.edge=TRUE)
+
 phylos <- lapply(seq_along(tree_data_list), function(i) {
     tree <- tree_data_list[[i]]
-    ggtree(tree, mrsd = "2016-01-01", color = "black", lwd = 1.3, layout = "roundrect") +
-  # geom_nodelab(size = 4, nudge_y = 0.4) +
-  # geom_tiplab(size = 4) +
-  geom_tippoint(aes(colour = posterior), size = 2, show.legend = F) +
+    ggtree(tree, mrsd = "2016-01-01", color = "black", lwd = 1, layout = "roundrect") +
   geom_nodepoint(aes(colour = posterior), size = 2, show.legend = if (i == 5) TRUE else FALSE) +
-  scale_color_viridis() +
-  labs(title = names(tree_data_list)[i], color = "Posterior\nprobability") +
+  scale_color_viridis(option = "G", begin = 0.2, end = 0.8) +
+  labs(title = letters[i], color = "Posterior\nprobability") +
   theme_tree2() +
             theme(
-    plot.title = element_text(color = "black", size = 30) 
+    plot.title = element_text(color = "black", size = 20) 
   )
 })  
 
@@ -107,11 +490,10 @@ P_all <- grid.arrange(
 )
 
 
-cowplot::save_plot("./Figures/map_trees.jpeg", P_all, base_height = 10, base_width = 20, dpi = 300)
+cowplot::save_plot("./manuscript/Figures/Fig3_V1.png", P_all, device = "png", dpi = 300, units = "mm", base_width = 150, base_height = 100)
 ```
 
-
-# Figure 3: Relative fit of clock models
+# Figure 4: Relative fit of clock models
 
 Read first three ML reps
 ```{r read-ml-data}
@@ -278,10 +660,10 @@ ML.plot
 
 Export ML plot
 ```{r export-ML, warning=FALSE, eval=TRUE}
-ggtree::ggsave(filename = "./Figures/Fig3_V1.png", plot = ML.plot, device = "png", dpi = 600, units = "mm", width = 180, height = 100)
+ggtree::ggsave(filename = "./manuscript/Figures/Fig4_V1.png", plot = ML.plot, device = "png", dpi = 600, units = "mm", width = 180, height = 100)
 ```
 
-# Figs 4-6 and S3-S32 Absolute model fit
+# Figs 5-7 and S3-S32 Absolute model fit
 
 Read P3 results
 ```{r process-p3-results}
@@ -527,7 +909,7 @@ ggs3$Number.Invariant.Sites
 
 ```
 
-Export main text figures 4-6 
+Export main text figures 5-7 
 ```{r plot-main-sim, warning=FALSE, eval=TRUE}
 
 figs <- list(ggs3$Number.Invariant.Sites, ggs3$Tajima.Pi, ggs3$Max.Pairwise.Difference)
@@ -535,8 +917,8 @@ figs <- list(ggs3$Number.Invariant.Sites, ggs3$Tajima.Pi, ggs3$Max.Pairwise.Diff
 for (i in 1:length(figs)) {
     ggtree::ggsave(
         filename = paste0(
-            "./Figures/Fig",
-            i + 3,
+            "./manuscript/Figures/Fig",
+            i + 4,
             "_V1.png"),
             plot = figs[[i]],
             device = "png",
@@ -564,7 +946,7 @@ sfigs <- list(ggs3[[1]],  ggs[[1]],  ggs2[[1]],
 for (i in 1:length(sfigs)) {
     ggtree::ggsave(
         filename = paste0(
-            "./Figures/FigS",
+            "./manuscript/Figures/FigS",
             i + 2,
             "_V1.png"),
             plot = sfigs[[i]],
@@ -577,7 +959,7 @@ for (i in 1:length(sfigs)) {
 }
 ```
 
-# Parameter sensitivity Figs 7-9 S33-S35
+# Parameter sensitivity Figs 8-10 S33-S35
 
 Prepare factor levels
 ```{r prep-factors, warning=FALSE}
@@ -679,10 +1061,10 @@ p_div_h_record_prank <- ggplot(data = plot_dat, aes(x = value, fill = record)) +
 p_div_h_record_prank
 ```
 
-Export plot for Fig. 7
+Export plot for Fig. 8
 ```{r export-record-prank, eval=TRUE}
 ggtree::ggsave(
-    filename = "./Figures/Fig7_V1.png",
+    filename = "./manuscript/Figures/Fig8_V1.png",
     plot = p_div_h_record_prank,
     device = "png",
     dpi = 600,
@@ -841,7 +1223,7 @@ sfigs <- list(p_div_h_record_prank, p_div_h_record_optimal, p_div_h_record_agnos
 for (i in 1:length(sfigs)) {
     ggtree::ggsave(
         filename = paste0(
-            "./Figures/FigS",
+            "./manuscript/Figures/FigS",
             i + 32,
             "_V1.png"),
             plot = sfigs[[i]],
@@ -904,10 +1286,10 @@ p_div_h_aln <- ggplot(data = plot_dat, aes(x = value, fill = aln)) +
   labs(x = "Parameter value", y = "Posterior frequency", fill = "Alignment")
 p_div_h_aln
 ```
-Export plot for Fig. 8
+Export plot for Fig. 9
 ```{r export-div-aln, eval=TRUE}
 ggtree::ggsave(
-    filename = "./Figures/Fig8_V1.png",
+    filename = "./manuscript/Figures/Fig9_V1.png",
     plot = p_div_h_aln,
     device = "png",
     dpi = 600,
@@ -968,10 +1350,10 @@ p_div_h_sampling_prank <- ggplot(data = plot_dat, aes(x = value, fill = sampling
 p_div_h_sampling_prank
 ```
 
-Export plot for Fig. 9
+Export plot for Fig. 10
 ```{r export-sampling-prank, eval=TRUE}
 ggtree::ggsave(
-    filename = "./Figures/Fig9_V1.png",
+    filename = "./manuscript/Figures/Fig10_V1.png",
     plot = p_div_h_sampling_prank,
     device = "png",
     dpi = 600,
@@ -1090,7 +1472,7 @@ sfigs <- list(p_div_h_sampling_prank, p_div_h_sampling_optimal, p_div_h_sampling
 for (i in 1:length(sfigs)) {
     ggtree::ggsave(
         filename = paste0(
-            "./Figures/FigS",
+            "./manuscript/Figures/FigS",
             i + 35,
             "_V1.png"),
             plot = sfigs[[i]],
