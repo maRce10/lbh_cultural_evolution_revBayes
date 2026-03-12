@@ -1,0 +1,130 @@
+---
+title: Measure repeatability of sound segment classification
+subtitle: Understanding cultural evolution in hummingbird leks through the fossilized birth-death process
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 3
+toc-location: left
+number-sections: true
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-tools: true
+    css: qmd.css
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r set root directory}
+#| eval: true
+#| echo: false
+
+# install knitr package if not installed
+if (!requireNamespace("knitr", quietly = TRUE)) {
+  install.packages("knitr")
+}
+
+# set working directory 
+knitr::opts_knit$set(root.dir =  "..")
+
+```
+
+```{r add link to github repo}
+#| eval: true
+#| output: asis
+#| echo: false
+
+# print link to github repo if any
+if (file.exists("./.git/config")){
+  config <- readLines("./.git/config")
+  url <- grep("url",  config, value = TRUE)
+  url <- gsub("\\turl = |.git$", "", url)
+  if (nchar(url) > 1)
+  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
+  }
+
+```
+
+```{r setup style}
+#| message: false
+#| warning: false
+
+# options to customize chunk outputs
+knitr::opts_chunk$set(
+  tidy.opts = list(width.cutoff = 65), 
+  tidy = TRUE,
+  message = FALSE
+ )
+
+```
+
+<!-- skyblue box -->
+
+::: {.alert .alert-info}
+# Purpose {.unnumbered .unlisted}
+
+-   The first goal of this report
+
+-   The second goal of this report
+:::
+
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages}
+
+library("irr")
+
+```
+
+Measure repeatability of segment labels
+
+Inter-observer reliability:
+```{r}
+segments_2_observers <- read.csv(
+  "./data/processed/segment_classification_2_observers.csv"
+)
+```
+
+` length(unique(segments_2_observers$lek.song.type))` segments classified by two observers
+
+```{r}
+kp <- irr::kappa2(segments_2_observers[,
+  c("obs1", "obs2")
+])
+
+kp
+
+```
+
+::: {.alert .alert-success}
+# Takeaways {#takeaways .unnumbered .unlisted}
+
+High repeatability of segment classification between two observers, with a Cohen's kappa of `r round(kp$value, 3)`, indicating substantial agreement.
+
+:::
+
+------------------------------------------------------------------------
+
+
+<!-- add packages used, system details and versions  -->
+
+::: {.callout-note collapse="true"}
+## Session information {.unnumbered .unlisted}
+
+```{r session info}
+#| echo: false
+
+# if devtools is installed use devtools::session_info()
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info()
+} else {
+  sessionInfo()
+}
+
+```
+:::

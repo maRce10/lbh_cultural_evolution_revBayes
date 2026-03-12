@@ -51,6 +51,7 @@ require(rnaturalearth)
 require(ggspatial)
 require(patchwork)
 require(magick)
+require(Rraven)
 
 fig_cols <- viridis::mako(3, begin = 0.2, end = 0.8, direction = -1)
 ```
@@ -194,125 +195,15 @@ ggsave(
 )
 ```
 
-
-
 # Figure 2: Spectrograms of segmented songs
-
-Measure repeatability of segment labels
-
-```{r}
-
-# copied from ~/Dropbox/Projects/LBH cult-evo/Song_segment_analysis/complete_segment_analysis_nov-2019.RDS
-sgmt.est <- as.data.frame(readRDS("./data/processed/complete_segment_analysis_nov-2019.RDS"))
-
-# fix segments
-sgmt.est$segment_type <- gsub("/ft", "-ft", sgmt.est$segment_type,  fixed = TRUE)
-sgmt.est$segment_type <- gsub("\\ft", "-ft", sgmt.est$segment_type,  fixed = TRUE)
-sgmt.est$segment_type <- gsub("/mt", "-mt", sgmt.est$segment_type,  fixed = TRUE)
-sgmt.est$segment_type <- gsub("\\mt", "-mt", sgmt.est$segment_type,  fixed = TRUE)
-sgmt.est$segment_type <- gsub("/mt", "-mt", sgmt.est$segment_type,  fixed = TRUE)
-
-
-new.code <- data.frame(
-  old = c("-st", "-ft", "\\p", "/p", "-p", "-mt"),
-  new = c("s","f", "d", "u", "p", "m"),
-  meaning = c("Slow trill", "Fast trill", "Downward\npure tone", "Upward\npure tone", "Flat\npure tone", "Medium\n-paced trill"), stringsAsFactors = FALSE
-)
-
-new.code <- new.code[match(c("s", "m", "f", "d", "p", "u"), new.code$new),]
-
-sgmt.est$segment_type <- sapply(sgmt.est$segment_type, function(x)
-  new.code$new[new.code$old == x]
-  )
-
-
-sgmt.est$lek.song.type.year <- paste(sgmt.est$lek.song.type, sgmt.est$year, sep = "-")
-
-
-dat <- sgm.est[sgm.est$lek %in% c("BR1", "TR1", "CCE", "HC1", "SUR"), ]
-
-fit <- brm(
-  segment_type ~ 1 + (1|lek.song.type.year) + (1|lek.song.type.year:lek),
-  data = dat,
-  family = categorical(),
-  chains = 1,
-  cores = 1
-)
-
-post <- as.data.frame(fit)
-
-# song type variance
-var_song_f <- post$sd_lek.song.type.year__muf_Intercept^2
-var_song_s <- post$sd_lek.song.type.year__mus_Intercept^2
-
-# lek within song type
-var_lek_f <- post$`sd_lek.song.type.year:lek__muf_Intercept`^2
-var_lek_s <- post$`sd_lek.song.type.year:lek__mus_Intercept`^2
-
-# average across categories
-var_song <- (var_song_f + var_song_s)/2
-var_lek  <- (var_lek_f + var_lek_s)/2
-
-# repeatability per category
-R_f <- var_song_f / (var_song_f + var_lek_f + var_resid)
-R_s <- var_song_s / (var_song_s + var_lek_s + var_resid)
-
-# average repeatability across categories
-R_song <- (R_f + R_s)/2
-
-median(R_song)
-quantile(R_song, c(.025,.975))
-
-
-
-###########
-post <- as.data.frame(fit)
-
-var_song <- post$sd_lek.song.type__Intercept^2
-var_lek  <- post$sd_lek.song.type.lek__Intercept^2
-
-    # measure repeatability
-reapt <- irr::kappa2(sgmt.est[, c("segment_type", "segment_type_2")], weight = "unweighted")
-
-data(anxiety)
-kappa2(anxiety2[,1:2], "squared") # predefined set of squared weights
-kappa2(anxiety[,1:2], (0:5)^2)   # same result with own set of squared weights
-
-
-df <- anxiety2[,1:2]
-
-subject <- rep(1:nrow(df), 2)
-rater   <- rep(c("rater1","rater2"), each = nrow(df))
-score   <- c(df$rater1, df$rater2)
-
-long <- data.frame(subject, rater, score)
-
-library(brms)
-
-fit <- brm(
-  score ~ 1 + (1|subject) + (1|rater),
-  data = long,
-  family = cumulative("logit"),
-  chains = 4,
-  cores = 4
-)
-
-post <- as.data.frame(fit)
-
-var_subject <- post$sd_subject__Intercept^2
-
-R <- var_subject / (var_subject + (pi^2/3))
-
-median(R)
-quantile(R, c(0.025,0.975))
-
-```
-
 
 ```{r spectrograms}
 
 # copied from /home/m/Dropbox/Projects/LBH cult-evo/data_for_beti/segments_by_song_type.csv
 sgm_final <- read.csv("./data/processed/segments_by_song_type.csv")
+
+sgmt.est <- readRDS("./data/processed/complete_segment_analysis_nov-2019.RDS")
+
 
 sub.sgmt <- sgmt.est[sgmt.est$lek.song.type %in% sgm_final$song.type, ]
 
@@ -334,13 +225,17 @@ song_type <- c("SUR-K1-1", "CCL-G1-4", "SUR-E2-4", "SUR-J2-1")
 # HC1-I1-4 HC1-C4-4 "SUR-D1-2"
 tag_cols <- viridis::mako(6, alpha = 0.8, begin = 0.3)
 
+# column breaks
+left_margin <- 0.08
+right_margin <- 0.1
+cbs <- c(left_margin, ((1 - (left_margin + right_margin)) / 2) + left_margin, 1 - right_margin, 1)
 
-m <- rbind(c(0.02, 0.505, 0.5, 1), # top left
-           c(0.505, 0.9, 0.5, 1), # top right
-           c(0.02, 0.505, 0, 0.5), # bottom left
-           c(0.505, 0.9, 0, 0.5), # bottom right
-           c(0, 0.05, 0, 1), # freq label
-           c(0.9, 1, 0, 1) # legend
+m <- rbind(c(cbs[1], cbs[2], 0.5, 1), # top left
+           c(cbs[2], cbs[3], 0.5, 1), # top right
+           c(cbs[1], cbs[2], 0, 0.5), # bottom left
+           c(cbs[2], cbs[3], 0, 0.5), # bottom right
+           c(0, cbs[1], 0, 1), # freq label
+           c(cbs[3], 1, 0, 1) # legend
            )
 
 out <- split.screen(figs = m)
@@ -354,6 +249,13 @@ out <- split.screen(figs = m)
       # }
       # close.screen(all.screens = T)
       # 
+# freq label
+screen(5)
+
+par(mar = c(0, 0, 0, 0), bg = adjustcolor("white", alpha.f = 0), new = T, xpd = NA)
+          plot(1, frame.plot = FALSE, xlim = c(0, 2), ylim = c(0, 2), type = "n", axes = FALSE, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+          text(x = 0.5, y = 1, "Frequency (kHz)", srt = 90, cex = 1)
+
 
 for (i in 1:length(song_type))
 {
@@ -365,7 +267,7 @@ for (i in 1:length(song_type))
   wv <- read_sound_file(x_est, index = 1, from = 0, to = Inf)
 
   par(mar = c(if(i %in% c(1, 2)) 0 else 1, 
-            if(i %in% c(2, 4)) 0 else 4.15, 
+            if(i %in% c(2, 4)) 0 else 0, 
             if(i %in% c(1, 2)) 1 else 0, 
             0))
 
@@ -409,17 +311,10 @@ for (e in 1:nrow(merge_sgmts)){
   polygon(x = c(0.01, 0.03, 0.03, 0.01), y = c(0.5, 0.5, 1.2, 1.2), lty = 1, lwd = 1.5, col = "black")
   
   # add text label to time bar
-  text(x = 0.015, y = 0.85, labels = "20 ms", cex = 0.65, adj = 0, col = "white")
+  text(x = 0.015, y = 0.85, labels = "20 ms", cex = 0.65, adj = 0.2, col = "white")
 }
 
 }
-
-# freq label
-screen(5)
-
-par(mar = c(0, 0, 0, 0), bg = adjustcolor("white", alpha.f = 0), new = T, xpd = NA)
-          plot(1, frame.plot = FALSE, xlim = c(0, 2), ylim = c(0, 2), type = "n", axes = FALSE, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
-          text(x = 2, y = 1, "Frequency (kHz)", srt = 90, cex = 1)
 
 screen(6)
 # legend
@@ -441,8 +336,8 @@ par(mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
 invisible(close.screen(all.screens = TRUE))
 
 # Then copy to PNG with your specifications
-dev.copy(png, filename = "./manuscript/Figures/Fig2_V1.png", 
-         width = 180, height = 100, units = "mm", res = 300)
+dev.copy(png, filename = "./manuscript/Figures/Fig2_V1.png",
+         width = 200, height = 100, units = "mm", res = 300)
 
 dev.off()
 
