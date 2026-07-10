@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Marcelo Araya-Salas">
+<meta name="dcterms.date" content="2026-07-05">
+
+<title>Measure song similarity</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="song_sequence_similarity_files/libs/clipboard/clipboard.min.js"></script>
+<script src="song_sequence_similarity_files/libs/quarto-html/quarto.js"></script>
+<script src="song_sequence_similarity_files/libs/quarto-html/popper.min.js"></script>
+<script src="song_sequence_similarity_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="song_sequence_similarity_files/libs/quarto-html/anchor.min.js"></script>
+<link href="song_sequence_similarity_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="song_sequence_similarity_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="song_sequence_similarity_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="song_sequence_similarity_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="song_sequence_similarity_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+<link rel="stylesheet" href="qmd.css">
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Measure song similarity</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<p class="subtitle lead">Understanding cultural evolution in hummingbird leks through the fossilized birth-death process</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://marce10.github.io/">Marcelo Araya-Salas</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 5, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Source code and data found at <a href="https://github.com/maRce10/lbh_cultural_evolution_revBayes">https://github.com/maRce10/lbh_cultural_evolution_revBayes</a></p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># options to customize chunk outputs</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">tidy.opts =</span> <span class="fu">list</span>(<span class="at">width.cutoff =</span> <span class="dv">65</span>), </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">tidy =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">message =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<!-- skyblue box -->
+<section id="purpose" class="level1 unnumbered unlisted alert alert-info">
+<h1 class="unnumbered unlisted">Purpose</h1>
+<ul>
+<li>Evaluate the effect of lek membership in song similarity</li>
+</ul>
+</section>
+<section id="load-packages" class="level1 unnumbered unlisted">
+<h1 class="unnumbered unlisted">Load packages</h1>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"TraMineR"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"brms"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"brmsish"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: replacing previous import 'brms::rstudent_t' by 'ggdist::rstudent_t'
+when loading 'brmsish'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: replacing previous import 'brms::dstudent_t' by 'ggdist::dstudent_t'
+when loading 'brmsish'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: replacing previous import 'brms::qstudent_t' by 'ggdist::qstudent_t'
+when loading 'brmsish'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: replacing previous import 'brms::pstudent_t' by 'ggdist::pstudent_t'
+when loading 'brmsish'</code></pre>
+</div>
+</div>
+<section id="statistical-modeling" class="level2" data-number="0.1">
+<h2 data-number="0.1" class="anchored" data-anchor-id="statistical-modeling"><span class="header-section-number">0.1</span> Statistical modeling</h2>
+<ul>
+<li><p>Pairwise song similarity was analyzed using a <strong>Bayesian Gaussian linear mixed model</strong>.</p></li>
+<li><p>The response variable was the <strong>pairwise Optimal Matching (OM) distance</strong> between song sequences.</p></li>
+<li><p>Pairwise distances were calculated using <strong>Optimal Matching</strong> with biologically informed substitution costs that assigned lower penalties to substitutions within broad acoustic categories (pure tones or trills) than between categories.</p></li>
+<li><p>Analyses were restricted to <strong>pairwise comparisons between songs recorded within the same study site</strong>, allowing us to test whether songs were more similar within leks than between neighboring leks while minimizing large-scale geographic effects.</p></li>
+<li><p>Candidate fixed effects included:</p>
+<ul>
+<li><code>same_lek</code>, indicating whether two songs originated from the same lek,</li>
+<li><code>year_diff</code>, representing the minimum temporal separation (years) between recorded occurrences of the two song types,</li>
+<li>and the interaction <code>same_lek × year_diff</code>.</li>
+</ul></li>
+<li><p>Because each song type appeared in multiple pairwise comparisons, song identity was included as a <strong>multi-membership random intercept</strong> (<code>mm(song1, song2)</code>) to account for the non-independence of pairwise observations.</p></li>
+<li><p>The fitted model was:</p></li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>distance <span class="sc">~</span> same_lek <span class="sc">*</span> year_diff <span class="sc">+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span> <span class="sc">|</span> <span class="fu">mm</span>(song1, song2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li><p>Models were fitted in <strong>Stan</strong> through the R package <strong>brms</strong> using a Gaussian likelihood and weakly informative default priors.</p></li>
+<li><p>Model adequacy was assessed using posterior predictive checks.</p></li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read data</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/raw/segments_by_song_type.csv"</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sequence object</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Columns containing the 20 song segments</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>seqs <span class="ot">&lt;-</span> dat[, <span class="fu">grep</span>(<span class="st">"^X"</span>, <span class="fu">names</span>(dat))]</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sequence object</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>seq.obj <span class="ot">&lt;-</span> <span class="fu">seqdef</span>(seqs)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute Optimal Matching distances</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"d"</span>, <span class="st">"p"</span>, <span class="st">"u"</span>, <span class="st">"s"</span>, <span class="st">"m"</span>, <span class="st">"f"</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>sm <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">2</span>, <span class="at">nrow =</span> <span class="dv">6</span>, <span class="at">ncol =</span> <span class="dv">6</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(states, states))</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="fu">diag</span>(sm) <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co"># within pure tones</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"d"</span>, <span class="st">"p"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"p"</span>, <span class="st">"d"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"p"</span>, <span class="st">"u"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"u"</span>, <span class="st">"p"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"d"</span>, <span class="st">"u"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"u"</span>, <span class="st">"d"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="co"># within trills</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"s"</span>, <span class="st">"m"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"m"</span>, <span class="st">"s"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"m"</span>, <span class="st">"f"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"f"</span>, <span class="st">"m"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"s"</span>, <span class="st">"f"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"f"</span>, <span class="st">"s"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>dist.mat <span class="ot">&lt;-</span> <span class="fu">seqdist</span>(seq.obj, <span class="at">method =</span> <span class="st">"OM"</span>, <span class="at">sm =</span> sm, <span class="at">indel =</span> <span class="dv">3</span>, <span class="at">norm =</span> <span class="st">"maxlength"</span>)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert distance matrix to pairwise data frame</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>pairs <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">upper.tri</span>(dist.mat), <span class="at">arr.ind =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>pair.dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">song1 =</span> dat<span class="sc">$</span>song.type[pairs[, <span class="dv">1</span>]], <span class="at">song2 =</span> dat<span class="sc">$</span>song.type[pairs[,</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span>]], <span class="at">lek1 =</span> dat<span class="sc">$</span>lek[pairs[, <span class="dv">1</span>]], <span class="at">lek2 =</span> dat<span class="sc">$</span>lek[pairs[, <span class="dv">2</span>]], <span class="at">distance =</span> dist.mat[pairs])</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Predictor variables</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/raw/year_range_by_song_type.csv"</span>, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>min.year<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song1, <span class="cf">function</span>(x) {</span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">min</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>max.year<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song1, <span class="cf">function</span>(x) {</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>min.year<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song2, <span class="cf">function</span>(x) {</span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">min</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>max.year<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song2, <span class="cf">function</span>(x) {</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge with pairwise data</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>year.diff <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(pair.dat), <span class="cf">function</span>(i) {</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>    song1 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>song1[i]</span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>    song2 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>song2[i]</span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    year1 <span class="ot">&lt;-</span> years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> song1]</span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    year2 <span class="ot">&lt;-</span> years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> song2]</span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>    <span class="co"># min of all possible differences</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>    <span class="fu">min</span>(<span class="fu">outer</span>(year1, <span class="fu">c</span>(year2, <span class="dv">2222</span>), <span class="at">FUN =</span> <span class="cf">function</span>(x, y) <span class="fu">abs</span>(x <span class="sc">-</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>        y)))</span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>lek.site <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">lek =</span> <span class="fu">c</span>(<span class="st">"BR1"</span>, <span class="st">"BR2"</span>, <span class="st">"CCE"</span>, <span class="st">"CCL"</span>, <span class="st">"LOC"</span>,</span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SAT"</span>, <span class="st">"SJA"</span>, <span class="st">"STR"</span>, <span class="st">"SUR"</span>, <span class="st">"TR1"</span>, <span class="st">"TR2"</span>, <span class="st">"HC1"</span>, <span class="st">"HC2"</span>), <span class="at">site =</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="st">"BR"</span>,</span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span>), <span class="fu">rep</span>(<span class="st">"LS"</span>, <span class="dv">7</span>), <span class="fu">rep</span>(<span class="st">"TR"</span>, <span class="dv">2</span>), <span class="fu">rep</span>(<span class="st">"HC"</span>, <span class="dv">2</span>)), <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>same_site <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(pair.dat), <span class="cf">function</span>(i) {</span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>    lek1 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek1[i]</span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>    lek2 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek2[i]</span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a>    site1 <span class="ot">&lt;-</span> lek.site<span class="sc">$</span>site[lek.site<span class="sc">$</span>lek <span class="sc">==</span> lek1]</span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>    site2 <span class="ot">&lt;-</span> lek.site<span class="sc">$</span>site[lek.site<span class="sc">$</span>lek <span class="sc">==</span> lek2]</span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>    site1 <span class="sc">==</span> site2</span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a><span class="co"># keep only from same site</span></span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>pair.dat <span class="ot">&lt;-</span> pair.dat[pair.dat<span class="sc">$</span>same_site, ]</span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a><span class="co"># head(pair.dat)</span></span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a><span class="co"># Songs from the same lek?</span></span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>same_lek <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek1 <span class="sc">==</span> pair.dat<span class="sc">$</span>lek2</span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect the distribution of distances</span></span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(pair.dat<span class="sc">$</span>distance, <span class="at">breaks =</span> <span class="dv">30</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="song_sequence_similarity_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bayesian regression</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">brm</span>(distance <span class="sc">~</span> same_lek <span class="sc">*</span> year.diff <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> <span class="fu">mm</span>(song1, song2)),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> pair.dat, <span class="at">family =</span> <span class="fu">gaussian</span>(), <span class="at">chains =</span> <span class="dv">4</span>, <span class="at">cores =</span> <span class="dv">4</span>, <span class="at">iter =</span> <span class="dv">5000</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">control =</span> <span class="fu">list</span>(<span class="at">adapt_delta =</span> <span class="fl">0.99</span>, <span class="at">max_treedepth =</span> <span class="dv">15</span>), <span class="at">file =</span> <span class="st">"./data/processed/song_similarity_model.rds"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">file_refit =</span> <span class="st">"on_change"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize results</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: gaussian 
+  Links: mu = identity 
+Formula: distance ~ same_lek * year.diff + (1 | mm(song1, song2)) 
+   Data: pair.dat (Number of observations: 7465) 
+  Draws: 4 chains, each with iter = 5000; warmup = 2500; thin = 1;
+         total post-warmup draws = 10000
+
+Multilevel Hyperparameters:
+~mmsong1song2 (Number of levels: 184) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)     0.08      0.00     0.07     0.09 1.00     1558     3431
+
+Regression Coefficients:
+                       Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS
+Intercept                  0.40      0.01     0.38     0.41 1.00     1121
+same_lekTRUE              -0.03      0.00    -0.04    -0.02 1.00    13951
+year.diff                  0.00      0.00     0.00     0.00 1.00    11482
+same_lekTRUE:year.diff     0.00      0.00     0.00     0.00 1.00    13340
+                       Tail_ESS
+Intercept                  2320
+same_lekTRUE               8071
+year.diff                  8899
+same_lekTRUE:year.diff     8449
+
+Further Distributional Parameters:
+      Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sigma     0.11      0.00     0.10     0.11 1.00    16601     6872
+
+Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### First</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### year</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### of</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### each</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### song</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### type</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>song.info <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">rbind</span>(<span class="fu">data.frame</span>(<span class="at">song =</span> pair.dat<span class="sc">$</span>song1, <span class="at">lek =</span> pair.dat<span class="sc">$</span>lek1,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">min.year =</span> pair.dat<span class="sc">$</span>min.year<span class="fl">.1</span>), <span class="fu">data.frame</span>(<span class="at">song =</span> pair.dat<span class="sc">$</span>song2,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">lek =</span> pair.dat<span class="sc">$</span>lek2, <span class="at">min.year =</span> pair.dat<span class="sc">$</span>min.year<span class="fl">.2</span>)))</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### Add</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### same_lek</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### if</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### needed</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>same_lek <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek1 <span class="sc">==</span> pair.dat<span class="sc">$</span>lek2</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### Nearest</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### neighbour</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### within</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### one</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### year</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### before</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### first</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="do">############################################################### occurrence</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>songs <span class="ot">&lt;-</span> song.info<span class="sc">$</span>song</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>nearest.same.lek <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="fu">length</span>(songs))</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(songs)) {</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    song <span class="ot">&lt;-</span> songs[i]</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>    t0 <span class="ot">&lt;-</span> song.info<span class="sc">$</span>min.year[song.info<span class="sc">$</span>song <span class="sc">==</span> song]</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="co"># all pairwise comparisons involving this song</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> pair.dat[pair.dat<span class="sc">$</span>song1 <span class="sc">==</span> song <span class="sc">|</span> pair.dat<span class="sc">$</span>song2 <span class="sc">==</span> song,</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">nrow</span>(x) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">next</span></span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>    <span class="co"># First year of the other song</span></span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>    other.year <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(x<span class="sc">$</span>song1 <span class="sc">==</span> song, x<span class="sc">$</span>min.year<span class="fl">.2</span>, x<span class="sc">$</span>min.year<span class="fl">.1</span>)</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Candidate songs: Candidate songs: first appeared in the</span></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>    <span class="co"># same year or exactly one year earlier</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> other.year <span class="sc">%in%</span> <span class="fu">c</span>(t0 <span class="sc">-</span> <span class="dv">1</span>, t0)</span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> x[keep, ]</span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">nrow</span>(x) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">next</span></span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Was there at least one candidate from the same lek?</span></span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(x<span class="sc">$</span>same_lek)) {</span>
+<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a>        nearest.same.lek[i] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">next</span></span>
+<span id="cb11-61"><a href="#cb11-61" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-62"><a href="#cb11-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-63"><a href="#cb11-63" aria-hidden="true" tabindex="-1"></a>    <span class="co"># nearest neighbour</span></span>
+<span id="cb11-64"><a href="#cb11-64" aria-hidden="true" tabindex="-1"></a>    mindist <span class="ot">&lt;-</span> <span class="fu">min</span>(x<span class="sc">$</span>distance)</span>
+<span id="cb11-65"><a href="#cb11-65" aria-hidden="true" tabindex="-1"></a>    closest <span class="ot">&lt;-</span> x[x<span class="sc">$</span>distance <span class="sc">==</span> mindist, ]</span>
+<span id="cb11-66"><a href="#cb11-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-67"><a href="#cb11-67" aria-hidden="true" tabindex="-1"></a>    nearest.same.lek[i] <span class="ot">&lt;-</span> <span class="fu">any</span>(closest<span class="sc">$</span>same_lek)</span>
+<span id="cb11-68"><a href="#cb11-68" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-69"><a href="#cb11-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-70"><a href="#cb11-70" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nearest.same.lek, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>nearest.same.lek
+FALSE  TRUE  &lt;NA&gt; 
+   69   106     9 </code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(nearest.same.lek, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6057143</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(nearest.same.lek, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)<span class="sc">/</span><span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(nearest.same.lek))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6057143</code></pre>
+</div>
+</div>
+</section>
+<section id="results" class="level2 alert alert-info" data-number="0.2">
+<h2 data-number="0.2" class="anchored" data-anchor-id="results"><span class="header-section-number">0.2</span> Results</h2>
+<ul>
+<li>Posterior predictive checks indicated that the Gaussian model adequately described the observed distribution of pairwise song distances.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="song_sequence_similarity_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<ul>
+<li>Songs recorded within the <strong>same lek</strong> were consistently more similar than songs recorded in <strong>different leks within the same study site</strong> (posterior estimate = -0.031).</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                            Estimate    Est.Error          Q2.5         Q97.5
+Intercept               0.3965124761 6.408106e-03  0.3839041288  0.4087786766
+same_lekTRUE           -0.0304654549 4.507073e-03 -0.0392576235 -0.0216182251
+year.diff               0.0004128877 9.585074e-05  0.0002234940  0.0005988732
+same_lekTRUE:year.diff  0.0005946398 1.896479e-04  0.0002179834  0.0009632403</code></pre>
+</div>
+</div>
+<ul>
+<li>Pairwise song distance increased with the temporal separation between recordings for <strong>between-lek comparisons</strong>, indicating that songs became progressively more dissimilar through time even among neighboring leks.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conditional_effects</span>(fit, <span class="at">effects =</span> <span class="st">"year.diff:same_lek"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="song_sequence_similarity_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypothesis</span>(fit, <span class="st">"year.diff &gt; 0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Hypothesis Tests for class b:
+       Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio Post.Prob
+1 (year.diff) &gt; 0        0         0        0        0        Inf         1
+  Star
+1    *
+---
+'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+'*': For one-sided hypotheses, the posterior probability exceeds 95%;
+for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+Posterior probabilities of point hypotheses assume equal prior probabilities.</code></pre>
+</div>
+</div>
+<ul>
+<li>The temporal increase in song dissimilarity was <strong>significantly stronger within leks</strong> than between leks, as indicated by a positive interaction between <code>same_lek</code> and <code>year_diff</code>.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypothesis</span>(fit, <span class="st">"same_lekTRUE:year.diff &gt; 0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Hypothesis Tests for class b:
+                Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio
+1 (same_lekTRUE:yea... &gt; 0        0         0        0        0       1249
+  Post.Prob Star
+1         1    *
+---
+'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+'*': For one-sided hypotheses, the posterior probability exceeds 95%;
+for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+Posterior probabilities of point hypotheses assume equal prior probabilities.</code></pre>
+</div>
+</div>
+<ul>
+<li>Consequently, pairwise song dissimilarity increased through time <strong>within leks</strong>, with overwhelming posterior support for a positive temporal trend.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypothesis</span>(fit, <span class="st">"year.diff + same_lekTRUE:year.diff &gt; 0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Hypothesis Tests for class b:
+                Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio
+1 (year.diff+same_l... &gt; 0        0         0        0        0        Inf
+  Post.Prob Star
+1         1    *
+---
+'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+'*': For one-sided hypotheses, the posterior probability exceeds 95%;
+for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+Posterior probabilities of point hypotheses assume equal prior probabilities.</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="takeaways" class="level1 unnumbered unlisted alert alert-success">
+<h1 class="unnumbered unlisted">Takeaways</h1>
+<ul>
+<li>Together, these results indicate that songs exhibit strong local cultural structure, with song types being more similar within leks than between neighboring leks, while simultaneously accumulating cultural differences through time. Moreover, the rate at which song dissimilarity accumulated was greater within leks than between leks.</li>
+</ul>
+</section>
+<hr>
+<!-- add packages used, system details and versions  -->
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Session information
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.3.2 (2023-10-31)
+ os       Ubuntu 22.04.2 LTS
+ system   x86_64, linux-gnu
+ ui       X11
+ language es_ES:en
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/Costa_Rica
+ date     2026-07-05
+ pandoc   3.6.3 @ /usr/lib/rstudio/resources/app/bin/quarto/bin/tools/x86_64/ (via rmarkdown)
+ quarto   1.4.549 @ /usr/local/bin/quarto
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package        * version   date (UTC) lib source
+ abind            1.4-8     2024-09-12 [1] CRAN (R 4.3.2)
+ ape              5.8-1     2024-12-16 [1] CRAN (R 4.3.2)
+ arrayhelpers     1.1-0     2020-02-04 [1] CRAN (R 4.3.2)
+ backports        1.5.1     2026-04-03 [1] CRAN (R 4.3.2)
+ bayesplot        1.15.0    2025-12-12 [1] CRAN (R 4.3.2)
+ boot             1.3-32    2025-08-29 [1] CRAN (R 4.3.2)
+ bridgesampling   1.2-1     2025-11-19 [1] CRAN (R 4.3.2)
+ brms           * 2.23.0    2025-09-09 [1] CRAN (R 4.3.2)
+ brmsish        * 1.0.0     2025-12-18 [1] CRANs (R 4.3.2)
+ Brobdingnag      1.2-9     2022-10-19 [1] CRAN (R 4.3.2)
+ cachem           1.1.0     2024-05-16 [1] CRAN (R 4.3.2)
+ checkmate        2.3.4     2026-02-03 [1] CRAN (R 4.3.2)
+ cli              3.6.6     2026-04-09 [1] CRAN (R 4.3.2)
+ cluster          2.1.8.2   2026-02-05 [1] CRAN (R 4.3.2)
+ coda             0.19-4.1  2024-01-31 [1] CRAN (R 4.3.2)
+ codetools        0.2-20    2024-03-31 [1] CRAN (R 4.3.2)
+ colorspace       2.1-2     2025-09-22 [1] CRAN (R 4.3.2)
+ cowplot          1.2.0     2025-07-07 [1] CRAN (R 4.3.2)
+ curl             7.1.0     2026-04-22 [1] CRAN (R 4.3.2)
+ devtools         2.4.6     2025-10-03 [1] CRAN (R 4.3.2)
+ digest           0.6.39    2025-11-19 [1] CRAN (R 4.3.2)
+ distributional   0.8.0     2026-06-23 [1] CRAN (R 4.3.2)
+ dplyr            1.2.1     2026-04-03 [1] CRAN (R 4.3.2)
+ ellipsis         0.3.3     2026-04-04 [1] CRAN (R 4.3.2)
+ emmeans          2.0.3     2026-04-09 [1] CRAN (R 4.3.2)
+ estimability     1.5.1     2024-05-12 [1] CRAN (R 4.3.2)
+ evaluate         1.0.5     2025-08-27 [1] CRAN (R 4.3.2)
+ farver           2.1.2     2024-05-13 [1] CRAN (R 4.3.2)
+ fastmap          1.2.0     2024-05-15 [1] CRAN (R 4.3.2)
+ formatR          1.14      2023-01-17 [1] CRAN (R 4.3.2)
+ fs               2.0.1     2026-03-24 [1] CRAN (R 4.3.2)
+ generics         0.1.4     2025-05-09 [1] CRAN (R 4.3.2)
+ ggdist           3.3.3     2025-04-23 [1] CRAN (R 4.3.2)
+ ggplot2          4.0.3     2026-04-22 [1] CRAN (R 4.3.2)
+ glue             1.8.1     2026-04-17 [1] CRAN (R 4.3.2)
+ gridExtra        2.3.1     2026-06-25 [1] CRAN (R 4.3.2)
+ gtable           0.3.6     2024-10-25 [1] CRAN (R 4.3.2)
+ htmltools        0.5.9     2025-12-04 [1] CRAN (R 4.3.2)
+ htmlwidgets      1.6.4     2023-12-06 [1] CRAN (R 4.3.2)
+ inline           0.3.21    2025-01-09 [1] CRAN (R 4.3.2)
+ jsonlite         2.0.0     2025-03-27 [1] CRAN (R 4.3.2)
+ kableExtra       1.4.0     2024-01-24 [1] CRAN (R 4.3.2)
+ knitr            1.51      2025-12-20 [1] CRAN (R 4.3.2)
+ labeling         0.4.3     2023-08-29 [1] CRAN (R 4.3.2)
+ lattice          0.22-9    2026-02-09 [1] CRAN (R 4.3.2)
+ lifecycle        1.0.5     2026-01-08 [1] CRAN (R 4.3.2)
+ loo              2.9.0     2025-12-23 [1] CRAN (R 4.3.2)
+ magrittr         2.0.5     2026-04-04 [1] CRAN (R 4.3.2)
+ MASS             7.3-55    2022-01-13 [4] CRAN (R 4.1.2)
+ Matrix           1.6-5     2024-01-11 [1] CRAN (R 4.3.2)
+ matrixStats      1.5.0     2025-01-07 [1] CRAN (R 4.3.2)
+ memoise          2.0.1     2021-11-26 [3] CRAN (R 4.1.2)
+ mgcv             1.8-39    2022-02-24 [4] CRAN (R 4.1.2)
+ multcomp         1.4-30    2026-03-09 [1] CRAN (R 4.3.2)
+ mvtnorm          1.4-1     2026-06-06 [1] CRAN (R 4.3.2)
+ nlme             3.1-169   2026-03-27 [1] CRAN (R 4.3.2)
+ otel             0.2.0     2025-08-29 [1] CRAN (R 4.3.2)
+ pbapply          1.7-4     2025-07-20 [1] CRAN (R 4.3.2)
+ permute          0.9-10    2026-02-06 [1] CRAN (R 4.3.2)
+ pillar           1.11.1    2025-09-17 [1] CRAN (R 4.3.2)
+ pkgbuild         1.4.8     2025-05-26 [1] CRAN (R 4.3.2)
+ pkgconfig        2.0.3     2019-09-22 [3] CRAN (R 4.0.1)
+ pkgload          1.5.3     2026-06-15 [1] CRAN (R 4.3.2)
+ plyr             1.8.9     2023-10-02 [1] CRAN (R 4.3.2)
+ posterior        1.7.0     2026-04-01 [1] CRAN (R 4.3.2)
+ purrr            1.2.2     2026-04-10 [1] CRAN (R 4.3.2)
+ QuickJSR         1.10.0    2026-05-17 [1] CRAN (R 4.3.2)
+ R6               2.6.1     2025-02-15 [1] CRAN (R 4.3.2)
+ RColorBrewer     1.1-3     2022-04-03 [1] CRAN (R 4.3.2)
+ Rcpp           * 1.1.1-1.1 2026-04-24 [1] CRAN (R 4.3.2)
+ RcppParallel     5.1.11-2  2026-03-05 [1] CRAN (R 4.3.2)
+ remotes          2.5.0     2024-03-17 [1] CRAN (R 4.3.2)
+ reshape2         1.4.5     2025-11-12 [1] CRAN (R 4.3.2)
+ rlang            1.2.0     2026-04-06 [1] CRAN (R 4.3.2)
+ rmarkdown        2.31      2026-03-26 [1] CRAN (R 4.3.2)
+ rstan            2.32.7    2025-03-10 [1] CRAN (R 4.3.2)
+ rstantools       2.6.0     2026-01-10 [1] CRAN (R 4.3.2)
+ rstudioapi       0.19.0    2026-06-11 [1] CRAN (R 4.3.2)
+ S7               0.2.2     2026-04-22 [1] CRAN (R 4.3.2)
+ sandwich         3.1-1     2024-09-15 [1] CRAN (R 4.3.2)
+ scales           1.4.0     2025-04-24 [1] CRAN (R 4.3.2)
+ sessioninfo      1.2.4     2026-06-04 [1] CRAN (R 4.3.2)
+ StanHeaders      2.32.10   2024-07-15 [1] CRAN (R 4.3.2)
+ stringi          1.8.7     2025-03-27 [1] CRAN (R 4.3.2)
+ stringr          1.6.0     2025-11-04 [1] CRAN (R 4.3.2)
+ survival         3.8-6     2026-01-16 [1] CRAN (R 4.3.2)
+ svglite          2.2.2     2025-10-21 [1] CRAN (R 4.3.2)
+ svUnit           1.0.8     2025-08-26 [1] CRAN (R 4.3.2)
+ systemfonts      1.3.2     2026-03-05 [1] CRAN (R 4.3.2)
+ tensorA          0.36.2.1  2023-12-13 [1] CRAN (R 4.3.2)
+ textshaping      1.0.5     2026-03-06 [1] CRAN (R 4.3.2)
+ TH.data          1.1-5     2025-11-17 [1] CRAN (R 4.3.2)
+ tibble           3.3.1     2026-01-11 [1] CRAN (R 4.3.2)
+ tidybayes        3.0.7     2024-09-15 [1] CRAN (R 4.3.2)
+ tidyr            1.3.2     2025-12-19 [1] CRAN (R 4.3.2)
+ tidyselect       1.2.1     2024-03-11 [1] CRAN (R 4.3.2)
+ TraMineR       * 2.2-13    2025-12-14 [1] CRAN (R 4.3.2)
+ usethis          3.2.1     2025-09-06 [1] CRAN (R 4.3.2)
+ V8               8.2.0     2026-04-21 [1] CRAN (R 4.3.2)
+ vctrs            0.7.3     2026-04-11 [1] CRAN (R 4.3.2)
+ vegan            2.7-5     2026-05-25 [1] CRAN (R 4.3.2)
+ viridis          0.6.5     2024-01-29 [1] CRAN (R 4.3.2)
+ viridisLite      0.4.3     2026-02-04 [1] CRAN (R 4.3.2)
+ withr            3.0.3     2026-06-19 [1] CRAN (R 4.3.2)
+ xfun             0.59      2026-06-19 [1] CRAN (R 4.3.2)
+ xml2             1.6.0     2026-06-22 [1] CRAN (R 4.3.2)
+ xtable           1.8-8     2026-02-22 [1] CRAN (R 4.3.2)
+ yaml             2.3.12    2025-12-10 [1] CRAN (R 4.3.2)
+ zoo              1.8-15    2025-12-15 [1] CRAN (R 4.3.2)
+
+ [1] /home/marce/R/x86_64-pc-linux-gnu-library/4.3
+ [2] /usr/local/lib/R/site-library
+ [3] /usr/lib/R/site-library
+ [4] /usr/lib/R/library
+ * ── Packages attached to the search path.
+
+──────────────────────────────────────────────────────────────────────────────</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- -->
+
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb28" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> Measure song similarity </span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> Understanding cultural evolution in hummingbird leks through the fossilized birth-death process</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> &lt;a href="https://marce10.github.io/"&gt;Marcelo Araya-Salas&lt;/a&gt;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "`r Sys.Date()`"</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="an">toc-depth:</span><span class="co"> 3</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="an">toc-location:</span><span class="co"> left</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="an">number-sections:</span><span class="co"> true</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="an">highlight-style:</span><span class="co"> pygments</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="co">    df-print: kable</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: show</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="co">    css: qmd.css</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="an">editor_options:</span><span class="co"> </span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="co">  chunk_output_type: console</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="in">```{r set root directory}</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a><span class="in">#| eval: true</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a><span class="in">#| echo: false</span></span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a><span class="in"># install knitr package if not installed</span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a><span class="in">if (!requireNamespace("knitr", quietly = TRUE)) {</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a><span class="in">  install.packages("knitr")</span></span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a><span class="in">}</span></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a><span class="in"># set working directory </span></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a><span class="in">knitr::opts_knit$set(root.dir =  "..")</span></span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a><span class="in">```{r add link to github repo}</span></span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a><span class="in">#| eval: true</span></span>
+<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a><span class="in">#| output: asis</span></span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a><span class="in">#| echo: false</span></span>
+<span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a><span class="in"># print link to github repo if any</span></span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a><span class="in">if (file.exists("./.git/config")){</span></span>
+<span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a><span class="in">  config &lt;- readLines("./.git/config")</span></span>
+<span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a><span class="in">  url &lt;- grep("url",  config, value = TRUE)</span></span>
+<span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a><span class="in">  url &lt;- gsub("\\turl = |.git$", "", url)</span></span>
+<span id="cb28-46"><a href="#cb28-46" aria-hidden="true" tabindex="-1"></a><span class="in">  if (nchar(url) &gt; 1)</span></span>
+<span id="cb28-47"><a href="#cb28-47" aria-hidden="true" tabindex="-1"></a><span class="in">  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")</span></span>
+<span id="cb28-48"><a href="#cb28-48" aria-hidden="true" tabindex="-1"></a><span class="in">  }</span></span>
+<span id="cb28-49"><a href="#cb28-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-50"><a href="#cb28-50" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-51"><a href="#cb28-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-52"><a href="#cb28-52" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup style}</span></span>
+<span id="cb28-53"><a href="#cb28-53" aria-hidden="true" tabindex="-1"></a><span class="in">#| message: false</span></span>
+<span id="cb28-54"><a href="#cb28-54" aria-hidden="true" tabindex="-1"></a><span class="in">#| warning: false</span></span>
+<span id="cb28-55"><a href="#cb28-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-56"><a href="#cb28-56" aria-hidden="true" tabindex="-1"></a><span class="in"># options to customize chunk outputs</span></span>
+<span id="cb28-57"><a href="#cb28-57" aria-hidden="true" tabindex="-1"></a><span class="in">knitr::opts_chunk$set(</span></span>
+<span id="cb28-58"><a href="#cb28-58" aria-hidden="true" tabindex="-1"></a><span class="in">  tidy.opts = list(width.cutoff = 65), </span></span>
+<span id="cb28-59"><a href="#cb28-59" aria-hidden="true" tabindex="-1"></a><span class="in">  tidy = TRUE,</span></span>
+<span id="cb28-60"><a href="#cb28-60" aria-hidden="true" tabindex="-1"></a><span class="in">  message = FALSE</span></span>
+<span id="cb28-61"><a href="#cb28-61" aria-hidden="true" tabindex="-1"></a><span class="in"> )</span></span>
+<span id="cb28-62"><a href="#cb28-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-63"><a href="#cb28-63" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-64"><a href="#cb28-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-65"><a href="#cb28-65" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- skyblue box --&gt;</span></span>
+<span id="cb28-66"><a href="#cb28-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-67"><a href="#cb28-67" aria-hidden="true" tabindex="-1"></a>::: {.alert .alert-info}</span>
+<span id="cb28-68"><a href="#cb28-68" aria-hidden="true" tabindex="-1"></a><span class="fu"># Purpose {.unnumbered .unlisted}</span></span>
+<span id="cb28-69"><a href="#cb28-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-70"><a href="#cb28-70" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Evaluate the effect of lek membership in song similarity </span>
+<span id="cb28-71"><a href="#cb28-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-72"><a href="#cb28-72" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb28-73"><a href="#cb28-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-74"><a href="#cb28-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-75"><a href="#cb28-75" aria-hidden="true" tabindex="-1"></a><span class="fu"># Load packages {.unnumbered .unlisted}</span></span>
+<span id="cb28-76"><a href="#cb28-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-77"><a href="#cb28-77" aria-hidden="true" tabindex="-1"></a><span class="in">```{r load packages}</span></span>
+<span id="cb28-78"><a href="#cb28-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-79"><a href="#cb28-79" aria-hidden="true" tabindex="-1"></a><span class="in">library("TraMineR")</span></span>
+<span id="cb28-80"><a href="#cb28-80" aria-hidden="true" tabindex="-1"></a><span class="in">library("brms")</span></span>
+<span id="cb28-81"><a href="#cb28-81" aria-hidden="true" tabindex="-1"></a><span class="in">library("brmsish")</span></span>
+<span id="cb28-82"><a href="#cb28-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-83"><a href="#cb28-83" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-84"><a href="#cb28-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-85"><a href="#cb28-85" aria-hidden="true" tabindex="-1"></a><span class="fu">## Statistical modeling</span></span>
+<span id="cb28-86"><a href="#cb28-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-87"><a href="#cb28-87" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Pairwise song similarity was analyzed using a **Bayesian Gaussian linear mixed model**.</span>
+<span id="cb28-88"><a href="#cb28-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-89"><a href="#cb28-89" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The response variable was the **pairwise Optimal Matching (OM) distance** between song sequences.</span>
+<span id="cb28-90"><a href="#cb28-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-91"><a href="#cb28-91" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Pairwise distances were calculated using **Optimal Matching** with biologically informed substitution costs that assigned lower penalties to substitutions within broad acoustic categories (pure tones or trills) than between categories.</span>
+<span id="cb28-92"><a href="#cb28-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-93"><a href="#cb28-93" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Analyses were restricted to **pairwise comparisons between songs recorded within the same study site**, allowing us to test whether songs were more similar within leks than between neighboring leks while minimizing large-scale geographic effects.</span>
+<span id="cb28-94"><a href="#cb28-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-95"><a href="#cb28-95" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Candidate fixed effects included:</span>
+<span id="cb28-96"><a href="#cb28-96" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span><span class="in">`same_lek`</span>, indicating whether two songs originated from the same lek,</span>
+<span id="cb28-97"><a href="#cb28-97" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span><span class="in">`year_diff`</span>, representing the minimum temporal separation (years) between recorded occurrences of the two song types,</span>
+<span id="cb28-98"><a href="#cb28-98" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>and the interaction <span class="in">`same_lek × year_diff`</span>.</span>
+<span id="cb28-99"><a href="#cb28-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-100"><a href="#cb28-100" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Because each song type appeared in multiple pairwise comparisons, song identity was included as a **multi-membership random intercept** (<span class="in">`mm(song1, song2)`</span>) to account for the non-independence of pairwise observations.</span>
+<span id="cb28-101"><a href="#cb28-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-102"><a href="#cb28-102" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The fitted model was:</span>
+<span id="cb28-103"><a href="#cb28-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-104"><a href="#cb28-104" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb28-105"><a href="#cb28-105" aria-hidden="true" tabindex="-1"></a>distance <span class="sc">~</span> same_lek <span class="sc">*</span> year_diff <span class="sc">+</span></span>
+<span id="cb28-106"><a href="#cb28-106" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span> <span class="sc">|</span> <span class="fu">mm</span>(song1, song2))</span>
+<span id="cb28-107"><a href="#cb28-107" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-108"><a href="#cb28-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-109"><a href="#cb28-109" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Models were fitted in **Stan** through the R package **brms** using a Gaussian likelihood and weakly informative default priors.</span>
+<span id="cb28-110"><a href="#cb28-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-111"><a href="#cb28-111" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Model adequacy was assessed using posterior predictive checks.</span>
+<span id="cb28-112"><a href="#cb28-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-115"><a href="#cb28-115" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-116"><a href="#cb28-116" aria-hidden="true" tabindex="-1"></a><span class="co"># Read data</span></span>
+<span id="cb28-117"><a href="#cb28-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-118"><a href="#cb28-118" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/raw/segments_by_song_type.csv"</span>)</span>
+<span id="cb28-119"><a href="#cb28-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-120"><a href="#cb28-120" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sequence object</span></span>
+<span id="cb28-121"><a href="#cb28-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-122"><a href="#cb28-122" aria-hidden="true" tabindex="-1"></a><span class="co"># Columns containing the 20 song segments</span></span>
+<span id="cb28-123"><a href="#cb28-123" aria-hidden="true" tabindex="-1"></a>seqs <span class="ot">&lt;-</span> dat[, <span class="fu">grep</span>(<span class="st">"^X"</span>, <span class="fu">names</span>(dat))]</span>
+<span id="cb28-124"><a href="#cb28-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-125"><a href="#cb28-125" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sequence object</span></span>
+<span id="cb28-126"><a href="#cb28-126" aria-hidden="true" tabindex="-1"></a>seq.obj <span class="ot">&lt;-</span> <span class="fu">seqdef</span>(seqs)</span>
+<span id="cb28-127"><a href="#cb28-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-128"><a href="#cb28-128" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute Optimal Matching distances</span></span>
+<span id="cb28-129"><a href="#cb28-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-130"><a href="#cb28-130" aria-hidden="true" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"d"</span>,<span class="st">"p"</span>,<span class="st">"u"</span>,<span class="st">"s"</span>,<span class="st">"m"</span>,<span class="st">"f"</span>)</span>
+<span id="cb28-131"><a href="#cb28-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-132"><a href="#cb28-132" aria-hidden="true" tabindex="-1"></a>sm <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">2</span>,</span>
+<span id="cb28-133"><a href="#cb28-133" aria-hidden="true" tabindex="-1"></a>             <span class="at">nrow =</span> <span class="dv">6</span>,</span>
+<span id="cb28-134"><a href="#cb28-134" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncol =</span> <span class="dv">6</span>,</span>
+<span id="cb28-135"><a href="#cb28-135" aria-hidden="true" tabindex="-1"></a>             <span class="at">dimnames =</span> <span class="fu">list</span>(states, states))</span>
+<span id="cb28-136"><a href="#cb28-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-137"><a href="#cb28-137" aria-hidden="true" tabindex="-1"></a><span class="fu">diag</span>(sm) <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb28-138"><a href="#cb28-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-139"><a href="#cb28-139" aria-hidden="true" tabindex="-1"></a><span class="co"># within pure tones</span></span>
+<span id="cb28-140"><a href="#cb28-140" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"d"</span>,<span class="st">"p"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"p"</span>,<span class="st">"d"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-141"><a href="#cb28-141" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"p"</span>,<span class="st">"u"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"u"</span>,<span class="st">"p"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-142"><a href="#cb28-142" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"d"</span>,<span class="st">"u"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"u"</span>,<span class="st">"d"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-143"><a href="#cb28-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-144"><a href="#cb28-144" aria-hidden="true" tabindex="-1"></a><span class="co"># within trills</span></span>
+<span id="cb28-145"><a href="#cb28-145" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"s"</span>,<span class="st">"m"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"m"</span>,<span class="st">"s"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-146"><a href="#cb28-146" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"m"</span>,<span class="st">"f"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"f"</span>,<span class="st">"m"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-147"><a href="#cb28-147" aria-hidden="true" tabindex="-1"></a>sm[<span class="st">"s"</span>,<span class="st">"f"</span>] <span class="ot">&lt;-</span> sm[<span class="st">"f"</span>,<span class="st">"s"</span>] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-148"><a href="#cb28-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-149"><a href="#cb28-149" aria-hidden="true" tabindex="-1"></a>dist.mat <span class="ot">&lt;-</span> <span class="fu">seqdist</span>(</span>
+<span id="cb28-150"><a href="#cb28-150" aria-hidden="true" tabindex="-1"></a>  seq.obj,</span>
+<span id="cb28-151"><a href="#cb28-151" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"OM"</span>,</span>
+<span id="cb28-152"><a href="#cb28-152" aria-hidden="true" tabindex="-1"></a>  <span class="at">sm =</span> sm,</span>
+<span id="cb28-153"><a href="#cb28-153" aria-hidden="true" tabindex="-1"></a>  <span class="at">indel =</span> <span class="dv">3</span>,</span>
+<span id="cb28-154"><a href="#cb28-154" aria-hidden="true" tabindex="-1"></a>  <span class="at">norm =</span> <span class="st">"maxlength"</span></span>
+<span id="cb28-155"><a href="#cb28-155" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-156"><a href="#cb28-156" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert distance matrix to pairwise data frame</span></span>
+<span id="cb28-157"><a href="#cb28-157" aria-hidden="true" tabindex="-1"></a>pairs <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">upper.tri</span>(dist.mat), <span class="at">arr.ind =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-158"><a href="#cb28-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-159"><a href="#cb28-159" aria-hidden="true" tabindex="-1"></a>pair.dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb28-160"><a href="#cb28-160" aria-hidden="true" tabindex="-1"></a>  <span class="at">song1    =</span> dat<span class="sc">$</span>song.type[pairs[,<span class="dv">1</span>]],</span>
+<span id="cb28-161"><a href="#cb28-161" aria-hidden="true" tabindex="-1"></a>  <span class="at">song2    =</span> dat<span class="sc">$</span>song.type[pairs[,<span class="dv">2</span>]],</span>
+<span id="cb28-162"><a href="#cb28-162" aria-hidden="true" tabindex="-1"></a>  <span class="at">lek1     =</span> dat<span class="sc">$</span>lek[pairs[,<span class="dv">1</span>]],</span>
+<span id="cb28-163"><a href="#cb28-163" aria-hidden="true" tabindex="-1"></a>  <span class="at">lek2     =</span> dat<span class="sc">$</span>lek[pairs[,<span class="dv">2</span>]],</span>
+<span id="cb28-164"><a href="#cb28-164" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> dist.mat[pairs]</span>
+<span id="cb28-165"><a href="#cb28-165" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-166"><a href="#cb28-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-167"><a href="#cb28-167" aria-hidden="true" tabindex="-1"></a><span class="co"># Predictor variables</span></span>
+<span id="cb28-168"><a href="#cb28-168" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span></span>
+<span id="cb28-169"><a href="#cb28-169" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read.csv</span>(<span class="st">"./data/raw/year_range_by_song_type.csv"</span>, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb28-170"><a href="#cb28-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-171"><a href="#cb28-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-172"><a href="#cb28-172" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>min.year<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song1, <span class="cf">function</span>(x) {</span>
+<span id="cb28-173"><a href="#cb28-173" aria-hidden="true" tabindex="-1"></a>  <span class="fu">min</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb28-174"><a href="#cb28-174" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-175"><a href="#cb28-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-176"><a href="#cb28-176" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>max.year<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song1, <span class="cf">function</span>(x) {</span>
+<span id="cb28-177"><a href="#cb28-177" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb28-178"><a href="#cb28-178" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-179"><a href="#cb28-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-180"><a href="#cb28-180" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>min.year<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song2, <span class="cf">function</span>(x) {</span>
+<span id="cb28-181"><a href="#cb28-181" aria-hidden="true" tabindex="-1"></a>  <span class="fu">min</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb28-182"><a href="#cb28-182" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-183"><a href="#cb28-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-184"><a href="#cb28-184" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>max.year<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">sapply</span>(pair.dat<span class="sc">$</span>song2, <span class="cf">function</span>(x) {</span>
+<span id="cb28-185"><a href="#cb28-185" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>(years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> x])</span>
+<span id="cb28-186"><a href="#cb28-186" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-187"><a href="#cb28-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-188"><a href="#cb28-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-189"><a href="#cb28-189" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge with pairwise data</span></span>
+<span id="cb28-190"><a href="#cb28-190" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>year.diff <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(pair.dat), <span class="cf">function</span>(i) {</span>
+<span id="cb28-191"><a href="#cb28-191" aria-hidden="true" tabindex="-1"></a>  song1 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>song1[i]</span>
+<span id="cb28-192"><a href="#cb28-192" aria-hidden="true" tabindex="-1"></a>  song2 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>song2[i]</span>
+<span id="cb28-193"><a href="#cb28-193" aria-hidden="true" tabindex="-1"></a>  year1 <span class="ot">&lt;-</span> years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> song1]</span>
+<span id="cb28-194"><a href="#cb28-194" aria-hidden="true" tabindex="-1"></a>  year2 <span class="ot">&lt;-</span> years<span class="sc">$</span>year[years<span class="sc">$</span>song.type <span class="sc">==</span> song2]</span>
+<span id="cb28-195"><a href="#cb28-195" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb28-196"><a href="#cb28-196" aria-hidden="true" tabindex="-1"></a>  <span class="co"># min of all possible differences</span></span>
+<span id="cb28-197"><a href="#cb28-197" aria-hidden="true" tabindex="-1"></a>  <span class="fu">min</span>(<span class="fu">outer</span>(year1, <span class="fu">c</span>(year2, <span class="dv">2222</span>), <span class="at">FUN =</span> <span class="cf">function</span>(x, y) <span class="fu">abs</span>(x <span class="sc">-</span> y)))</span>
+<span id="cb28-198"><a href="#cb28-198" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb28-199"><a href="#cb28-199" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-200"><a href="#cb28-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-201"><a href="#cb28-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-202"><a href="#cb28-202" aria-hidden="true" tabindex="-1"></a>lek.site <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb28-203"><a href="#cb28-203" aria-hidden="true" tabindex="-1"></a>  <span class="at">lek =</span> <span class="fu">c</span>(</span>
+<span id="cb28-204"><a href="#cb28-204" aria-hidden="true" tabindex="-1"></a>    <span class="st">"BR1"</span>, <span class="st">"BR2"</span>,</span>
+<span id="cb28-205"><a href="#cb28-205" aria-hidden="true" tabindex="-1"></a>    <span class="st">"CCE"</span>, <span class="st">"CCL"</span>, <span class="st">"LOC"</span>, <span class="st">"SAT"</span>, <span class="st">"SJA"</span>, <span class="st">"STR"</span>, <span class="st">"SUR"</span>,</span>
+<span id="cb28-206"><a href="#cb28-206" aria-hidden="true" tabindex="-1"></a>    <span class="st">"TR1"</span>, <span class="st">"TR2"</span>,</span>
+<span id="cb28-207"><a href="#cb28-207" aria-hidden="true" tabindex="-1"></a>    <span class="st">"HC1"</span>, <span class="st">"HC2"</span></span>
+<span id="cb28-208"><a href="#cb28-208" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb28-209"><a href="#cb28-209" aria-hidden="true" tabindex="-1"></a>  <span class="at">site =</span> <span class="fu">c</span>(</span>
+<span id="cb28-210"><a href="#cb28-210" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"BR"</span>, <span class="dv">2</span>),</span>
+<span id="cb28-211"><a href="#cb28-211" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"LS"</span>, <span class="dv">7</span>),</span>
+<span id="cb28-212"><a href="#cb28-212" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"TR"</span>, <span class="dv">2</span>),</span>
+<span id="cb28-213"><a href="#cb28-213" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"HC"</span>, <span class="dv">2</span>)</span>
+<span id="cb28-214"><a href="#cb28-214" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb28-215"><a href="#cb28-215" aria-hidden="true" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb28-216"><a href="#cb28-216" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-217"><a href="#cb28-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-218"><a href="#cb28-218" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>same_site <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(pair.dat), <span class="cf">function</span>(i) {</span>
+<span id="cb28-219"><a href="#cb28-219" aria-hidden="true" tabindex="-1"></a>  lek1 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek1[i]</span>
+<span id="cb28-220"><a href="#cb28-220" aria-hidden="true" tabindex="-1"></a>  lek2 <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek2[i]</span>
+<span id="cb28-221"><a href="#cb28-221" aria-hidden="true" tabindex="-1"></a>  site1 <span class="ot">&lt;-</span> lek.site<span class="sc">$</span>site[lek.site<span class="sc">$</span>lek <span class="sc">==</span> lek1]</span>
+<span id="cb28-222"><a href="#cb28-222" aria-hidden="true" tabindex="-1"></a>  site2 <span class="ot">&lt;-</span> lek.site<span class="sc">$</span>site[lek.site<span class="sc">$</span>lek <span class="sc">==</span> lek2]</span>
+<span id="cb28-223"><a href="#cb28-223" aria-hidden="true" tabindex="-1"></a>  site1 <span class="sc">==</span> site2</span>
+<span id="cb28-224"><a href="#cb28-224" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb28-225"><a href="#cb28-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-226"><a href="#cb28-226" aria-hidden="true" tabindex="-1"></a><span class="co"># keep only from same site</span></span>
+<span id="cb28-227"><a href="#cb28-227" aria-hidden="true" tabindex="-1"></a>pair.dat <span class="ot">&lt;-</span> pair.dat[pair.dat<span class="sc">$</span>same_site, ]</span>
+<span id="cb28-228"><a href="#cb28-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-229"><a href="#cb28-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-230"><a href="#cb28-230" aria-hidden="true" tabindex="-1"></a><span class="co"># head(pair.dat)</span></span>
+<span id="cb28-231"><a href="#cb28-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-232"><a href="#cb28-232" aria-hidden="true" tabindex="-1"></a><span class="co"># Songs from the same lek?</span></span>
+<span id="cb28-233"><a href="#cb28-233" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>same_lek <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek1 <span class="sc">==</span> pair.dat<span class="sc">$</span>lek2</span>
+<span id="cb28-234"><a href="#cb28-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-235"><a href="#cb28-235" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect the distribution of distances</span></span>
+<span id="cb28-236"><a href="#cb28-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-237"><a href="#cb28-237" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(pair.dat<span class="sc">$</span>distance, <span class="at">breaks =</span> <span class="dv">30</span>)</span>
+<span id="cb28-238"><a href="#cb28-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-239"><a href="#cb28-239" aria-hidden="true" tabindex="-1"></a><span class="co"># Bayesian regression</span></span>
+<span id="cb28-240"><a href="#cb28-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-241"><a href="#cb28-241" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
+<span id="cb28-242"><a href="#cb28-242" aria-hidden="true" tabindex="-1"></a>  distance <span class="sc">~</span> same_lek <span class="sc">*</span> year.diff <span class="sc">+</span>               </span>
+<span id="cb28-243"><a href="#cb28-243" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">|</span> <span class="fu">mm</span>(song1, song2)),</span>
+<span id="cb28-244"><a href="#cb28-244" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> pair.dat,</span>
+<span id="cb28-245"><a href="#cb28-245" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">gaussian</span>(),</span>
+<span id="cb28-246"><a href="#cb28-246" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>,</span>
+<span id="cb28-247"><a href="#cb28-247" aria-hidden="true" tabindex="-1"></a>  <span class="at">cores =</span> <span class="dv">4</span>,</span>
+<span id="cb28-248"><a href="#cb28-248" aria-hidden="true" tabindex="-1"></a>  <span class="at">iter =</span> <span class="dv">5000</span>,</span>
+<span id="cb28-249"><a href="#cb28-249" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">list</span>(</span>
+<span id="cb28-250"><a href="#cb28-250" aria-hidden="true" tabindex="-1"></a>    <span class="at">adapt_delta =</span> <span class="fl">0.99</span>,</span>
+<span id="cb28-251"><a href="#cb28-251" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_treedepth =</span> <span class="dv">15</span></span>
+<span id="cb28-252"><a href="#cb28-252" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb28-253"><a href="#cb28-253" aria-hidden="true" tabindex="-1"></a>  <span class="at">file =</span> <span class="st">"./data/processed/song_similarity_model.rds"</span>, </span>
+<span id="cb28-254"><a href="#cb28-254" aria-hidden="true" tabindex="-1"></a>  <span class="at">file_refit =</span> <span class="st">"on_change"</span></span>
+<span id="cb28-255"><a href="#cb28-255" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-256"><a href="#cb28-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-257"><a href="#cb28-257" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize results</span></span>
+<span id="cb28-258"><a href="#cb28-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-259"><a href="#cb28-259" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit)</span>
+<span id="cb28-260"><a href="#cb28-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-261"><a href="#cb28-261" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-262"><a href="#cb28-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-263"><a href="#cb28-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-266"><a href="#cb28-266" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-267"><a href="#cb28-267" aria-hidden="true" tabindex="-1"></a><span class="do">###############################################################</span></span>
+<span id="cb28-268"><a href="#cb28-268" aria-hidden="true" tabindex="-1"></a><span class="co"># First year of each song type</span></span>
+<span id="cb28-269"><a href="#cb28-269" aria-hidden="true" tabindex="-1"></a><span class="do">###############################################################</span></span>
+<span id="cb28-270"><a href="#cb28-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-271"><a href="#cb28-271" aria-hidden="true" tabindex="-1"></a>song.info <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">rbind</span>(</span>
+<span id="cb28-272"><a href="#cb28-272" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">song =</span> pair.dat<span class="sc">$</span>song1,</span>
+<span id="cb28-273"><a href="#cb28-273" aria-hidden="true" tabindex="-1"></a>             <span class="at">lek =</span> pair.dat<span class="sc">$</span>lek1,</span>
+<span id="cb28-274"><a href="#cb28-274" aria-hidden="true" tabindex="-1"></a>             <span class="at">min.year =</span> pair.dat<span class="sc">$</span>min.year<span class="fl">.1</span>),</span>
+<span id="cb28-275"><a href="#cb28-275" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">song =</span> pair.dat<span class="sc">$</span>song2,</span>
+<span id="cb28-276"><a href="#cb28-276" aria-hidden="true" tabindex="-1"></a>             <span class="at">lek =</span> pair.dat<span class="sc">$</span>lek2,</span>
+<span id="cb28-277"><a href="#cb28-277" aria-hidden="true" tabindex="-1"></a>             <span class="at">min.year =</span> pair.dat<span class="sc">$</span>min.year<span class="fl">.2</span>)</span>
+<span id="cb28-278"><a href="#cb28-278" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb28-279"><a href="#cb28-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-280"><a href="#cb28-280" aria-hidden="true" tabindex="-1"></a><span class="do">###############################################################</span></span>
+<span id="cb28-281"><a href="#cb28-281" aria-hidden="true" tabindex="-1"></a><span class="co"># Add same_lek if needed</span></span>
+<span id="cb28-282"><a href="#cb28-282" aria-hidden="true" tabindex="-1"></a><span class="do">###############################################################</span></span>
+<span id="cb28-283"><a href="#cb28-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-284"><a href="#cb28-284" aria-hidden="true" tabindex="-1"></a>pair.dat<span class="sc">$</span>same_lek <span class="ot">&lt;-</span> pair.dat<span class="sc">$</span>lek1 <span class="sc">==</span> pair.dat<span class="sc">$</span>lek2</span>
+<span id="cb28-285"><a href="#cb28-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-286"><a href="#cb28-286" aria-hidden="true" tabindex="-1"></a><span class="do">###############################################################</span></span>
+<span id="cb28-287"><a href="#cb28-287" aria-hidden="true" tabindex="-1"></a><span class="co"># Nearest neighbour within one year before first occurrence</span></span>
+<span id="cb28-288"><a href="#cb28-288" aria-hidden="true" tabindex="-1"></a><span class="do">###############################################################</span></span>
+<span id="cb28-289"><a href="#cb28-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-290"><a href="#cb28-290" aria-hidden="true" tabindex="-1"></a>songs <span class="ot">&lt;-</span> song.info<span class="sc">$</span>song</span>
+<span id="cb28-291"><a href="#cb28-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-292"><a href="#cb28-292" aria-hidden="true" tabindex="-1"></a>nearest.same.lek <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="fu">length</span>(songs))</span>
+<span id="cb28-293"><a href="#cb28-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-294"><a href="#cb28-294" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(songs)){</span>
+<span id="cb28-295"><a href="#cb28-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-296"><a href="#cb28-296" aria-hidden="true" tabindex="-1"></a>  song <span class="ot">&lt;-</span> songs[i]</span>
+<span id="cb28-297"><a href="#cb28-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-298"><a href="#cb28-298" aria-hidden="true" tabindex="-1"></a>  t0 <span class="ot">&lt;-</span> song.info<span class="sc">$</span>min.year[song.info<span class="sc">$</span>song <span class="sc">==</span> song]</span>
+<span id="cb28-299"><a href="#cb28-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-300"><a href="#cb28-300" aria-hidden="true" tabindex="-1"></a>  <span class="co"># all pairwise comparisons involving this song</span></span>
+<span id="cb28-301"><a href="#cb28-301" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> pair.dat[pair.dat<span class="sc">$</span>song1 <span class="sc">==</span> song <span class="sc">|</span> pair.dat<span class="sc">$</span>song2 <span class="sc">==</span> song, ]</span>
+<span id="cb28-302"><a href="#cb28-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-303"><a href="#cb28-303" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">nrow</span>(x) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb28-304"><a href="#cb28-304" aria-hidden="true" tabindex="-1"></a>    <span class="cf">next</span></span>
+<span id="cb28-305"><a href="#cb28-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-306"><a href="#cb28-306" aria-hidden="true" tabindex="-1"></a><span class="co"># First year of the other song</span></span>
+<span id="cb28-307"><a href="#cb28-307" aria-hidden="true" tabindex="-1"></a>other.year <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb28-308"><a href="#cb28-308" aria-hidden="true" tabindex="-1"></a>  x<span class="sc">$</span>song1 <span class="sc">==</span> song,</span>
+<span id="cb28-309"><a href="#cb28-309" aria-hidden="true" tabindex="-1"></a>  x<span class="sc">$</span>min.year<span class="fl">.2</span>,</span>
+<span id="cb28-310"><a href="#cb28-310" aria-hidden="true" tabindex="-1"></a>  x<span class="sc">$</span>min.year<span class="fl">.1</span></span>
+<span id="cb28-311"><a href="#cb28-311" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-312"><a href="#cb28-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-313"><a href="#cb28-313" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate songs:</span></span>
+<span id="cb28-314"><a href="#cb28-314" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate songs:</span></span>
+<span id="cb28-315"><a href="#cb28-315" aria-hidden="true" tabindex="-1"></a><span class="co"># first appeared in the same year or exactly one year earlier</span></span>
+<span id="cb28-316"><a href="#cb28-316" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> other.year <span class="sc">%in%</span> <span class="fu">c</span>(t0 <span class="sc">-</span> <span class="dv">1</span>, t0)</span>
+<span id="cb28-317"><a href="#cb28-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-318"><a href="#cb28-318" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> x[keep, ]</span>
+<span id="cb28-319"><a href="#cb28-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-320"><a href="#cb28-320" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">nrow</span>(x) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb28-321"><a href="#cb28-321" aria-hidden="true" tabindex="-1"></a>  <span class="cf">next</span></span>
+<span id="cb28-322"><a href="#cb28-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-323"><a href="#cb28-323" aria-hidden="true" tabindex="-1"></a><span class="co"># Was there at least one candidate from the same lek?</span></span>
+<span id="cb28-324"><a href="#cb28-324" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">any</span>(x<span class="sc">$</span>same_lek)){</span>
+<span id="cb28-325"><a href="#cb28-325" aria-hidden="true" tabindex="-1"></a>  nearest.same.lek[i] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb28-326"><a href="#cb28-326" aria-hidden="true" tabindex="-1"></a>  <span class="cf">next</span></span>
+<span id="cb28-327"><a href="#cb28-327" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-328"><a href="#cb28-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-329"><a href="#cb28-329" aria-hidden="true" tabindex="-1"></a>  <span class="co"># nearest neighbour</span></span>
+<span id="cb28-330"><a href="#cb28-330" aria-hidden="true" tabindex="-1"></a>  mindist <span class="ot">&lt;-</span> <span class="fu">min</span>(x<span class="sc">$</span>distance)</span>
+<span id="cb28-331"><a href="#cb28-331" aria-hidden="true" tabindex="-1"></a>  closest <span class="ot">&lt;-</span> x[x<span class="sc">$</span>distance <span class="sc">==</span> mindist, ]</span>
+<span id="cb28-332"><a href="#cb28-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-333"><a href="#cb28-333" aria-hidden="true" tabindex="-1"></a>  nearest.same.lek[i] <span class="ot">&lt;-</span> <span class="fu">any</span>(closest<span class="sc">$</span>same_lek)</span>
+<span id="cb28-334"><a href="#cb28-334" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-335"><a href="#cb28-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-336"><a href="#cb28-336" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nearest.same.lek, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span>
+<span id="cb28-337"><a href="#cb28-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-338"><a href="#cb28-338" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(nearest.same.lek, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-339"><a href="#cb28-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-340"><a href="#cb28-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-341"><a href="#cb28-341" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(nearest.same.lek, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(nearest.same.lek))</span>
+<span id="cb28-342"><a href="#cb28-342" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-343"><a href="#cb28-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-344"><a href="#cb28-344" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-345"><a href="#cb28-345" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-346"><a href="#cb28-346" aria-hidden="true" tabindex="-1"></a>::: {.alert .alert-info}</span>
+<span id="cb28-347"><a href="#cb28-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-348"><a href="#cb28-348" aria-hidden="true" tabindex="-1"></a><span class="fu">## Results</span></span>
+<span id="cb28-349"><a href="#cb28-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-350"><a href="#cb28-350" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Posterior predictive checks indicated that the Gaussian model adequately described the observed distribution of pairwise song distances.</span>
+<span id="cb28-351"><a href="#cb28-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-354"><a href="#cb28-354" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-355"><a href="#cb28-355" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit)</span>
+<span id="cb28-356"><a href="#cb28-356" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-357"><a href="#cb28-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-358"><a href="#cb28-358" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-359"><a href="#cb28-359" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Songs recorded within the **same lek** were consistently more similar than songs recorded in **different leks within the same study site** (posterior estimate = -0.031).</span>
+<span id="cb28-360"><a href="#cb28-360" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-363"><a href="#cb28-363" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-364"><a href="#cb28-364" aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(fit)</span>
+<span id="cb28-365"><a href="#cb28-365" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-366"><a href="#cb28-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-367"><a href="#cb28-367" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Pairwise song distance increased with the temporal separation between recordings for **between-lek comparisons**, indicating that songs became progressively more dissimilar through time even among neighboring leks.</span>
+<span id="cb28-368"><a href="#cb28-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-371"><a href="#cb28-371" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-372"><a href="#cb28-372" aria-hidden="true" tabindex="-1"></a><span class="fu">conditional_effects</span>(fit, <span class="at">effects =</span> <span class="st">"year.diff:same_lek"</span>)</span>
+<span id="cb28-373"><a href="#cb28-373" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-374"><a href="#cb28-374" aria-hidden="true" tabindex="-1"></a><span class="fu">hypothesis</span>(</span>
+<span id="cb28-375"><a href="#cb28-375" aria-hidden="true" tabindex="-1"></a>  fit,</span>
+<span id="cb28-376"><a href="#cb28-376" aria-hidden="true" tabindex="-1"></a>  <span class="st">"year.diff &gt; 0"</span></span>
+<span id="cb28-377"><a href="#cb28-377" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-378"><a href="#cb28-378" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-379"><a href="#cb28-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-380"><a href="#cb28-380" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The temporal increase in song dissimilarity was **significantly stronger within leks** than between leks, as indicated by a positive interaction between <span class="in">`same_lek`</span> and <span class="in">`year_diff`</span>.</span>
+<span id="cb28-381"><a href="#cb28-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-384"><a href="#cb28-384" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-385"><a href="#cb28-385" aria-hidden="true" tabindex="-1"></a><span class="fu">hypothesis</span>(</span>
+<span id="cb28-386"><a href="#cb28-386" aria-hidden="true" tabindex="-1"></a>  fit,</span>
+<span id="cb28-387"><a href="#cb28-387" aria-hidden="true" tabindex="-1"></a>  <span class="st">"same_lekTRUE:year.diff &gt; 0"</span></span>
+<span id="cb28-388"><a href="#cb28-388" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-389"><a href="#cb28-389" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-390"><a href="#cb28-390" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-391"><a href="#cb28-391" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Consequently, pairwise song dissimilarity increased through time **within leks**, with overwhelming posterior support for a positive temporal trend.</span>
+<span id="cb28-392"><a href="#cb28-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-395"><a href="#cb28-395" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb28-396"><a href="#cb28-396" aria-hidden="true" tabindex="-1"></a><span class="fu">hypothesis</span>(</span>
+<span id="cb28-397"><a href="#cb28-397" aria-hidden="true" tabindex="-1"></a>  fit,</span>
+<span id="cb28-398"><a href="#cb28-398" aria-hidden="true" tabindex="-1"></a>  <span class="st">"year.diff + same_lekTRUE:year.diff &gt; 0"</span></span>
+<span id="cb28-399"><a href="#cb28-399" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-400"><a href="#cb28-400" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-401"><a href="#cb28-401" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-402"><a href="#cb28-402" aria-hidden="true" tabindex="-1"></a>::: </span>
+<span id="cb28-403"><a href="#cb28-403" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-404"><a href="#cb28-404" aria-hidden="true" tabindex="-1"></a>::: {.alert .alert-success}</span>
+<span id="cb28-405"><a href="#cb28-405" aria-hidden="true" tabindex="-1"></a><span class="fu"># Takeaways {#takeaways .unnumbered .unlisted}</span></span>
+<span id="cb28-406"><a href="#cb28-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-407"><a href="#cb28-407" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Together, these results indicate that songs exhibit strong local cultural structure, with song types being more similar within leks than between neighboring leks, while simultaneously accumulating cultural differences through time. Moreover, the rate at which song dissimilarity accumulated was greater within leks than between leks.</span>
+<span id="cb28-408"><a href="#cb28-408" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb28-409"><a href="#cb28-409" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-410"><a href="#cb28-410" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------</span>
+<span id="cb28-411"><a href="#cb28-411" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-412"><a href="#cb28-412" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-413"><a href="#cb28-413" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- add packages used, system details and versions  --&gt;</span></span>
+<span id="cb28-414"><a href="#cb28-414" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-415"><a href="#cb28-415" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb28-416"><a href="#cb28-416" aria-hidden="true" tabindex="-1"></a><span class="fu">## Session information {.unnumbered .unlisted}</span></span>
+<span id="cb28-417"><a href="#cb28-417" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-418"><a href="#cb28-418" aria-hidden="true" tabindex="-1"></a><span class="in">```{r session info}</span></span>
+<span id="cb28-419"><a href="#cb28-419" aria-hidden="true" tabindex="-1"></a><span class="in">#| echo: false</span></span>
+<span id="cb28-420"><a href="#cb28-420" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-421"><a href="#cb28-421" aria-hidden="true" tabindex="-1"></a><span class="in"># if devtools is installed use devtools::session_info()</span></span>
+<span id="cb28-422"><a href="#cb28-422" aria-hidden="true" tabindex="-1"></a><span class="in">if (requireNamespace("devtools", quietly = TRUE)) {</span></span>
+<span id="cb28-423"><a href="#cb28-423" aria-hidden="true" tabindex="-1"></a><span class="in">  devtools::session_info()</span></span>
+<span id="cb28-424"><a href="#cb28-424" aria-hidden="true" tabindex="-1"></a><span class="in">} else {</span></span>
+<span id="cb28-425"><a href="#cb28-425" aria-hidden="true" tabindex="-1"></a><span class="in">  sessionInfo()</span></span>
+<span id="cb28-426"><a href="#cb28-426" aria-hidden="true" tabindex="-1"></a><span class="in">}</span></span>
+<span id="cb28-427"><a href="#cb28-427" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-428"><a href="#cb28-428" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb28-429"><a href="#cb28-429" aria-hidden="true" tabindex="-1"></a>:::</span>
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,416 @@
+---
+title: Measure song similarity 
+subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 3
+toc-location: left
+number-sections: true
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-tools: true
+    css: qmd.css
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r set root directory}
+#| eval: true
+#| echo: false
+
+# install knitr package if not installed
+if (!requireNamespace("knitr", quietly = TRUE)) {
+  install.packages("knitr")
+}
+
+# set working directory 
+knitr::opts_knit$set(root.dir =  "..")
+
+```
+
+```{r add link to github repo}
+#| eval: true
+#| output: asis
+#| echo: false
+
+# print link to github repo if any
+if (file.exists("./.git/config")){
+  config <- readLines("./.git/config")
+  url <- grep("url",  config, value = TRUE)
+  url <- gsub("\\turl = |.git$", "", url)
+  if (nchar(url) > 1)
+  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
+  }
+
+```
+
+```{r setup style}
+#| message: false
+#| warning: false
+
+# options to customize chunk outputs
+knitr::opts_chunk$set(
+  tidy.opts = list(width.cutoff = 65), 
+  tidy = TRUE,
+  message = FALSE
+ )
+
+```
+
+<!-- skyblue box -->
+
+::: {.alert .alert-info}
+# Purpose {.unnumbered .unlisted}
+
+- Evaluate the effect of lek membership in song similarity 
+
+:::
+
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages}
+
+library("TraMineR")
+library("brms")
+library("brmsish")
+
+```
+
+## Statistical modeling
+
+- Pairwise song similarity was analyzed using a **Bayesian Gaussian linear mixed model**.
+
+- The response variable was the **pairwise Optimal Matching (OM) distance** between song sequences.
+
+- Pairwise distances were calculated using **Optimal Matching** with biologically informed substitution costs that assigned lower penalties to substitutions within broad acoustic categories (pure tones or trills) than between categories.
+
+- Analyses were restricted to **pairwise comparisons between songs recorded within the same study site**, allowing us to test whether songs were more similar within leks than between neighboring leks while minimizing large-scale geographic effects.
+
+- Candidate fixed effects included:
+  - `same_lek`, indicating whether two songs originated from the same lek,
+  - `year_diff`, representing the minimum temporal separation (years) between recorded occurrences of the two song types,
+  - and the interaction `same_lek × year_diff`.
+
+- Because each song type appeared in multiple pairwise comparisons, song identity was included as a **multi-membership random intercept** (`mm(song1, song2)`) to account for the non-independence of pairwise observations.
+
+- The fitted model was:
+
+```r
+distance ~ same_lek * year_diff +
+  (1 | mm(song1, song2))
+```
+
+- Models were fitted in **Stan** through the R package **brms** using a Gaussian likelihood and weakly informative default priors.
+
+- Model adequacy was assessed using posterior predictive checks.
+
+```{r}
+# Read data
+
+dat <- read.csv("./data/raw/segments_by_song_type.csv")
+
+# Create sequence object
+
+# Columns containing the 20 song segments
+seqs <- dat[, grep("^X", names(dat))]
+
+# Create sequence object
+seq.obj <- seqdef(seqs)
+
+# Compute Optimal Matching distances
+
+states <- c("d","p","u","s","m","f")
+
+sm <- matrix(2,
+             nrow = 6,
+             ncol = 6,
+             dimnames = list(states, states))
+
+diag(sm) <- 0
+
+# within pure tones
+sm["d","p"] <- sm["p","d"] <- 1
+sm["p","u"] <- sm["u","p"] <- 1
+sm["d","u"] <- sm["u","d"] <- 1
+
+# within trills
+sm["s","m"] <- sm["m","s"] <- 1
+sm["m","f"] <- sm["f","m"] <- 1
+sm["s","f"] <- sm["f","s"] <- 1
+
+dist.mat <- seqdist(
+  seq.obj,
+  method = "OM",
+  sm = sm,
+  indel = 3,
+  norm = "maxlength"
+)
+# Convert distance matrix to pairwise data frame
+pairs <- which(upper.tri(dist.mat), arr.ind = TRUE)
+
+pair.dat <- data.frame(
+  song1    = dat$song.type[pairs[,1]],
+  song2    = dat$song.type[pairs[,2]],
+  lek1     = dat$lek[pairs[,1]],
+  lek2     = dat$lek[pairs[,2]],
+  distance = dist.mat[pairs]
+)
+
+# Predictor variables
+years <-
+  read.csv("./data/raw/year_range_by_song_type.csv", stringsAsFactors = FALSE)
+
+
+pair.dat$min.year.1 <- sapply(pair.dat$song1, function(x) {
+  min(years$year[years$song.type == x])
+})
+
+pair.dat$max.year.1 <- sapply(pair.dat$song1, function(x) {
+  max(years$year[years$song.type == x])
+})
+
+pair.dat$min.year.2 <- sapply(pair.dat$song2, function(x) {
+  min(years$year[years$song.type == x])
+})
+
+pair.dat$max.year.2 <- sapply(pair.dat$song2, function(x) {
+  max(years$year[years$song.type == x])
+})
+
+
+# Merge with pairwise data
+pair.dat$year.diff <- sapply(1:nrow(pair.dat), function(i) {
+  song1 <- pair.dat$song1[i]
+  song2 <- pair.dat$song2[i]
+  year1 <- years$year[years$song.type == song1]
+  year2 <- years$year[years$song.type == song2]
+ 
+  # min of all possible differences
+  min(outer(year1, c(year2, 2222), FUN = function(x, y) abs(x - y)))
+  
+})
+
+
+lek.site <- data.frame(
+  lek = c(
+    "BR1", "BR2",
+    "CCE", "CCL", "LOC", "SAT", "SJA", "STR", "SUR",
+    "TR1", "TR2",
+    "HC1", "HC2"
+  ),
+  site = c(
+    rep("BR", 2),
+    rep("LS", 7),
+    rep("TR", 2),
+    rep("HC", 2)
+  ),
+  stringsAsFactors = FALSE
+)
+
+pair.dat$same_site <- sapply(1:nrow(pair.dat), function(i) {
+  lek1 <- pair.dat$lek1[i]
+  lek2 <- pair.dat$lek2[i]
+  site1 <- lek.site$site[lek.site$lek == lek1]
+  site2 <- lek.site$site[lek.site$lek == lek2]
+  site1 == site2
+})
+
+# keep only from same site
+pair.dat <- pair.dat[pair.dat$same_site, ]
+
+
+# head(pair.dat)
+
+# Songs from the same lek?
+pair.dat$same_lek <- pair.dat$lek1 == pair.dat$lek2
+
+# Inspect the distribution of distances
+
+hist(pair.dat$distance, breaks = 30)
+
+# Bayesian regression
+
+fit <- brm(
+  distance ~ same_lek * year.diff +               
+    (1 | mm(song1, song2)),
+  data = pair.dat,
+  family = gaussian(),
+  chains = 4,
+  cores = 4,
+  iter = 5000,
+  control = list(
+    adapt_delta = 0.99,
+    max_treedepth = 15
+  ),
+  file = "./data/processed/song_similarity_model.rds", 
+  file_refit = "on_change"
+)
+
+# Summarize results
+
+summary(fit)
+
+```
+
+
+```{r}
+###############################################################
+# First year of each song type
+###############################################################
+
+song.info <- unique(rbind(
+  data.frame(song = pair.dat$song1,
+             lek = pair.dat$lek1,
+             min.year = pair.dat$min.year.1),
+  data.frame(song = pair.dat$song2,
+             lek = pair.dat$lek2,
+             min.year = pair.dat$min.year.2)
+))
+
+###############################################################
+# Add same_lek if needed
+###############################################################
+
+pair.dat$same_lek <- pair.dat$lek1 == pair.dat$lek2
+
+###############################################################
+# Nearest neighbour within one year before first occurrence
+###############################################################
+
+songs <- song.info$song
+
+nearest.same.lek <- rep(NA, length(songs))
+
+for(i in seq_along(songs)){
+
+  song <- songs[i]
+
+  t0 <- song.info$min.year[song.info$song == song]
+
+  # all pairwise comparisons involving this song
+  x <- pair.dat[pair.dat$song1 == song | pair.dat$song2 == song, ]
+
+  if(nrow(x) == 0)
+    next
+
+# First year of the other song
+other.year <- ifelse(
+  x$song1 == song,
+  x$min.year.2,
+  x$min.year.1
+)
+
+# Candidate songs:
+# Candidate songs:
+# first appeared in the same year or exactly one year earlier
+keep <- other.year %in% c(t0 - 1, t0)
+
+x <- x[keep, ]
+
+if(nrow(x) == 0)
+  next
+
+# Was there at least one candidate from the same lek?
+if(!any(x$same_lek)){
+  nearest.same.lek[i] <- NA
+  next
+}
+
+  # nearest neighbour
+  mindist <- min(x$distance)
+  closest <- x[x$distance == mindist, ]
+
+  nearest.same.lek[i] <- any(closest$same_lek)
+}
+
+table(nearest.same.lek, useNA = "ifany")
+
+mean(nearest.same.lek, na.rm = TRUE)
+
+
+sum(nearest.same.lek, na.rm = TRUE) / sum(!is.na(nearest.same.lek))
+
+
+```
+
+::: {.alert .alert-info}
+
+## Results
+
+- Posterior predictive checks indicated that the Gaussian model adequately described the observed distribution of pairwise song distances.
+
+```{r}
+pp_check(fit)
+```
+
+
+- Songs recorded within the **same lek** were consistently more similar than songs recorded in **different leks within the same study site** (posterior estimate = -0.031).
+
+```{r}
+fixef(fit)
+```
+
+- Pairwise song distance increased with the temporal separation between recordings for **between-lek comparisons**, indicating that songs became progressively more dissimilar through time even among neighboring leks.
+
+```{r}
+
+conditional_effects(fit, effects = "year.diff:same_lek")
+
+hypothesis(
+  fit,
+  "year.diff > 0"
+)
+```
+
+- The temporal increase in song dissimilarity was **significantly stronger within leks** than between leks, as indicated by a positive interaction between `same_lek` and `year_diff`.
+
+```{r}
+hypothesis(
+  fit,
+  "same_lekTRUE:year.diff > 0"
+)
+```
+
+- Consequently, pairwise song dissimilarity increased through time **within leks**, with overwhelming posterior support for a positive temporal trend.
+
+```{r}
+hypothesis(
+  fit,
+  "year.diff + same_lekTRUE:year.diff > 0"
+)
+```
+
+::: 
+
+::: {.alert .alert-success}
+# Takeaways {#takeaways .unnumbered .unlisted}
+
+- Together, these results indicate that songs exhibit strong local cultural structure, with song types being more similar within leks than between neighboring leks, while simultaneously accumulating cultural differences through time. Moreover, the rate at which song dissimilarity accumulated was greater within leks than between leks.
+:::
+
+------------------------------------------------------------------------
+
+
+<!-- add packages used, system details and versions  -->
+
+::: {.callout-note collapse="true"}
+## Session information {.unnumbered .unlisted}
+
+```{r session info}
+#| echo: false
+
+# if devtools is installed use devtools::session_info()
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info()
+} else {
+  sessionInfo()
+}
+
+```
+:::

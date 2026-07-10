@@ -886,8 +886,6 @@ tab
 #| warning: false
 #| out.height: '170%'
 
- 
-
 topo_similarity_all$fossils <- "all"
 topo_similarity_early$fossils <- "early"
 
@@ -965,7 +963,12 @@ priors <- c(
 )
 
 mod <- brm(
-  formula = dissimilarity ~ alignment + data.set + models + fossils + (1 | lek), 
+  formula = dissimilarity ~ alignment +
+    data.set +
+    models +
+    fossils +
+    (1 | lek) +
+    (1 | mm(group.1, group.2)),
   data = topo_similarity,
   iter = iterations,
   family = gaussian(),
@@ -973,10 +976,10 @@ mod <- brm(
   cores = chains,
   prior = priors,
   save_pars = save_pars(all = TRUE),
-   control = list(adapt_delta = 0.99, max_treedepth = 15),
+  control = list(adapt_delta = 0.99, max_treedepth = 15),
   file = "./data/processed/regression_results_topological_similiarity",
-  file_refit = "always")
-
+  file_refit = "always"
+)
 mod <- add_criterion(mod, criterion = c("loo"))
 
 # weakly informative priors
@@ -986,7 +989,8 @@ priors <- c(
 )
 
 null_mod <- brm(
-  formula = dissimilarity ~ 1 + (1 | lek), 
+  formula = dissimilarity ~ 1 + (1 | lek) +
+    (1 | mm(group.1, group.2)), 
   data = topo_similarity,
   iter = iterations,
   family = gaussian(),

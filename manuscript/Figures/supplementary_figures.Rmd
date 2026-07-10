@@ -1,0 +1,141 @@
+---
+title: "Supplementary Figures"
+output:
+  word_document: default
+  pdf_document:
+    latex_engine: xelatex
+geometry: margin=1in
+fontsize: 11pt
+header-includes: \usepackage{graphicx}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+library(knitr)
+```
+
+
+```{r captions, include=FALSE}
+# Find all figure files
+files <- list.files(path = ".",
+  pattern = "^FigS[0-9]+.*\\.png$",
+  full.names = TRUE,
+)
+
+# Sort numerically
+fig_num <- as.integer(sub(".*FigS([0-9]+).*", "\\1", basename(files)))
+files <- files[order(fig_num)]
+fig_num <- sort(fig_num)
+
+
+captions <- data.frame(
+  fig_num = 3:38,
+  caption = c(
+
+    ## Estimates --------------------------------------------------------------
+
+    "Number of invariant sites estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of number of invariant sites. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of number of invariant sites. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Number of segregating sites estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of segregating sites. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of segregating sites. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Maximum invariant block length estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of maximum invariant block length. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of maximum invariant block length. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Maximum variable block length estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of maximum variable block length. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of maximum variable block length. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Number of invariant blocks estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of number of invariant blocks. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of number of invariant blocks. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Maximum pairwise difference estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of maximum pairwise difference. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of maximum pairwise difference. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Minimum pairwise difference estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of minimum pairwise difference. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of minimum pairwise difference. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Theta estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of theta. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of theta. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Tajima's D estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of Tajima's D. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of Tajima's D. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    "Nucleotide diversity (Tajima's π) estimated from empirical and simulated data. Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and symbols distinguish empirical (triangles) from simulated (circles) data. Error bars indicate 95% credible intervals.",
+
+    "Effect sizes comparing empirical and simulated estimates of nucleotide diversity (Tajima's π). Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), and colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93). The dashed horizontal line indicates an effect size of 2.",
+
+    "Two-tailed posterior predictive p-values comparing empirical and simulated estimates of nucleotide diversity (Tajima's π). Rows correspond to historical record configurations (Old gapped, Recent complete, and None), the x-axis indicates the treatment of repeated historical song observations (all occurrences, earliest occurrence only, or none), columns correspond to the five study leks (BR1, TR1, CCE, HC1, and SUR), colors indicate multiple sequence alignment strategies (MAFFT-agnostic, MAFFT-optimal, and PRANK-TN93), and point size indicates whether posterior predictive p-values are significant (< 0.05). The dashed horizontal line indicates p = 0.05.",
+
+    ## Overall fit
+
+    "Overall posterior predictive p-values across historical record configurations, treatments of repeated historical song observations, study leks, and sequence alignment strategies.",
+
+    ## Posterior distributions
+
+    "Posterior distributions of diversification parameters under alternative historical record configurations.",
+    "Posterior distributions of topological space descriptors under alternative historical record configurations.",
+    "Posterior distributions of diversification parameters under alternative treatments of repeated historical song observations.",
+    "Posterior distributions of topological space descriptors under alternative treatments of repeated historical song observations.",
+    "Posterior distributions of topological space descriptors across combinations of historical record configurations and treatments of repeated historical song observations."
+
+  ),
+  stringsAsFactors = FALSE
+)
+
+
+```
+
+
+```{r results='asis', echo=FALSE}
+
+for(i in seq_along(files)) {
+
+  n <- fig_num[i]
+
+  ## Figure
+  cat(sprintf("![](%s){width=100%%}\n\n", files[i]))
+
+  ## Caption
+  cap <- captions$caption[captions$fig_num == n]
+
+  cat(sprintf("**Figure S%d.** %s\n\n", n, cap))
+
+  ## New page
+  cat("\\newpage\n\n")
+}
+```

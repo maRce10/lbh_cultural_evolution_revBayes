@@ -67,9 +67,8 @@ knitr::opts_chunk$set(
 ::: {.alert .alert-info}
 # Purpose {.unnumbered .unlisted}
 
--   The first goal of this report
+- Measure repeatability of segment classification between two observers using Cohen's kappa statistic
 
--   The second goal of this report
 :::
 
 
