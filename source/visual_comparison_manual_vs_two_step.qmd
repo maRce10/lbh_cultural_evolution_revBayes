@@ -1,0 +1,184 @@
+---
+title: Visual comparison of manual and two-step segment labels
+subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 2
+toc-location: left
+number-sections: false
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: true
+    code-tools: true
+    css: qmd.css
+editor_options:
+  chunk_output_type: console
+---
+
+```{r set root directory, echo = FALSE}
+
+# set working directory as project directory
+knitr::opts_knit$set(root.dir = "..")
+
+```
+
+<div class="alert alert-info">
+
+# Purpose {.unnumbered .unlisted}
+
+- Visually compare manual segment labels with the two-step automated classification (tone/trill model + fixed thresholds) on spectrograms of 30 randomly chosen songs
+
+</div>
+
+&nbsp;
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages, message = FALSE, warning = FALSE}
+
+sketchy::load_packages(packages = c("knitr", "tuneR", "seewave", "xgboost", "viridis"))
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+```
+
+# Two-step labels
+
+The two-step labels are obtained as described in `automated_segment_classification.qmd`:
+
+1. **Tone vs. trill**: xgboost model on the contour and audio features (W segments treated as tones). Predictions come from grouped 5-fold cross-validation, so each song is labelled by a model that did not see its song type during training
+2. **Sub-categories**: fixed thresholds on a single measurement
+    - Trills: fast (F) if trill period < 8.5 ms, medium (M) if 8.5 - 15 ms, slow (S) if > 15 ms
+    - Tones: descending (D) if slope < -5 kHz/s, flat (P) if -5 to 5 kHz/s, ascending (U) if > 5 kHz/s
+
+```{r two step labels}
+
+# features created by automated_segment_classification.qmd
+X <- read.csv("./data/processed/segment_classifier/segment_features_audio.csv")
+non_feat <- c("ID", "lek.song.type", "Category", "start", "end")
+feat <- setdiff(names(X), non_feat)
+Xm <- X
+for (v in feat) Xm[[v]][is.na(Xm[[v]])] <- -999
+
+# grouped folds (whole lek song types held out)
+set.seed(1)
+types <- unique(X$lek.song.type)
+fold <- setNames(sample(rep(1:5, length.out = length(types))), types)[X$lek.song.type]
+
+y <- as.integer(X$Category %in% c("F", "M", "S"))
+w <- ifelse(y == 1, sqrt(sum(y == 0) / sum(y == 1)), 1)
+X$p_trill <- NA
+for (f in 1:5) {
+  tr <- fold != f
+  m <- xgb.train(params = list(eta = 0.03, max_depth = 6, subsample = 0.8, colsample_bytree = 0.6,
+                               min_child_weight = 2, objective = "binary:logistic", nthread = 8),
+                 data = xgb.DMatrix(as.matrix(Xm[tr, feat]), label = y[tr], weight = w[tr]),
+                 nrounds = 800, verbose = 0)
+  X$p_trill[!tr] <- predict(m, as.matrix(Xm[!tr, feat]))
+}
+
+X$trill_period_ms <- 1000 / X$osc_rate
+X$two_step <- ifelse(X$p_trill > 0.5,
+                     ifelse(X$trill_period_ms < 8.5, "F", ifelse(X$trill_period_ms < 15, "M", "S")),
+                     ifelse(X$slope < -5, "D", ifelse(X$slope < 5, "P", "U")))
+
+# overall agreement (manual W segments cannot match, as W is not a two-step category)
+data.frame(segments = c("all", "excluding manual W"),
+           agreement = round(c(mean(X$two_step == X$Category), mean((X$two_step == X$Category)[X$Category != "W"])), 3))
+
+table(manual = X$Category, two_step = X$two_step)
+
+```
+
+# Spectrograms
+
+Each panel shows the spectrogram of one song with the tailored frequency contour (white line) and segment boundaries (dashed lines). The two strips at the top show the **manual** label (upper strip) and the **two-step** label (lower strip) of each segment; segments where they agree are shaded green and those where they disagree red. Manual W segments, which have no two-step equivalent (W is treated as a tone), are shaded amber and excluded from the agreement count in the panel title. The value below the two-step label is the trill period (ms) for trills or the frequency slope (kHz/s) for tones, i.e. the measurement used to assign the sub-category.
+
+```{r plotting function}
+
+contours <- read.csv("./data/raw/segment_classification/seltailor_output.csv")
+ff_cols <- grep("^ff", names(contours))
+wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
+sr <- wave@samp.rate
+
+cat_cols <- setNames(viridis(7, option = "H", begin = 0.05, end = 0.95), c("D", "U", "P", "W", "F", "M", "S"))
+
+plot_song <- function(id, margin = 0.01, flim = c(1, 11)) {
+  d <- X[X$ID == id, ]; d <- d[order(d$start), ]
+  ct <- contours[contours$song.type == id, ]
+  t0 <- max(0, min(d$start) - margin); t1 <- max(d$end) + margin
+  clip <- cutw(wave, f = sr, from = t0, to = t1, output = "Wave")
+  sp <- spectro(clip, f = sr, wl = 256, ovlp = 90, plot = FALSE, flim = c(0, 13))
+  amp <- sp$amp; amp[amp < -45] <- -45
+  tms <- (sp$time) * 1000                                   # ms from clip start
+  # frequency axis with room for the label strips above the spectrogram
+  strip_lo <- flim[2]; strip_mid <- flim[2] + 1.2; strip_hi <- flim[2] + 2.4
+  par(mar = c(4, 4, 2.5, 1))
+  plot(NA, xlim = range(tms), ylim = c(flim[1], strip_hi), xaxs = "i", yaxs = "i",
+       xlab = "Time (ms)", ylab = "Frequency (kHz)", yaxt = "n",
+       main = sprintf("%s   (agreement: %d of %d segments, excluding manual W)", id,
+                      sum(d$Category == d$two_step), sum(d$Category != "W")),
+       cex.main = 1)
+  axis(2, at = seq(ceiling(flim[1]), flim[2], 2))
+  fsel <- sp$freq >= flim[1] & sp$freq <= flim[2]
+  image(tms, sp$freq[fsel], t(amp[fsel, ]), col = gray.colors(40, start = 1, end = 0), add = TRUE, useRaster = TRUE)
+
+  # tailored contour
+  tt <- seq(ct$start, ct$end, length.out = length(ff_cols))
+  lines((tt - t0) * 1000, unlist(ct[, ff_cols]), col = "white", lwd = 4)
+  lines((tt - t0) * 1000, unlist(ct[, ff_cols]), col = "#FF8C00", lwd = 1.5)
+
+  # segments and label strips
+  xs <- (d$start - t0) * 1000; xe <- (d$end - t0) * 1000
+  abline(v = c(xs, tail(xe, 1)), lty = 2, col = "gray30")
+  rect(min(tms), strip_lo, max(tms), strip_hi, col = "white", border = NA)
+  # green = agreement, red = disagreement, amber = manual W (no two-step equivalent)
+  fill <- ifelse(d$Category == "W", "#FBE3B0", ifelse(d$Category != d$two_step, "#F4C7C3", "#E6F2E6"))
+  rect(xs, strip_mid, xe, strip_hi, col = fill, border = "gray40")
+  rect(xs, strip_lo, xe, strip_mid, col = fill, border = "gray40")
+  meas <- ifelse(d$two_step %in% c("F", "M", "S"), sprintf("%.1f", d$trill_period_ms), sprintf("%.0f", d$slope))
+  cx <- ifelse(xe - xs < 0.03 * diff(range(tms)), 0.7, 1)
+  text((xs + xe) / 2, strip_mid + 0.6, d$Category, col = cat_cols[d$Category], font = 2, cex = cx)
+  text((xs + xe) / 2, strip_lo + 0.78, d$two_step, col = cat_cols[d$two_step], font = 2, cex = cx)
+  text((xs + xe) / 2, strip_lo + 0.3, meas, cex = 0.55 * cx, col = "gray20")
+  mtext(c("manual", "two-step"), side = 2, at = c(strip_mid + 0.6, strip_lo + 0.6), las = 1, line = 0.3, cex = 0.7, adj = 1)
+  box()
+}
+
+```
+
+```{r select songs}
+
+set.seed(42)
+songs <- sample(unique(X$ID), 30)
+
+# songs sorted by lek song type so renditions of the same song type appear together
+songs <- songs[order(sub("^[0-9]+-", "", songs))]
+
+```
+
+```{r spectrograms, fig.width = 11, fig.height = 4.2, results = "asis"}
+
+for (id in songs) {
+  cat("\n\n## ", id, "\n\n", sep = "")
+  plot_song(id)
+  cat("\n\n")
+}
+
+```
+
+---
+
+&nbsp;
+
+<!-- add packages used, system details and versions  -->
+
+<font size="4">Session information</font>
+
+```{r session info, echo = FALSE}
+
+sessionInfo()
+
+```
