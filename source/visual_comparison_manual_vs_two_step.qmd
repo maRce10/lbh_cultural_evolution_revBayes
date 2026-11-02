@@ -48,7 +48,7 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 
 The two-step labels are obtained as described in `automated_segment_classification.qmd`:
 
-1. **Tone vs. trill**: xgboost model on the contour and audio features (W segments treated as tones). Predictions come from grouped 5-fold cross-validation, so each song is labelled by a model that did not see its song type during training
+1. **Tone vs. trill**: xgboost model on the contour and audio features. Predictions come from grouped 5-fold cross-validation, so each song is labelled by a model that did not see its song type during training
 2. **Sub-categories**: fixed thresholds on a single measurement
     - Trills: fast (F) if trill period < 8.5 ms, medium (M) if 8.5 - 15 ms, slow (S) if > 15 ms
     - Tones: descending (D) if slope < -5 kHz/s, flat (P) if -5 to 5 kHz/s, ascending (U) if > 5 kHz/s
@@ -84,9 +84,8 @@ X$two_step <- ifelse(X$p_trill > 0.5,
                      ifelse(X$trill_period_ms < 8.5, "F", ifelse(X$trill_period_ms < 15, "M", "S")),
                      ifelse(X$slope < -5, "D", ifelse(X$slope < 5, "P", "U")))
 
-# overall agreement (manual W segments cannot match, as W is not a two-step category)
-data.frame(segments = c("all", "excluding manual W"),
-           agreement = round(c(mean(X$two_step == X$Category), mean((X$two_step == X$Category)[X$Category != "W"])), 3))
+# overall agreement
+data.frame(segments = nrow(X), agreement = round(mean(X$two_step == X$Category), 3))
 
 table(manual = X$Category, two_step = X$two_step)
 
@@ -94,7 +93,7 @@ table(manual = X$Category, two_step = X$two_step)
 
 # Spectrograms
 
-Each panel shows the spectrogram of one song with the tailored frequency contour (white line) and segment boundaries (dashed lines). The two strips at the top show the **manual** label (upper strip) and the **two-step** label (lower strip) of each segment; segments where they agree are shaded green and those where they disagree red. Manual W segments, which have no two-step equivalent (W is treated as a tone), are shaded amber and excluded from the agreement count in the panel title. The value below the two-step label is the trill period (ms) for trills or the frequency slope (kHz/s) for tones, i.e. the measurement used to assign the sub-category.
+Each panel shows the spectrogram of one song with the tailored frequency contour (white line) and segment boundaries (dashed lines). The two strips at the top show the **manual** label (upper strip) and the **two-step** label (lower strip) of each segment; segments where they agree are shaded green and those where they disagree red. Manual W segments (a single wide frequency sweep) were converted to ascending tones (U) in `automated_segment_classification.qmd`, which also reassigns a few segments that were annotated with the wrong song. The value below the two-step label is the trill period (ms) for trills or the frequency slope (kHz/s) for tones, i.e. the measurement used to assign the sub-category.
 
 ```{r plotting function}
 
@@ -103,12 +102,12 @@ ff_cols <- grep("^ff", names(contours))
 wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
 sr <- wave@samp.rate
 
-cat_cols <- setNames(viridis(7, option = "H", begin = 0.05, end = 0.95), c("D", "U", "P", "W", "F", "M", "S"))
+cat_cols <- setNames(viridis(6, option = "H", begin = 0.05, end = 0.95), c("D", "U", "P", "F", "M", "S"))
 
 plot_song <- function(id, margin = 0.01, flim = c(1, 11)) {
   d <- X[X$ID == id, ]; d <- d[order(d$start), ]
   ct <- contours[contours$song.type == id, ]
-  t0 <- max(0, min(d$start) - margin); t1 <- max(d$end) + margin
+  t0 <- max(0, min(ct$start, d$start) - margin); t1 <- max(ct$end, d$end) + margin
   clip <- cutw(wave, f = sr, from = t0, to = t1, output = "Wave")
   sp <- spectro(clip, f = sr, wl = 256, ovlp = 90, plot = FALSE, flim = c(0, 13))
   amp <- sp$amp; amp[amp < -45] <- -45
@@ -118,8 +117,7 @@ plot_song <- function(id, margin = 0.01, flim = c(1, 11)) {
   par(mar = c(4, 4, 2.5, 1))
   plot(NA, xlim = range(tms), ylim = c(flim[1], strip_hi), xaxs = "i", yaxs = "i",
        xlab = "Time (ms)", ylab = "Frequency (kHz)", yaxt = "n",
-       main = sprintf("%s   (agreement: %d of %d segments, excluding manual W)", id,
-                      sum(d$Category == d$two_step), sum(d$Category != "W")),
+       main = sprintf("%s   (agreement: %d of %d segments)", id, sum(d$Category == d$two_step), nrow(d)),
        cex.main = 1)
   axis(2, at = seq(ceiling(flim[1]), flim[2], 2))
   fsel <- sp$freq >= flim[1] & sp$freq <= flim[2]
@@ -134,8 +132,8 @@ plot_song <- function(id, margin = 0.01, flim = c(1, 11)) {
   xs <- (d$start - t0) * 1000; xe <- (d$end - t0) * 1000
   abline(v = c(xs, tail(xe, 1)), lty = 2, col = "gray30")
   rect(min(tms), strip_lo, max(tms), strip_hi, col = "white", border = NA)
-  # green = agreement, red = disagreement, amber = manual W (no two-step equivalent)
-  fill <- ifelse(d$Category == "W", "#FBE3B0", ifelse(d$Category != d$two_step, "#F4C7C3", "#E6F2E6"))
+  # green = agreement, red = disagreement
+  fill <- ifelse(d$Category != d$two_step, "#F4C7C3", "#E6F2E6")
   rect(xs, strip_mid, xe, strip_hi, col = fill, border = "gray40")
   rect(xs, strip_lo, xe, strip_mid, col = fill, border = "gray40")
   meas <- ifelse(d$two_step %in% c("F", "M", "S"), sprintf("%.1f", d$trill_period_ms), sprintf("%.0f", d$slope))

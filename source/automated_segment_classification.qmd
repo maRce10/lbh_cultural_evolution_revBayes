@@ -81,10 +81,38 @@ segs <- segs[order(segs$ID, segs$start), ]
 # keep only songs with a contour
 segs <- segs[segs$ID %in% contours$song.type, ]
 
+# some segments were assigned to the wrong song in the annotation file: they lie outside the
+# contour of their song but within the contour of another song. Reassign them to the song whose
+# contour contains them (and drop them if there is no unique match)
+tol <- 0.005
+m <- match(segs$ID, contours$song.type)
+outside <- segs$end < contours$start[m] - tol | segs$start > contours$end[m] + tol
+new_id <- vapply(which(outside), function(i) {
+  k <- which(contours$start <= segs$start[i] + tol & contours$end >= segs$end[i] - tol)
+  if (length(k) == 1) contours$song.type[k] else NA_character_
+}, character(1))
+reassigned <- data.frame(selec = segs$selec[outside], start = segs$start[outside], end = segs$end[outside],
+                         Category = segs$Category[outside], original_ID = segs$ID[outside], new_ID = new_id)
+segs$ID[outside] <- new_id
+segs <- segs[!is.na(segs$ID), ]
+segs <- segs[order(segs$ID, segs$start), ]
+
+# W segments (a single wide frequency sweep) are treated as ascending tones (U)
+n_W <- sum(segs$Category == "W")
+segs$Category[segs$Category == "W"] <- "U"
+
 # lek song type (e.g. BR1-A1 from ID "1-BR1-A1-2011"), used to group cross-validation folds
 segs$lek.song.type <- sub("-[0-9]{4}$", "", sub("^[0-9]+-", "", segs$ID))
 
 ```
+
+Segments reassigned to a different song because they fell outside the contour of the song they were annotated with (all of them fill a gap within the song they were reassigned to):
+
+```{r reassigned segments}
+reassigned
+```
+
+The `r n_W` segments originally labelled as W (a single wide frequency sweep) were converted to ascending tones (U).
 
 The data set contains `r nrow(segs)` segments from `r length(unique(segs$ID))` songs belonging to `r length(unique(segs$lek.song.type))` lek song types.
 
@@ -93,10 +121,10 @@ The category codes are not documented in the annotation file. The interpretation
 ```{r category table}
 
 cat_info <- data.frame(
-  Category = c("D", "U", "P", "W", "F", "M", "S"),
-  Interpretation = c("descending tone", "ascending tone", "flat pure tone", "single wide frequency sweep (U-shaped?)",
+  Category = c("D", "U", "P", "F", "M", "S"),
+  Interpretation = c("descending tone", "ascending tone (including former W)", "flat pure tone",
                      "fast trill", "medium trill", "slow trill"),
-  n = as.vector(table(segs$Category)[c("D", "U", "P", "W", "F", "M", "S")])
+  n = as.vector(table(segs$Category)[c("D", "U", "P", "F", "M", "S")])
 )
 cat_info
 
@@ -108,7 +136,7 @@ Contours of randomly chosen songs, coloured by the manually assigned segment cat
 
 ```{r example songs, fig.width = 11, fig.height = 7}
 
-cat_cols <- setNames(viridis(7, option = "H", begin = 0.05, end = 0.95), c("D", "U", "P", "W", "F", "M", "S"))
+cat_cols <- setNames(viridis(6, option = "H", begin = 0.05, end = 0.95), c("D", "U", "P", "F", "M", "S"))
 
 set.seed(7)
 ex_ids <- sample(unique(segs$ID), 9)
@@ -310,9 +338,9 @@ Direction separates the tonal categories and trill period separates the trill ca
 
 ```{r feature distributions, fig.width = 11, fig.height = 4.5}
 
-X$Category <- factor(X$Category, levels = c("D", "U", "P", "W", "F", "M", "S"))
+X$Category <- factor(X$Category, levels = c("D", "U", "P", "F", "M", "S"))
 
-p1 <- ggplot(X[X$Category %in% c("D", "U", "P", "W"), ], aes(Category, slope_rel, fill = Category)) +
+p1 <- ggplot(X[X$Category %in% c("D", "U", "P"), ], aes(Category, slope_rel, fill = Category)) +
   geom_violin(scale = "width") + scale_fill_manual(values = cat_cols, guide = "none") +
   coord_cartesian(ylim = c(-2, 2)) + labs(y = "Linear frequency change (kHz)", title = "Tones")
 
@@ -616,12 +644,11 @@ cv_scheme <- function(lab, reps = 3) {
 
 ```{r compare schemes}
 
-cat7 <- as.character(X$Category)
+cat_manual <- as.character(X$Category)
 schemes <- list(
-  "7: D, U, P, W, F, M, S" = cat7,
-  "5: D, U, P, W, Trill" = ifelse(cat7 %in% c("F", "M", "S"), "Trill", cat7),
-  "3: Tone, W, Trill" = ifelse(cat7 %in% c("F", "M", "S"), "Trill", ifelse(cat7 == "W", "W", "Tone")),
-  "2: Tone (incl. W), Trill" = ifelse(cat7 %in% c("F", "M", "S"), "Trill", "Tone")
+  "6: D, U, P, F, M, S" = cat_manual,
+  "4: D, U, P, Trill" = ifelse(cat_manual %in% c("F", "M", "S"), "Trill", cat_manual),
+  "2: Tone, Trill" = ifelse(cat_manual %in% c("F", "M", "S"), "Trill", "Tone")
 )
 scheme_res <- lapply(schemes, cv_scheme)
 
@@ -637,17 +664,17 @@ Confusion matrix of the binary scheme (summed over the 3 repetitions):
 
 ```{r binary confusion}
 
-scheme_res[["2: Tone (incl. W), Trill"]]$cm
+scheme_res[["2: Tone, Trill"]]$cm
 
 ```
 
-Merging the trills removes most errors, and the broad distinction between tonal segments and trills is almost perfectly predicted on unseen song types. The W category is mostly confused with tones, so it was merged into the tone category for the final model.
+Merging the trills removes most errors, and the broad distinction between tonal segments and trills is almost perfectly predicted on unseen song types.
 
 ## Final tone/trill model
 
 ```{r binary model}
 
-bin_lab <- schemes[["2: Tone (incl. W), Trill"]]
+bin_lab <- schemes[["2: Tone, Trill"]]
 bin_y <- as.integer(factor(bin_lab)) - 1
 bin_w <- as.numeric(sqrt(max(table(bin_y)) / table(bin_y)))[bin_y + 1]
 bin_model <- xgb.train(params = c(params_final, objective = "multi:softprob", num_class = 2, nthread = 8),
@@ -711,7 +738,7 @@ tone_cands <- list(
 
 thr_table <- function(cands, levs) {
   do.call(rbind, lapply(names(cands), function(n) {
-    a <- cv_thr(cands[[n]]$x, cat7, levs, cands[[n]]$grid)
+    a <- cv_thr(cands[[n]]$x, cat_manual, levs, cands[[n]]$grid)
     data.frame(measurement = n, cv_accuracy = sprintf("%.3f ± %.3f", mean(a), sd(a)), mean_acc = mean(a))
   }))
 }
@@ -726,9 +753,9 @@ tone_thr_tab[, 1:2]
 
 best_trill <- trill_cands[[which.max(trill_thr_tab$mean_acc)]]
 best_tone <- tone_cands[[which.max(tone_thr_tab$mean_acc)]]
-k_tr <- cat7 %in% c("F", "M", "S"); k_to <- cat7 %in% c("D", "P", "U")
-trill_thr <- fit_thr(best_trill$x[k_tr], cat7[k_tr], c("F", "M", "S"), best_trill$grid)
-tone_thr <- fit_thr(best_tone$x[k_to], cat7[k_to], c("D", "P", "U"), best_tone$grid)
+k_tr <- cat_manual %in% c("F", "M", "S"); k_to <- cat_manual %in% c("D", "P", "U")
+trill_thr <- fit_thr(best_trill$x[k_tr], cat_manual[k_tr], c("F", "M", "S"), best_trill$grid)
+tone_thr <- fit_thr(best_tone$x[k_to], cat_manual[k_to], c("D", "P", "U"), best_tone$grid)
 
 # negated measures (oscillation rate) are reported back on their original scale
 trill_negated <- grepl("negated", trill_thr_tab$measurement[which.max(trill_thr_tab$mean_acc)])
@@ -762,8 +789,8 @@ label_trill <- function(osc_rate, cut_ms = trill_cut_ms) {
 }
 label_tone <- function(slope, cut = tone_cut) ifelse(slope < cut[1], "D", ifelse(slope < cut[2], "P", "U"))
 
-acc_trill <- function(cut_ms) mean(label_trill(X$osc_rate[k_tr], cut_ms) == cat7[k_tr])
-acc_tone <- function(cut) mean(label_tone(X$slope[k_to], cut) == cat7[k_to])
+acc_trill <- function(cut_ms) mean(label_trill(X$osc_rate[k_tr], cut_ms) == cat_manual[k_tr])
+acc_tone <- function(cut) mean(label_tone(X$slope[k_to], cut) == cat_manual[k_to])
 
 data.frame(
   group = c("Trills", "Trills", "Tones", "Tones"),
@@ -795,8 +822,8 @@ data.frame(slope_threshold_kHz_s = paste0("+/-", sens_to), agreement = round(sap
 
 ```{r threshold plots, fig.width = 11, fig.height = 4.5}
 
-d_tr <- data.frame(Category = factor(cat7[k_tr], levels = c("F", "M", "S")), x = trill_period(X$osc_rate[k_tr]))
-d_to <- data.frame(Category = factor(cat7[k_to], levels = c("D", "P", "U")), x = X$slope[k_to])
+d_tr <- data.frame(Category = factor(cat_manual[k_tr], levels = c("F", "M", "S")), x = trill_period(X$osc_rate[k_tr]))
+d_to <- data.frame(Category = factor(cat_manual[k_to], levels = c("D", "P", "U")), x = X$slope[k_to])
 
 p1 <- ggplot(d_tr[is.finite(d_tr$x), ], aes(x, fill = Category)) + geom_density(alpha = 0.6) +
   geom_vline(xintercept = trill_cut_ms, linetype = 2) + scale_fill_manual(values = cat_cols) +
@@ -812,31 +839,30 @@ Dashed lines show the fixed thresholds. Segments without any detected oscillatio
 
 ## Full pipeline: tone/trill model + thresholds
 
-The complete approach (binary model, then thresholds within each class) was evaluated against the manual D, U, P, F, M and S labels (manual W segments excluded, as W is no longer a category). The binary model is evaluated on held-out song types (first repetition). Two versions of the thresholds are compared: thresholds fitted on the training folds, and the fixed round thresholds. Both are compared with the 7-category model on the same segments:
+The complete approach (binary model, then thresholds within each class) was evaluated against the manual D, U, P, F, M and S labels The binary model is evaluated on held-out song types (first repetition). Two versions of the thresholds are compared: thresholds fitted on the training folds, and the fixed round thresholds. Both are compared with the 6-category model on the same segments:
 
 ```{r full pipeline}
 
 fold <- grouped_folds(1)
-P_bin <- scheme_res[["2: Tone (incl. W), Trill"]]$oof
+P_bin <- scheme_res[["2: Tone, Trill"]]$oof
 pred_bin <- colnames(P_bin)[max.col(P_bin)]
 pipe_fitted <- rep(NA, nrow(X))
 for (f in 1:5) {
   tr <- fold != f; te <- fold == f
-  t_tr <- fit_thr(best_trill$x[tr & k_tr], cat7[tr & k_tr], c("F", "M", "S"), best_trill$grid)
-  t_to <- fit_thr(best_tone$x[tr & k_to], cat7[tr & k_to], c("D", "P", "U"), best_tone$grid)
+  t_tr <- fit_thr(best_trill$x[tr & k_tr], cat_manual[tr & k_tr], c("F", "M", "S"), best_trill$grid)
+  t_to <- fit_thr(best_tone$x[tr & k_to], cat_manual[tr & k_to], c("D", "P", "U"), best_tone$grid)
   pipe_fitted[te] <- ifelse(pred_bin[te] == "Trill", apply_thr(best_trill$x[te], t_tr, c("F", "M", "S")),
                             apply_thr(best_tone$x[te], t_to, c("D", "P", "U")))
 }
 pipe <- ifelse(pred_bin == "Trill", label_trill(X$osc_rate), label_tone(X$slope))
 
-noW <- cat7 != "W"
-data.frame(approach = c("7-category model", "tone/trill model + thresholds fitted in CV", "tone/trill model + fixed thresholds"),
-           accuracy_on_D_U_P_F_M_S = round(c(mean(as.character(X$pred[noW]) == cat7[noW]),
-                                             mean(pipe_fitted[noW] == cat7[noW]), mean(pipe[noW] == cat7[noW])), 3))
+data.frame(approach = c("6-category model", "tone/trill model + thresholds fitted in CV", "tone/trill model + fixed thresholds"),
+           accuracy_on_D_U_P_F_M_S = round(c(mean(as.character(X$pred) == cat_manual),
+                                             mean(pipe_fitted == cat_manual), mean(pipe == cat_manual)), 3))
 
 # confusion matrix for the fixed thresholds
-table(manual = factor(cat7[noW], levels = c("D", "P", "U", "F", "M", "S")),
-      pipeline = factor(pipe[noW], levels = c("D", "P", "U", "F", "M", "S")))
+table(manual = factor(cat_manual, levels = c("D", "P", "U", "F", "M", "S")),
+      pipeline = factor(pipe, levels = c("D", "P", "U", "F", "M", "S")))
 
 ```
 
@@ -849,8 +875,8 @@ inconsistent_types <- function(lab) {
   s <- split(d, d$lek.song.type); s <- s[sapply(s, function(z) length(unique(z$ID)) >= 2)]
   sum(sapply(s, function(z) length(unique(tapply(z$l, z$ID, function(q) paste(sort(unique(q)), collapse = "")))) > 1))
 }
-data.frame(labels = c("manual", "7-category model", "tone/trill model + fixed thresholds"),
-           song_types_with_inconsistent_trill_labels = c(inconsistent_types(cat7), inconsistent_types(as.character(X$pred)),
+data.frame(labels = c("manual", "6-category model", "tone/trill model + fixed thresholds"),
+           song_types_with_inconsistent_trill_labels = c(inconsistent_types(cat_manual), inconsistent_types(as.character(X$pred)),
                                                          inconsistent_types(pipe)),
            out_of = length(st))
 
@@ -866,7 +892,7 @@ saveRDS(list(model = bin_model, features = feat, classes = levels(factor(bin_lab
 
 # Predicting new data
 
-Two models are saved: the 7-category model (`xgb_segment_classifier.RDS`) and the tone/trill model with the measurement thresholds (`xgb_tone_trill_classifier.RDS`). The prediction function below uses the tone/trill model and returns the class probability, the measured trill period and frequency slope, and the sub-category assigned by the fixed thresholds. It needs the same inputs used for training: a tailored contour per song (`song.type`, `start`, `end`, `ff1`...`ffN`), segment boundaries per song (`ID` matching `song.type`, `start`, `end`) and the recording:
+Two models are saved: the 6-category model (`xgb_segment_classifier.RDS`) and the tone/trill model with the measurement thresholds (`xgb_tone_trill_classifier.RDS`). The prediction function below uses the tone/trill model and returns the class probability, the measured trill period and frequency slope, and the sub-category assigned by the fixed thresholds. It needs the same inputs used for training: a tailored contour per song (`song.type`, `start`, `end`, `ff1`...`ffN`), segment boundaries per song (`ID` matching `song.type`, `start`, `end`) and the recording:
 
 ```{r prediction function}
 
@@ -905,9 +931,9 @@ sm <- function(s, v) sprintf("%.3f", mean(scheme_res[[s]]$metrics[, v]))
 ```
 
 - Using `r nrow(X)` manually labelled segments from `r length(unique(X$ID))` songs (`r length(unique(X$lek.song.type))` lek song types), all models were evaluated on song types not seen during training
-- With the original 7 categories accuracy is `r sm(1, "accuracy")` (kappa `r sm(1, "kappa")`); the main errors are fast vs. medium trills and flat vs. ascending tones, i.e. boundaries along continuous acoustic dimensions
-- Merging categories removes most errors: `r sm(2, "accuracy")` with all trills merged and **`r sm(4, "accuracy")` (kappa `r sm(4, "kappa")`) for tone vs. trill** (W merged into tones)
-- Within each class, sub-categories can be assigned with fixed thresholds on a single measurement: **trill period < 8.5 ms (fast), 8.5 - 15 ms (medium), > 15 ms (slow)** and **frequency slope < -5 kHz/s (descending), -5 to 5 kHz/s (flat), > 5 kHz/s (ascending)**. This makes the criterion transparent and repeatable; combined with the tone/trill model it agrees with `r sprintf("%.0f", 100 * mean(pipe[noW] == cat7[noW]))`% of the manual D, U, P, F, M and S labels (vs. `r sprintf("%.0f", 100 * mean(as.character(X$pred[noW]) == cat7[noW]))`% for the 7-category model)
+- With the 6 categories (W merged into U) accuracy is `r sm(1, "accuracy")` (kappa `r sm(1, "kappa")`); the main errors are fast vs. medium trills and flat vs. ascending tones, i.e. boundaries along continuous acoustic dimensions
+- Merging categories removes most errors: `r sm(2, "accuracy")` with all trills merged and **`r sm(3, "accuracy")` (kappa `r sm(3, "kappa")`) for tone vs. trill**
+- Within each class, sub-categories can be assigned with fixed thresholds on a single measurement: **trill period < 8.5 ms (fast), 8.5 - 15 ms (medium), > 15 ms (slow)** and **frequency slope < -5 kHz/s (descending), -5 to 5 kHz/s (flat), > 5 kHz/s (ascending)**. This makes the criterion transparent and repeatable; combined with the tone/trill model it agrees with `r sprintf("%.0f", 100 * mean(pipe == cat_manual))`% of the manual D, U, P, F, M and S labels (vs. `r sprintf("%.0f", 100 * mean(as.character(X$pred) == cat_manual))`% for the 6-category model)
 - Trill labels are inconsistent across renditions of the same song type in `r sum(mixed)` of `r length(st)` song types, and this changes little under automated labelling, suggesting real variation in trill rate (or segmentation) across years rather than only annotation noise
 - Prediction confidence can be used to classify most segments automatically and send uncertain ones to manual review
 
