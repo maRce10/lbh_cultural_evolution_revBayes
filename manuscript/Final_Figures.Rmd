@@ -31,7 +31,7 @@ knitr::opts_knit$set(root.dir =  "..")
 
 # Introduction
 
-This document provides scripts for all figures included in the manuscript entitled "*Understanding cultural evolution in hummingbird leks through the fossilized birth-death process*" by Araya-Salas et al. (2023). Figures are plotted in the order they appear in the manuscript. Panels are plotted separately in some cases and arranged as a multipanel figures in others. Multipanel assembly, insertion of photos and illustrations, and minor esthetic changes were made in [Inkscape](https://inkscape.org/) v. 0.91. 
+This document provides scripts for all figures included in the manuscript entitled "*Understanding birdsong cultural evolution through the fossilized birth-death process*" by Araya-Salas et al. (2023). Figures are plotted in the order they appear in the manuscript. Panels are plotted separately in some cases and arranged as a multipanel figures in others. Multipanel assembly, insertion of photos and illustrations, and minor esthetic changes were made in [Inkscape](https://inkscape.org/) v. 0.91. 
 
 Load required packages.
 ```{r load-packages, message=FALSE}

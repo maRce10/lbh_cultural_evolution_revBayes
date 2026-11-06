@@ -1,5 +1,5 @@
 ---
-title: "Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process"
+title: "Understanding birdsong cultural evolution through the fossilized birth-death process"
 subtitle: "Code and data"
 author: "Marcelo Araya-Salas, Beatriz Willink, Alejandro Rico-Guevara"
 toc: false

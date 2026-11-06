@@ -1,5 +1,5 @@
 ---
-title: Understanding cultural evolution in hummingbird leks through the fossilized birth-death process
+title: Understanding birdsong cultural evolution through the fossilized birth-death process
 author:
 - Marcelo Araya-Salas (marcelo.araya@ucr.ac.cr)^1,2^ *
 - Beatriz Willink (beatriz.willink@ucr.ac.cr)^3,4^

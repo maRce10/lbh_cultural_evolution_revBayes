@@ -1,6 +1,6 @@
 ---
 title: Segment classes of the song types used in the phylogenetic analyses
-subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+subtitle: Understanding birdsong cultural evolution through the fossilized birth-death process
 author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
 date: "`r Sys.Date()`"
 toc: true

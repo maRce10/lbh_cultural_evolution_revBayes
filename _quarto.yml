@@ -9,7 +9,7 @@ execute:
   freeze: auto
 
 website:
-  title: "Cultural evolution in hummingbird leks"
+  title: "Modelling birdsong cultural evolution"
   site-url: https://marce10.github.io/lbh_cultural_evolution_revBayes/
   repo-url: https://github.com/maRce10/lbh_cultural_evolution_revBayes
   page-navigation: true
