@@ -1,0 +1,38 @@
+/* white navbar with a thin divider */
+.navbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.navbar .navbar-title,
+.navbar .nav-link {
+    color: #408AB4 !important;
+}
+
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+    color: #2c6280 !important;
+}
+
+/* download button added below each figure (see _figure-download.html) */
+.figure-download {
+    text-align: center;
+    margin: 0 0 1rem 0;
+}
+
+.figure-download .btn {
+    color: #6c8fa3;
+    border-color: #d5dee4;
+    font-size: 0.65rem;
+    line-height: 1.2;
+    padding: 0.1rem 0.4rem;
+}
+
+.figure-download .btn:hover {
+    color: #ffffff;
+    background-color: #408AB4;
+}
+
+.figure-gallery img {
+    border: 1px solid #eeeeee;
+}

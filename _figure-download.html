@@ -1,0 +1,27 @@
+<script>
+// Add a "Download" button below every figure in the page content.
+// The button links to the figure's image file.
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("main img").forEach(function (img) {
+    var src = img.getAttribute("src");
+    if (!src || src.indexOf("data:") === 0) return;
+
+    var fileName = decodeURIComponent(src.split("/").pop().split("?")[0]);
+
+    var link = document.createElement("a");
+    link.href = src;
+    link.setAttribute("download", fileName);
+    link.className = "btn btn-outline-primary btn-sm";
+    link.innerHTML = '<i class="bi bi-download"></i> Download';
+    link.title = "Download " + fileName;
+
+    var wrapper = document.createElement("div");
+    wrapper.className = "figure-download";
+    wrapper.appendChild(link);
+
+    // place the button after the figure (below its caption) or after the image's container
+    var anchor = img.closest("figure") || img.closest("p") || img;
+    anchor.insertAdjacentElement("afterend", wrapper);
+  });
+});
+</script>

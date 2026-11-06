@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - source/song_segment_coding_5ms.qmd
+
+execute:
+  freeze: auto
+
+website:
+  title: "Cultural evolution in hummingbird leks"
+  site-url: https://marce10.github.io/lbh_cultural_evolution_revBayes/
+  repo-url: https://github.com/maRce10/lbh_cultural_evolution_revBayes
+  page-navigation: true
+  navbar:
+    background: "#ffffff"
+    foreground: "#408AB4"
+    left:
+      - href: index.qmd
+        text: Home
+      - href: source/song_segment_coding_5ms.qmd
+        text: Song segmenting
+    right:
+      - icon: github
+        href: https://github.com/maRce10/lbh_cultural_evolution_revBayes
+        aria-label: GitHub repository
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    include-after-body: _figure-download.html

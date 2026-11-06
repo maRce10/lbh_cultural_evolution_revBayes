@@ -1,6 +1,6 @@
 ---
-title: Coding songs as sequences of 5 ms segments
-subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+title: Song segmenting
+subtitle: Coding songs as sequences of 5 ms segments
 author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
 date: "`r Sys.Date()`"
 toc: true
@@ -13,7 +13,6 @@ format:
     df-print: kable
     code-fold: show
     code-tools: true
-    css: qmd.css
 editor_options:
   chunk_output_type: console
 ---
@@ -41,12 +40,7 @@ if (file.exists("./.git/config")){
 
 # Purpose {.unnumbered .unlisted}
 
-Code each song as a sequence of 5 ms segments with 5 possible states, in four steps:
-
-1. **Broad sections**: the manual segmentation of the prevalence data set defines the boundaries of each section and whether it is a pure tone or a trill
-2. **Classify trills**: each whole trill section is assigned to fast or slow from its trill period
-3. **Split into 5 ms segments**: trill segments inherit the state of their section
-4. **Classify tones**: each 5 ms tone segment is assigned to descending, flat or ascending from the local frequency slope
+Code each song as a sequence of 5 ms segments, each in one of 5 states, so that songs can be aligned and compared.
 
 </div>
 
@@ -56,7 +50,7 @@ Code each song as a sequence of 5 ms segments with 5 possible states, in four st
 
 ```{r load packages, message=FALSE, warning=FALSE}
 
-sketchy::load_packages(packages = c("knitr", "Rraven", "ggplot2", "viridis", "tuneR", "seewave", "mclust", "diptest"))
+sketchy::load_packages(packages = c("knitr", "Rraven", "ggplot2", "viridis", "tuneR", "seewave", "mclust"))
 
 theme_set(theme_classic(base_size = 13))
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, dpi = 120, fig.retina = 1)
@@ -65,18 +59,49 @@ states <- c("D", "P", "U", "F", "S")
 state_names <- c("D: descending tone", "P: flat tone", "U: ascending tone", "F: fast trill", "S: slow trill")
 cat_cols <- setNames(viridis(5, option = "H", begin = 0.05, end = 0.95), states)
 txt_col <- setNames(c("white", "black", "black", "black", "white"), states)
+broad_cols <- c(tone = "#4C78A8", trill = "#B279A2")
 
 # parameters of the coding
 segment_ms <- 5              # duration of the segments
 trill_cut_ms <- 13           # fast < 13 ms <= slow
-tone_cut <- 5                # D < -5 kHz/s <= P < 5 kHz/s <= U
+tone_cut <- 14               # D < -14 kHz/s <= P < 14 kHz/s <= U
 tone_window_ms <- 5          # slope measured on the segment +- 5 ms (15 ms in total)
 
 ```
 
-# Step 1: broad sections
+# The procedure
 
-Manual segments and tailored contours from the prevalence data set, with two corrections: segments annotated with the wrong song are reassigned to the song whose contour contains them, and W segments (a rapid frequency sweep) are treated as tones. Only the boundaries and the broad class of the manual labels are used: **tone** (D, U, P, W) or **trill** (F, M, S).
+The goal is to turn each song into a string of letters, one letter per `r segment_ms` ms of song. Each letter is one of five states, two for trills and three for pure tones:
+
+| State | Sound | Rule |
+|:---|:-----|:-----|
+| **F** | fast trill | trill period < `r trill_cut_ms` ms |
+| **S** | slow trill | trill period ≥ `r trill_cut_ms` ms |
+| **D** | descending tone | frequency slope < `r -tone_cut` kHz/s |
+| **P** | flat tone | frequency slope from `r -tone_cut` to `r tone_cut` kHz/s |
+| **U** | ascending tone | frequency slope ≥ `r tone_cut` kHz/s |
+
+The **trill period** is the duration of one oscillation cycle of the frequency contour. The **frequency slope** is how fast the frequency changes over time. Both are measured on the tailored frequency contour of each song, so only the first step is done by hand. The rest follows from fixed rules.
+
+The coding has four steps:
+
+1. **Divide the song into broad sections (manual).** A person marks where each section starts and ends, and labels it as pure tone or trill. Consecutive pure tone sections are merged. Trills that differ discretely in rate are annotated as separate sections.
+2. **Classify the trills.** The trill period of each whole trill section is measured, and the section is assigned to fast (F) or slow (S).
+3. **Split the song into `r segment_ms` ms segments.** The whole song is split, tones and trills alike. Each trill segment takes the state of its section. Tone segments have no state yet.
+4. **Classify the tones.** The frequency slope around each tone segment is measured, and the segment is assigned to descending (D), flat (P) or ascending (U).
+
+The order of the steps follows from the two kinds of sound:
+
+- **Trills are classified before splitting** because one trill cycle lasts about 10 - 20 ms, so a `r segment_ms` ms segment contains only part of a cycle and its period cannot be measured.
+- **Tones are classified after splitting** because the frequency of a single tone section can fall and then rise. Classifying each segment captures those changes, which a single label for the whole section would miss.
+
+For example, a song that starts with a descending tone followed by a slow trill could be coded as `dddddssssssss`. Because segments have a fixed duration, longer sounds produce more letters, and songs can differ in sequence length.
+
+The same five example songs are shown after each step, with the output of that step overlaid on the spectrogram.
+
+# Step 1: manual broad sections
+
+Each song was manually divided into consecutive sections, each labelled as **pure tone** or **trill**. Consecutive pure tone sections are merged into a single section. Consecutive trill sections are not merged: the rate of trills did not seem to vary gradually but rather discretely, so when discrete variation was observed the trills were annotated individually. The start and end of each song come from its tailored frequency contour. Sections annotated with the wrong song are reassigned to the song whose contour contains them.
 
 ```{r read data}
 
@@ -98,14 +123,23 @@ segs$ID[outside] <- vapply(which(outside), function(i) {
 segs <- segs[!is.na(segs$ID), ]
 segs <- segs[order(segs$ID, segs$start), ]
 
-segs$manual <- ifelse(segs$Category == "W", "U", segs$Category)
-segs$class <- ifelse(segs$manual %in% c("F", "M", "S"), "trill", "tone")
+# broad class of each section
+segs$class <- ifelse(segs$Category %in% c("F", "M", "S"), "trill", "tone")
+
+# merge consecutive pure tone sections (trill sections are kept as annotated)
+n <- nrow(segs)
+new_section <- c(TRUE, segs$ID[-1] != segs$ID[-n] | segs$class[-1] != "tone" | segs$class[-n] != "tone")
+merged_end <- as.vector(tapply(segs$end, cumsum(new_section), max))
+segs <- segs[new_section, ]
+segs$end <- merged_end
+
 segs$lek.song.type <- sub("-[0-9]{4}$", "", sub("^[0-9]+-", "", segs$ID))
 segs$lek <- sub("-.*", "", segs$lek.song.type)
 segs$duration_ms <- (segs$end - segs$start) * 1000
 
 data.frame(recordings = length(unique(segs$ID)), song_types = length(unique(segs$lek.song.type)), sections = nrow(segs))
-table(segs$class)
+data.frame(class = c("tone", "trill"), sections = as.vector(table(segs$class)),
+           median_duration_ms = round(as.vector(tapply(segs$duration_ms, segs$class, median)), 1))
 
 # contour of each recording
 CT <- lapply(split(contours, contours$song.type), function(ct)
@@ -122,6 +156,106 @@ measure <- function(id, a, b) {
   osc <- n_ext / 2 / (b - a)
   c(slope = unname(coef(lm(fi ~ ti))[2]), period_ms = if (osc > 0) 1000 / osc else Inf)
 }
+
+```
+
+## Output of step 1
+
+```{r plotting functions}
+
+wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
+sr <- wave@samp.rate
+
+# example songs shown after each step
+examples <- c("7-BR1-C1-2012", "58-CCE-I2-2012", "109-HC1-F2-1992", "209-SUR-B1-1972", "303-TR1-E3-2012")
+
+strip_names <- c("broad sections", "trills classified", "5 ms segments", "5 ms states")
+
+# blocks (start, end, color, label) available after each step
+step_output <- function(id, step) {
+  if (step <= 2) {
+    d <- segs[segs$ID == id, ]
+    tr <- d$class == "trill"
+    if (step == 1) return(data.frame(start = d$start, end = d$end, fill = broad_cols[d$class], txt = "white", label = d$class, cex = 0.8))
+    lab <- ifelse(tr, ifelse(is.finite(d$period_ms), sprintf("%s (%.1f ms)", d$trill_state, d$period_ms), d$trill_state), "tone")
+    return(data.frame(start = d$start, end = d$end, fill = ifelse(tr, cat_cols[d$trill_state], broad_cols["tone"]),
+                      txt = ifelse(tr, txt_col[d$trill_state], "white"), label = lab, cex = 0.8))
+  }
+  z <- P[P$ID == id, ]; z <- z[order(z$segment), ]
+  if (step == 3) {
+    tr <- z$class == "trill"
+    return(data.frame(start = z$start, end = z$end, fill = ifelse(tr, cat_cols[z$trill_state], broad_cols["tone"]),
+                      txt = ifelse(tr, txt_col[z$trill_state], "white"), label = ifelse(tr, z$trill_state, ""), cex = 0.55))
+  }
+  data.frame(start = z$start, end = z$end, fill = cat_cols[z$state], txt = txt_col[z$state], label = z$state, cex = 0.55)
+}
+
+# all spectrograms share the same time range (longest song of the five leks plus margins),
+# so that segments have the same size in all plots
+time_range_ms <- 210
+
+# spectrogram with the output of a step overlaid and shown as labelled strip(s) on top
+plot_step <- function(id, steps, margin = 0.008, flim = c(1, 11)) {
+  k <- CT[[id]]
+  t0 <- max(0, k$start - margin); t1 <- k$end + margin
+  sp <- spectro(cutw(wave, f = sr, from = t0, to = t1, output = "Wave"), f = sr, wl = 256, ovlp = 90, plot = FALSE, flim = c(0, 13))
+  amp <- sp$amp; amp[amp < -45] <- -45
+  tms <- sp$time * 1000; ms <- function(x) (x - t0) * 1000
+
+  h <- 1.2; top <- flim[2] + length(steps) * h
+  par(mar = c(3.3, 7, 2, 0.5))
+  plot(NA, xlim = c(0, time_range_ms), ylim = c(flim[1], top), xaxs = "i", yaxs = "i", xlab = "", ylab = "", yaxt = "n", main = id, cex.main = 0.95)
+  mtext("Time (ms)", side = 1, line = 2.1, cex = 0.8)
+  axis(2, at = seq(ceiling(flim[1]), flim[2], 2), las = 1, cex.axis = 0.8)
+  mtext("kHz", side = 2, line = 2.2, at = mean(flim), cex = 0.8)
+  fsel <- sp$freq >= flim[1] & sp$freq <= flim[2]
+  image(tms, sp$freq[fsel], t(amp[fsel, ]), col = gray.colors(40, start = 1, end = 0), add = TRUE, useRaster = TRUE)
+
+  # overlay of the last step
+  o <- step_output(id, tail(steps, 1))
+  rect(ms(o$start), flim[1], ms(o$end), flim[2], col = adjustcolor(o$fill, 0.33), border = NA)
+  segments(ms(c(o$start, tail(o$end, 1))), flim[1], y1 = flim[2], col = "gray25", lwd = 0.5)
+  lines(ms(k$t), k$f, col = "white", lwd = 3); lines(ms(k$t), k$f, col = "#FF8C00", lwd = 1.2)
+
+  # labelled strips
+  rect(0, flim[2], time_range_ms, top, col = "white", border = NA)
+  for (i in seq_along(steps)) {
+    o <- step_output(id, steps[i])
+    y0 <- top - i * h
+    rect(ms(o$start), y0, ms(o$end), y0 + h, col = o$fill, border = "white", lwd = 0.4)
+    fits <- 1.15 * strwidth(o$label, cex = o$cex) < ms(o$end) - ms(o$start)
+    text(ms((o$start + o$end) / 2), y0 + h / 2, ifelse(fits, o$label, ""), col = o$txt, cex = o$cex, font = 2)
+    mtext(strip_names[steps[i]], side = 2, at = y0 + h / 2, las = 1, line = 0.3, cex = 0.65, adj = 1)
+  }
+  box()
+}
+
+plot_legend <- function(step) {
+  par(mar = c(0, 0, 0, 0))
+  plot.new()
+  fl <- switch(as.character(step),
+               "1" = broad_cols, "4" = cat_cols,
+               c(broad_cols["tone"], cat_cols[c("F", "S")]))
+  lb <- switch(as.character(step),
+               "1" = c("pure tone", "trill"), "4" = state_names,
+               c("pure tone (not yet classified)", "F: fast trill", "S: slow trill"))
+  legend("center", horiz = TRUE, bty = "n", fill = fl, border = NA, cex = 0.9, legend = lb)
+}
+
+plot_examples <- function(step) {
+  layout(matrix(1:6), heights = c(0.45, rep(3.2, 5)))
+  par(cex = 1)
+  plot_legend(step)
+  for (id in examples) plot_step(id, step)
+}
+
+```
+
+Spectrograms of the five example songs with the broad sections overlaid (orange: tailored contour):
+
+```{r step 1 output, fig.width = 10.5, fig.height = 16.45}
+
+plot_examples(1)
 
 ```
 
@@ -159,9 +293,19 @@ ggplot(data.frame(x), aes(x)) +
 
 A mixture of two groups is preferred (BIC): fast trills (~10 ms) and slow trills (~20 ms). The dashed line marks the threshold used (`r trill_cut_ms` ms), close to the point at which the two groups are equally likely.
 
+## Output of step 2
+
+Trill sections now have a state, shown with their trill period. Tone sections are not yet classified:
+
+```{r step 2 output, fig.width = 10.5, fig.height = 16.45}
+
+plot_examples(2)
+
+```
+
 # Step 3: split into 5 ms segments
 
-Each song (from the start to the end of its tailored contour) is split into consecutive `r segment_ms` ms segments. A last remainder of at least half a segment forms its own (shorter) segment, and a shorter remainder is added to the previous segment. Each segment belongs to the section that covers most of it, and trill segments inherit the state of their section.
+Each whole song (tones and trills, from the start to the end of its tailored contour) is split into consecutive `r segment_ms` ms segments. A last remainder of at least half a segment forms its own (shorter) segment, and a shorter remainder is added to the previous segment. Each segment belongs to the section that covers most of it, and trill segments inherit the state of their section.
 
 ```{r split}
 
@@ -175,13 +319,22 @@ split_song <- function(id) {
 }
 P <- do.call(rbind, lapply(unique(segs$ID), split_song))
 P$class <- segs$class[P$section]
-P$manual <- segs$manual[P$section]
-P$former_W <- segs$Category[P$section] == "W"
+P$trill_state <- segs$trill_state[P$section]
 P$lek.song.type <- segs$lek.song.type[P$section]
 P$taxon <- sub("^[0-9]+-", "", P$ID)
 P$year <- as.numeric(sub(".*-", "", P$ID))
 
 data.frame(segments = nrow(P), tone = sum(P$class == "tone"), trill = sum(P$class == "trill"))
+
+```
+
+## Output of step 3
+
+All sections are now split into 5 ms segments. Trill segments carry the state of their section, and tone segments are not yet classified:
+
+```{r step 3 output, fig.width = 10.5, fig.height = 16.45}
+
+plot_examples(3)
 
 ```
 
@@ -210,35 +363,63 @@ round(prop.table(table(factor(P$state, states))), 3)
 
 ```
 
-Slope distribution of the tone segments, on a signed log scale (dashed lines: thresholds):
+## Natural groups in tone slope
 
-```{r slope distribution, fig.width = 8, fig.height = 4}
+As with trills, the thresholds are placed where neighbouring groups of a mixture model are equally likely. The model is fitted to the absolute slope, so that the two thresholds are symmetric and a flat tone is treated the same whether it falls or rises slightly.
 
-sl <- P$slope[to_idx]
-ggplot(data.frame(x = sign(sl) * log1p(abs(sl))), aes(x)) +
-  geom_histogram(bins = 60, fill = "gray70", color = "white") +
-  geom_vline(xintercept = c(-1, 1) * log1p(tone_cut), linetype = 2) +
-  labs(x = "sign(slope) x log(1 + |slope|)", y = "Tone segments")
+```{r tone groups, fig.width = 8, fig.height = 4}
+
+a <- abs(sl <- P$slope[to_idx]); a <- a[a > 0 & a < 150]
+tone_bic <- mclustBIC(a, G = 1:6, modelNames = "V", verbose = FALSE)
+tone_mod <- Mclust(a, G = 3, modelNames = "V", verbose = FALSE)
+grid <- seq(0.05, 150, by = 0.05)
+tone_bound <- grid[which(diff(predict(tone_mod, grid)$classification) != 0)]
+
+data.frame(groups = 1:6, BIC = round(tone_bic[, "V"]))
+data.frame(group = c("flat", "gentle slope", "steep slope"), mean_kHz_s = round(tone_mod$parameters$mean, 1),
+           sd_kHz_s = round(sqrt(tone_mod$parameters$variance$sigmasq), 1), proportion = round(tone_mod$parameters$pro, 2))
+data.frame(boundaries_kHz_s = round(tone_bound, 1))
+
+ggplot(data.frame(x = sl[abs(sl) < 150]), aes(x)) +
+  geom_histogram(binwidth = 2, fill = "gray70", color = "white") +
+  geom_vline(xintercept = c(-1, 1) * tone_cut, linetype = 2) +
+  labs(x = "Frequency slope (kHz/s)", y = "Tone segments")
 
 ```
 
-## Former W segments
+The groups are less distinct than those of trills: slopes vary continuously, and BIC prefers `r which.max(tone_bic[, "V"])` groups rather than a clear small number. Three groups are used because they separate flat tones from gentle and steep slopes. The boundary between flat tones and gentle slopes (`r round(tone_bound[1], 1)` kHz/s) sets the threshold used (dashed lines, ±`r tone_cut` kHz/s). Gentle and steep slopes are both coded as ascending or descending according to their sign.
 
-W segments are rapid frequency sweeps. Classifying tones per segment splits them into their rising and falling parts:
+## Output of step 4
 
-```{r former W}
+The final coding, with a state for all 5 ms segments:
 
-round(prop.table(table(factor(P$state[P$former_W], c("D", "P", "U")))), 3)
+```{r step 4 output, fig.width = 10.5, fig.height = 16.45}
+
+plot_examples(4)
+
+```
+
+```{r summary figure for home page, include = FALSE}
+
+# one song through the four steps (shown on the home page of the website)
+dir.create("./output/figures", recursive = TRUE, showWarnings = FALSE)
+png("./output/figures/song_coding_steps.png", width = 10.5, height = 13, units = "in", res = 150)
+layout(matrix(1:4))
+par(cex = 1)
+for (st in 1:4) plot_step("58-CCE-I2-2012", st)
+dev.off()
 
 ```
 
 # Sequences
 
-Three tables are saved in `data/processed`:
+Sequences are saved for two sets of recordings: the five leks used in the paper (BR1, CCE, HC1, SUR and TR1) and all leks. The thresholds above were set using all recordings, and the rest of this report uses the five leks.
+
+Three tables are saved in `data/processed`, each in two versions (add `_all_leks` to the file name for the version with all leks):
 
 - `song_5ms_segments_by_recording.csv`: all segments with their state
 - `song_5ms_sequences_by_taxon.csv`: the sequence of each song type and year (one recording per song type and year)
-- `song_5ms_sequences_by_song_type.csv`: one sequence per song type, from its **most representative recording** (highest mean similarity to the other recordings of the song type). A position-by-position consensus is not used because sequences differ in length
+- `song_5ms_sequences_by_song_type.csv`: one sequence per song type, from its **most representative recording** (highest mean similarity to the other recordings of the song type)
 
 ```{r sequences}
 
@@ -261,12 +442,28 @@ by_type <- do.call(rbind, lapply(split(rec, rec$lek.song.type), function(z) {
              mean_similarity_to_others = round(ms, 3), length = z$length[best], sequence = z$sequence[best])
 }))
 
-write.csv(P[, c("ID", "lek.song.type", "taxon", "year", "segment", "start", "end", "class", "manual", "slope", "state")],
-          "./data/processed/song_5ms_segments_by_recording.csv", row.names = FALSE)
-write.csv(rec[, c("lek", "lek.song.type", "year", "taxon", "ID", "length", "sequence")],
-          "./data/processed/song_5ms_sequences_by_taxon.csv", row.names = FALSE)
-write.csv(by_type, "./data/processed/song_5ms_sequences_by_song_type.csv", row.names = FALSE)
+write_tables <- function(P, rec, by_type, suffix = "") {
+  write.csv(P[, c("ID", "lek.song.type", "taxon", "year", "segment", "start", "end", "class", "slope", "state")],
+            paste0("./data/processed/song_5ms_segments_by_recording", suffix, ".csv"), row.names = FALSE)
+  write.csv(rec[, c("lek", "lek.song.type", "year", "taxon", "ID", "length", "sequence")],
+            paste0("./data/processed/song_5ms_sequences_by_taxon", suffix, ".csv"), row.names = FALSE)
+  write.csv(by_type, paste0("./data/processed/song_5ms_sequences_by_song_type", suffix, ".csv"), row.names = FALSE)
+}
 
+# all leks
+write_tables(P, rec, by_type, "_all_leks")
+rec_all <- rec
+summary_all <- data.frame(leks = "all", recordings = nrow(rec), song_types = nrow(by_type))
+
+# leks used in the paper
+sel_leks <- c("BR1", "CCE", "HC1", "SUR", "TR1")
+P <- P[sub("-.*", "", P$lek.song.type) %in% sel_leks, ]
+rec <- rec[rec$lek %in% sel_leks, ]
+by_type <- by_type[by_type$lek %in% sel_leks, ]
+Q <- Q[rec$ID]
+write_tables(P, rec, by_type)
+
+rbind(summary_all, data.frame(leks = "used in the paper", recordings = nrow(rec), song_types = nrow(by_type)))
 data.frame(taxa = nrow(rec), song_types = nrow(by_type), median_length = median(rec$length), min_length = min(rec$length), max_length = max(rec$length))
 head(by_type[, c("song.type", "n_recordings", "length", "sequence")])
 
@@ -274,23 +471,22 @@ head(by_type[, c("song.type", "n_recordings", "length", "sequence")])
 
 ## FASTA files for alignment
 
-FASTA files are saved in `data/processed/song_sequences_5ms`, with the same taxa and file names used for the 20-segment sequences (`data/processed/song_sequences`), so they can be used in the same alignment steps. For each lek, taxa are split into `early_old`, `rest_old`, `early_new`, `rest_new` and `no.fossils`, following `aligning_song_types.Rmd`. The original alignments are not modified.
+FASTA files are saved in `data/processed/song_sequences_5ms`. For each lek, taxa (song type x year) are split into `early_old`, `rest_old`, `early_new`, `rest_new` and `no.fossils`.
 
 Each set comes in two formats:
 
 - `song_seqs_<set>_<lek>.fa`: states as lower-case letters (d, p, u, f, s), for MAFFT
-- `song_seqs_<set>_<lek>_prank.fa`: nucleotide coding for PRANK, as in the previous analyses: trills as pyrimidines (f = C, s = T) and tones as purines (u = A, d = G, with flat tones ambiguous between them, p = R)
+- `song_seqs_<set>_<lek>_prank.fa`: nucleotide coding for PRANK: trills as pyrimidines (f = C, s = T) and tones as purines (u = A, d = G, with flat tones ambiguous between them, p = R)
 
 Sequences of taxa are provided in two versions, in separate folders:
 
-- `song_type_sequence`: all years of a song type share the sequence of its most representative recording (as in the previous analyses, in which a song type had a single sequence)
-- `year_specific_sequence`: each song type and year has the sequence of its own recording. Taxa with no recording in that year (years between the first and last record of the song type) use the representative sequence of the song type
+- `song_type_sequence`: all years of a song type share the sequence of its most representative recording
+- `year_specific_sequence`: each song type and year has the sequence of its own recording. Taxa with no recording in that year use the representative sequence of the song type
 
-`taxon_sequence_source.csv` gives the recording used for each taxon, and `all_recordings.fa` has the sequences of all recordings.
+`taxon_sequence_source.csv` gives the recording used for each taxon, and `all_recordings.fa` and `all_recordings_all_leks.fa` have the sequences of all recordings from the five leks and from all leks.
 
 ```{r fasta files}
 
-sel_leks <- c("BR1", "CCE", "HC1", "SUR", "TR1")
 out_dir <- "./data/processed/song_sequences_5ms"
 for (d in c("song_type_sequence", "year_specific_sequence")) dir.create(file.path(out_dir, d), recursive = TRUE, showWarnings = FALSE)
 
@@ -316,8 +512,9 @@ write.csv(data.frame(lek = yrs$lek, taxon = yrs$taxon, song.type = yrs$song.type
                      recording_year_specific_sequence = ifelse(yrs$has_recording, yrs$own_recording, yrs$representative_recording)),
           file.path(out_dir, "taxon_sequence_source.csv"), row.names = FALSE)
 write_fasta(rec$ID, rec$sequence, file.path(out_dir, "all_recordings.fa"))
+write_fasta(rec_all$ID, rec_all$sequence, file.path(out_dir, "all_recordings_all_leks.fa"))
 
-# taxon sets (as in aligning_song_types.Rmd)
+# taxon sets
 all_old <- yrs
 early_old <- all_old[!duplicated(all_old$song.type), ]
 all_new <- all_old[all_old$year > 2000, ]
@@ -341,13 +538,11 @@ for (i in sel_leks) for (set in names(sets)) {
   }
 }
 
-# number of taxa per set, compared with the taxa sets of the previous analyses
+# number of taxa per set
 n_tax <- function(set, lek) { f <- file.path(out_dir, "song_type_sequence", paste0("song_seqs_", set, "_", lek, ".fa")); if (file.exists(f)) sum(grepl("^>", readLines(f))) else 0 }
-n_prev <- function(set, lek) { f <- file.path("./data/processed/song_sequences", paste0("song_seqs_", set, "_", lek, ".fa")); if (file.exists(f)) sum(grepl("^>", readLines(f))) else 0 }
 check <- expand.grid(lek = sel_leks, set = names(sets), stringsAsFactors = FALSE)
-check$taxa <- mapply(n_tax, check$set, check$lek); check$taxa_previous <- mapply(n_prev, check$set, check$lek)
+check$taxa <- mapply(n_tax, check$set, check$lek)
 xtabs(taxa ~ lek + set, check)
-all(check$taxa == check$taxa_previous)
 
 data.frame(fasta_files = n_files, taxa = nrow(yrs), taxa_with_recording_that_year = sum(yrs$has_recording),
            taxa_using_representative_sequence = sum(!yrs$has_recording))
@@ -377,15 +572,13 @@ diff_sim <- apply(diff_pairs, 1, function(p) similarity(p[1], p[2]))
 fs <- list.files("./data/processed/fossils", pattern = "taxa_.*\\.tsv$", full.names = TRUE)
 rb_taxa <- unique(unlist(lapply(fs, function(f) read.delim(f)[[1]])))
 rb_types <- unique(sub("-[0-9]{4}$", "", rb_taxa))
-same_type <- rec$lek.song.type[match(same[, 1], rec$ID)]
-in_rb <- same_type %in% rb_types
 
-data.frame(comparison = c("same song type", "same song type (RevBayes song types)", "different song types, same lek"),
-           pairs = c(length(same_sim), sum(in_rb), length(diff_sim)),
-           mean = round(c(mean(same_sim), mean(same_sim[in_rb]), mean(diff_sim)), 3),
-           q25 = round(c(quantile(same_sim, .25), quantile(same_sim[in_rb], .25), quantile(diff_sim, .25)), 3),
-           median = round(c(median(same_sim), median(same_sim[in_rb]), median(diff_sim)), 3),
-           q75 = round(c(quantile(same_sim, .75), quantile(same_sim[in_rb], .75), quantile(diff_sim, .75)), 3))
+data.frame(comparison = c("same song type", "different song types, same lek"),
+           pairs = c(length(same_sim), length(diff_sim)),
+           mean = round(c(mean(same_sim), mean(diff_sim)), 3),
+           q25 = round(c(quantile(same_sim, .25), quantile(diff_sim, .25)), 3),
+           median = round(c(median(same_sim), median(diff_sim)), 3),
+           q75 = round(c(quantile(same_sim, .75), quantile(diff_sim, .75)), 3))
 
 data.frame(chance_corrected_similarity = round((mean(same_sim) - mean(diff_sim)) / (1 - mean(diff_sim)), 3),
            same_type_pairs_above_median_different_type = round(mean(same_sim > median(diff_sim)), 3))
@@ -402,63 +595,13 @@ ggplot(data.frame(similarity = c(same_sim, diff_sim),
 
 ```
 
-Similarity by lek and by time between recordings:
+## Agreement of the broad sections between copies of the same song type
 
-```{r similarity groups}
-
-rev_lek <- sub("-.*", "", same_type); k <- rev_lek %in% c("BR1", "CCE", "HC1", "SUR", "TR1")
-data.frame(lek = names(table(rev_lek[k])), pairs = as.vector(table(rev_lek[k])), similarity = round(as.vector(tapply(same_sim[k], rev_lek[k], mean)), 3))
-
-gap <- abs(rec$year[match(same[, 1], rec$ID)] - rec$year[match(same[, 2], rec$ID)])
-bins <- cut(gap, c(0, 1, 2, 5, 60), labels = c("1", "2", "3-5", ">5"))
-data.frame(years_apart = levels(bins), pairs = as.vector(table(bins)), similarity = round(as.vector(tapply(same_sim, bins, mean)), 3))
-
-```
-
-## Agreement with the manual labels
-
-Manual M trills have no equivalent in this coding (their segments are assigned to F or S by their period) and are excluded here; former W segments are compared as U.
-
-```{r agreement with manual}
-
-ref <- ifelse(P$manual == "M", NA, P$manual)
-data.frame(segments = c("all (excluding manual M)", "trills (F, S)", "tones (D, P, U)", "tones, excluding former W"),
-           agreement = round(c(mean(P$state == ref, na.rm = TRUE),
-                               mean((P$state == ref)[P$class == "trill"], na.rm = TRUE),
-                               mean((P$state == ref)[P$class == "tone"], na.rm = TRUE),
-                               mean((P$state == ref)[P$class == "tone" & !P$former_W], na.rm = TRUE)), 3))
-
-table(manual = factor(P$manual, c("D", "P", "U", "F", "M", "S")), coded = factor(P$state, states))
-
-```
-
-## Redundancy
-
-```{r runs}
-
-run_len <- sapply(Q, function(z) length(z) / length(rle(z)$lengths))
-data.frame(positions_per_run = round(mean(run_len), 2), runs_per_song = round(mean(sapply(Q, function(z) length(rle(z)$lengths))), 1))
-
-```
-
-## Coverage of the RevBayes taxa
-
-```{r coverage}
-
-data.frame(revbayes_song_types = length(rb_types), with_sequence = sum(rb_types %in% by_type$song.type),
-           revbayes_taxa = length(rb_taxa), taxa_with_recording_that_year = sum(rb_taxa %in% rec$taxon))
-
-```
-
-# Agreement of the broad categories (tone vs. trill)
-
-## Between copies of the same song type
-
-Two comparisons between all pairs of recordings of the same song type, using only the broad category of each segment: similarity of the 5 ms sequences (edit distance, as sequences differ in length) and position-by-position agreement after splitting each song into 20 equal-length parts (which can be compared directly with the previous 20-segment coding below).
+Two comparisons between all pairs of recordings of the same song type, using only the broad category of each segment: similarity of the 5 ms sequences (edit distance, as sequences differ in length) and position-by-position agreement after splitting each song into 20 equal-length parts.
 
 ```{r broad agreement between copies}
 
-broad <- function(z) ifelse(toupper(z) %in% c("F", "S", "M"), "T", "N")
+broad <- function(z) ifelse(z %in% c("F", "S"), "T", "N")
 kappa <- function(a, b) {
   lv <- union(a, b); cm <- table(factor(a, lv), factor(b, lv))
   acc <- sum(diag(cm)) / sum(cm); pe <- sum(rowSums(cm) * colSums(cm)) / sum(cm)^2
@@ -471,10 +614,10 @@ broad_sim <- function(p) 1 - adist(broad_str[[p[1]]], broad_str[[p[2]]])[1, 1] /
 same_broad <- apply(same, 1, broad_sim); diff_broad <- apply(diff_pairs, 1, broad_sim)
 
 # 20 equal-length parts: broad category of the section covering most of each part
-parts20 <- do.call(rbind, lapply(unique(segs$ID), function(id) {
+parts20 <- do.call(rbind, lapply(rec$ID, function(id) {
   ii <- which(segs$ID == id); k <- CT[[id]]; b <- seq(k$start, k$end, length.out = 21)
-  data.frame(ID = id, lek.song.type = segs$lek.song.type[ii[1]], segment = 1:20,
-             broad = broad(segs$manual[sapply(1:20, function(j) ii[which.max(pmax(0, pmin(segs$end[ii], b[j + 1]) - pmax(segs$start[ii], b[j])))])]))
+  data.frame(ID = id, segment = 1:20,
+             broad = segs$class[sapply(1:20, function(j) ii[which.max(pmax(0, pmin(segs$end[ii], b[j + 1]) - pmax(segs$start[ii], b[j])))])])
 }))
 B20 <- split(parts20$broad, parts20$ID)
 a20 <- unlist(lapply(seq_len(nrow(same)), function(i) B20[[same[i, 1]]]))
@@ -494,154 +637,40 @@ data.frame(measure = c("5 ms sequences, similarity", "20 equal-length parts, pos
 
 ```
 
-## With the previous manual 20-segment coding
 
-The previous coding (`complete_segment_analysis_nov-2019.RDS`) assigned one of six states to each of the 20 equal-length segments of each recording. It is converted to two categories: trills (f, m, s) and tones (d, p, u). Each recording of this data set is compared position by position with all recordings of the same song type in the previous coding, and with the consensus of the song type (most common category at each position, built in temporal order). These are mostly different recordings of the song type, so they include variation between copies.
+# Output files
 
-For reference, the table also includes the agreement between copies within the previous coding and between the two observers of the previous coding (`segment_classification_2_observers.csv`).
+All files are saved in `data/processed`. The evaluation and the spectrograms in this report use the five leks.
 
-```{r broad agreement previous coding}
+| Output | Five leks used in the paper (`r nrow(rec)` recordings, `r nrow(by_type)` song types) | All leks (`r summary_all$recordings` recordings, `r summary_all$song_types` song types) |
+|:-----|:-----|:-----|
+| Segments | `song_5ms_segments_by_recording.csv` | `song_5ms_segments_by_recording_all_leks.csv` |
+| Sequence per song type and year | `song_5ms_sequences_by_taxon.csv` | `song_5ms_sequences_by_taxon_all_leks.csv` |
+| One sequence per song type | `song_5ms_sequences_by_song_type.csv` | `song_5ms_sequences_by_song_type_all_leks.csv` |
+| FASTA of all recordings | `song_sequences_5ms/all_recordings.fa` | `song_sequences_5ms/all_recordings_all_leks.fa` |
+| FASTA files for alignment | `song_sequences_5ms/song_type_sequence/` and `song_sequences_5ms/year_specific_sequence/` | not available |
 
-prev <- as.data.frame(readRDS("./data/processed/complete_segment_analysis_nov-2019.RDS"))
-prev <- prev[order(prev$sound.files, prev$start), ]
-prev$segment <- ave(prev$start, prev$sound.files, FUN = seq_along)
-prev$broad <- ifelse(grepl("t$", prev$segment_type), "T", "N")
-P20 <- split(prev$broad, prev$sound.files)
-prev_type <- tapply(prev$lek.song.type, prev$sound.files, `[`, 1)
-prev_year <- tapply(prev$year, prev$sound.files, `[`, 1)
+# Spectrograms of all recordings {#sec-spectrograms}
 
-cur_type <- tapply(parts20$lek.song.type, parts20$ID, `[`, 1)
-cur_year <- as.numeric(sub(".*-", "", names(cur_type)))
-shared_types <- intersect(cur_type, prev_type)
+All recordings of the `r length(rb_types)` song types used in the RevBayes analyses, with one tab per lek and grouped by song type within each tab. Each panel shows the spectrogram with the 5 ms states overlaid and the tailored contour (orange). The strips on top show the classified sections (steps 1 and 2) and the final 5 ms states (steps 3 and 4). All spectrograms in this report have the same time range (`r time_range_ms` ms), so segments have the same size in all of them.
 
-# all recordings of this data set vs. all recordings of the previous coding of the same song type
-cross <- do.call(rbind, lapply(shared_types, function(ty) {
-  expand.grid(cur = names(cur_type)[cur_type == ty], pre = names(prev_type)[prev_type == ty], stringsAsFactors = FALSE)
-}))
-cross$same_year <- cur_year[match(cross$cur, names(cur_type))] == prev_year[cross$pre]
-x_cur <- unlist(B20[cross$cur], use.names = FALSE); x_pre <- unlist(P20[cross$pre], use.names = FALSE)
-k_sy <- rep(cross$same_year, each = 20)
-in_rb_x <- rep(cur_type[cross$cur] %in% rb_types, each = 20)
-
-# consensus per song type vs. each recording and vs. consensus of this data set
-mc <- function(x) names(which.max(table(x)))
-cons_prev <- lapply(split(prev, prev$lek.song.type), function(z) sapply(1:20, function(s) mc(z$broad[z$segment == s])))
-cons_cur <- lapply(split(parts20, parts20$lek.song.type), function(z) sapply(1:20, function(s) mc(z$broad[z$segment == s])))
-rc <- names(cur_type)[cur_type %in% shared_types]
-r_cur <- unlist(B20[rc], use.names = FALSE); r_con <- unlist(cons_prev[cur_type[rc]], use.names = FALSE)
-c_cur <- unlist(cons_cur[shared_types], use.names = FALSE); c_pre <- unlist(cons_prev[shared_types], use.names = FALSE)
-
-# copies within the previous coding
-same_prev <- do.call(rbind, lapply(split(names(prev_type), prev_type), function(z) if (length(z) > 1) t(combn(z, 2)) else NULL))
-p_a <- unlist(P20[same_prev[, 1]], use.names = FALSE); p_b <- unlist(P20[same_prev[, 2]], use.names = FALSE)
-
-# two observers of the previous coding
-obs <- read.csv("./data/processed/segment_classification_2_observers.csv")
-obs1 <- broad(obs$obs1); obs2 <- broad(obs$obs2)
-
-ag_row <- function(name, a, b, n) data.frame(comparison = name, comparisons = n, positions = length(a),
-                                             agreement = round(mean(a == b), 3), kappa = round(kappa(a, b), 3))
-rbind(
-  ag_row("this data set vs. previous coding: all recording pairs", x_cur, x_pre, nrow(cross)),
-  ag_row("  same year only", x_cur[k_sy], x_pre[k_sy], sum(cross$same_year)),
-  ag_row("  RevBayes song types only", x_cur[in_rb_x], x_pre[in_rb_x], sum(cur_type[cross$cur] %in% rb_types)),
-  ag_row("this data set (each recording) vs. previous consensus", r_cur, r_con, length(rc)),
-  ag_row("consensus vs. consensus, per song type", c_cur, c_pre, length(shared_types)),
-  ag_row("reference: copies within this data set", a20, b20, nrow(same)),
-  ag_row("reference: copies within the previous coding", p_a, p_b, nrow(same_prev)),
-  ag_row("reference: two observers of the previous coding", obs1, obs2, length(unique(obs$lek.song.type)))
-)
-
-table(this_data_set = c_cur, previous_coding = c_pre)
-
-```
-
-# Spectrograms {#sec-spectrograms}
-
-All recordings of the `r length(rb_types)` song types used in the RevBayes analyses, grouped by lek and song type. Each panel shows the spectrogram with the tailored contour (orange) and three label strips:
-
-1. **manual**: original manual sections and labels (W shown as U); dashed lines on the spectrogram mark the section boundaries
-2. **broad + trills**: steps 1 and 2: tone sections in gray, trill sections classified as fast or slow, with their period (ms)
-3. **5 ms coding**: the final sequence (steps 3 and 4)
-
-```{r spectrogram setup}
-
-wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
-sr <- wave@samp.rate
-
-plot_recording <- function(id, margin = 0.008, flim = c(1, 11)) {
-  k <- CT[[id]]
-  d <- segs[segs$ID == id, ]
-  z <- P[P$ID == id, ]; z <- z[order(z$segment), ]
-  t0 <- max(0, k$start - margin); t1 <- k$end + margin
-  sp <- spectro(cutw(wave, f = sr, from = t0, to = t1, output = "Wave"), f = sr, wl = 256, ovlp = 90, plot = FALSE, flim = c(0, 13))
-  amp <- sp$amp; amp[amp < -45] <- -45
-  tms <- sp$time * 1000; ms <- function(x) (x - t0) * 1000
-
-  h <- 1.1; top <- flim[2] + 3 * h
-  par(mar = c(3.3, 6.5, 2, 0.5))
-  plot(NA, xlim = range(tms), ylim = c(flim[1], top), xaxs = "i", yaxs = "i", xlab = "", ylab = "", yaxt = "n",
-       main = sprintf("%s   (%d segments)", id, nrow(z)), cex.main = 0.95)
-  mtext("Time (ms)", side = 1, line = 2.1, cex = 0.8)
-  axis(2, at = seq(ceiling(flim[1]), flim[2], 2), las = 1, cex.axis = 0.8)
-  mtext("kHz", side = 2, line = 2.2, at = mean(flim), cex = 0.8)
-  fsel <- sp$freq >= flim[1] & sp$freq <= flim[2]
-  image(tms, sp$freq[fsel], t(amp[fsel, ]), col = gray.colors(40, start = 1, end = 0), add = TRUE, useRaster = TRUE)
-  lines(ms(k$t), k$f, col = "white", lwd = 3.5); lines(ms(k$t), k$f, col = "#FF8C00", lwd = 1.3)
-  abline(v = ms(c(d$start, tail(d$end, 1))), lty = 2, col = "gray35")
-  rect(min(tms), flim[2], max(tms), top, col = "white", border = NA)
-
-  manual_cols <- c(cat_cols, M = "#F59F00"); manual_txt <- c(txt_col, M = "black")
-  # manual
-  y0 <- top - h
-  rect(ms(d$start), y0, ms(d$end), y0 + h, col = manual_cols[d$manual], border = "white", lwd = 0.5)
-  narrow <- (d$end - d$start) * 1000 < 0.025 * diff(range(tms))
-  text(ms((d$start + d$end) / 2), y0 + h / 2, d$manual, col = manual_txt[d$manual], cex = ifelse(narrow, 0.55, 0.8), font = 2)
-  mtext("manual", side = 2, at = y0 + h / 2, las = 1, line = 0.3, cex = 0.65, adj = 1)
-  # broad + trills
-  y0 <- top - 2 * h
-  is_tr <- d$class == "trill"
-  rect(ms(d$start), y0, ms(d$end), y0 + h, col = ifelse(is_tr, cat_cols[d$trill_state], "gray85"), border = "white", lwd = 0.5)
-  if (any(!is_tr)) text(ms((d$start + d$end) / 2)[!is_tr], y0 + h / 2, ifelse(narrow[!is_tr], "", "tone"), cex = 0.6, col = "gray30")
-  if (any(is_tr)) {
-    text(ms((d$start + d$end) / 2)[is_tr], y0 + h * 0.65, d$trill_state[is_tr], col = txt_col[d$trill_state[is_tr]], font = 2, cex = 0.8)
-    text(ms((d$start + d$end) / 2)[is_tr], y0 + h * 0.22, ifelse(is.finite(d$period_ms[is_tr]), sprintf("%.1f", d$period_ms[is_tr]), "Inf"), col = txt_col[d$trill_state[is_tr]], cex = 0.5)
-  }
-  mtext("broad + trills", side = 2, at = y0 + h / 2, las = 1, line = 0.3, cex = 0.65, adj = 1)
-  # 5 ms coding
-  y0 <- top - 3 * h
-  rect(ms(z$start), y0, ms(z$end), y0 + h, col = cat_cols[z$state], border = "white", lwd = 0.3)
-  text(ms((z$start + z$end) / 2), y0 + h / 2, z$state, col = txt_col[z$state], cex = 0.48, font = 2)
-  mtext("5 ms coding", side = 2, at = y0 + h / 2, las = 1, line = 0.3, cex = 0.65, adj = 1)
-  box()
-}
-
-```
-
-```{r spectrogram legend, fig.width = 11, fig.height = 0.8}
-
-par(mar = c(0, 0, 0, 0))
-plot.new()
-legend("center", horiz = TRUE, bty = "n", fill = c(cat_cols, "#F59F00"), border = NA, cex = 0.8,
-       legend = c(state_names, "M: medium trill (manual only)"))
-
-```
-
-```{r spectrograms, fig.width = 11, fig.height = 4.3, results = "asis"}
+```{r spectrograms, fig.width = 10.5, fig.height = 4, results = "asis"}
 
 show <- rec[rec$lek.song.type %in% rb_types, ]
 show <- show[order(show$lek.song.type, show$year), ]
 
+cat("\n\n::: {.panel-tabset}\n\n")
 for (lk in unique(show$lek)) {
   cat("\n\n## ", lk, "\n\n", sep = "")
   for (ty in unique(show$lek.song.type[show$lek == lk])) {
-    cat("\n\n### ", ty, "\n\n", sep = "")
+    cat("\n\n### ", ty, " {.unnumbered}\n\n", sep = "")
     for (id in show$ID[show$lek.song.type == ty]) {
-      plot_recording(id)
+      plot_step(id, c(2, 4))
       cat("\n\n")
     }
   }
 }
+cat("\n\n:::\n\n")
 
 ```
 
@@ -649,8 +678,9 @@ for (lk in unique(show$lek)) {
 
 # Takeaways {.unnumbered .unlisted}
 
-- `r nrow(rec)` recordings of `r nrow(by_type)` song types were coded as sequences of `r segment_ms` ms segments (median length `r median(rec$length)`, range `r min(rec$length)` - `r max(rec$length)`) with 5 states: fast and slow trills (< `r trill_cut_ms` ms and ≥ `r trill_cut_ms` ms trill period, measured over each manual trill section) and descending, flat and ascending tones (slope thresholds of ±`r tone_cut` kHz/s, measured per segment in a `r 2 * tone_window_ms + segment_ms` ms window)
+- `r nrow(rec)` recordings of `r nrow(by_type)` song types were coded as sequences of `r segment_ms` ms segments (median length `r median(rec$length)`, range `r min(rec$length)` - `r max(rec$length)`) with 5 states: fast and slow trills (< `r trill_cut_ms` ms and ≥ `r trill_cut_ms` ms trill period, measured over each trill section) and descending, flat and ascending tones (slope thresholds of ±`r tone_cut` kHz/s, measured per segment in a `r 2 * tone_window_ms + segment_ms` ms window)
 - Copies of the same song type have a mean similarity of `r sprintf("%.3f", mean(same_sim))`, compared with `r sprintf("%.3f", mean(diff_sim))` for different song types from the same lek
+- For the broad categories alone, copies of the same song type have a mean similarity of `r sprintf("%.3f", mean(same_broad))` (`r sprintf("%.3f", mean(diff_broad))` for different song types from the same lek)
 - Sequences cover all `r length(rb_types)` song types used in the RevBayes analyses
 
 </div>
