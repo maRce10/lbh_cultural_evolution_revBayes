@@ -1,0 +1,682 @@
+---
+title: Automated classification of 20 equal-length song segments
+subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 3
+toc-location: left
+number-sections: true
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-tools: true
+    css: qmd.css
+editor_options:
+  chunk_output_type: console
+---
+
+```{r set root directory, echo = FALSE}
+
+# set working directory as project directory
+knitr::opts_knit$set(root.dir = "..")
+
+```
+
+```{r add link to github repo, echo = FALSE, results='asis'}
+
+# print link to github repo if any
+if (file.exists("./.git/config")){
+  config <- readLines("./.git/config")
+  url <- grep("url",  config, value = TRUE)
+  url <- gsub("\\turl = |.git$", "", url)
+  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
+  }
+
+```
+
+<div class="alert alert-info">
+
+# Purpose {.unnumbered .unlisted}
+
+- Convert the manually delimited song segments of the prevalence data set into **20 equal-length segments**, the coding scheme used for the phylogenetic analyses
+- Check the 20-segment coding used in the phylogenetic analyses (`segments_by_song_type.csv`) and compare it with these manual labels
+- Train and evaluate automated classifiers on the 20-segment scheme: one-step models and a two-step approach (tone/trill model + fixed thresholds)
+
+</div>
+
+&nbsp;
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages, message=FALSE, warning=FALSE}
+
+sketchy::load_packages(packages = c("knitr", "Rraven", "tuneR", "seewave", "xgboost", "ggplot2", "viridis"))
+
+theme_set(theme_classic(base_size = 13))
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+dir.create("./data/processed/segment_classifier_20", showWarnings = FALSE)
+
+classes6 <- c("D", "U", "P", "F", "M", "S")
+cat_cols <- setNames(viridis(6, option = "H", begin = 0.05, end = 0.95), classes6)
+
+```
+
+# Data
+
+The same sources and corrections as in `automated_segment_classification.qmd`:
+
+- Tailored dominant frequency contours (`seltailor_output.csv`) and manual segment annotations (`FrameworkContourDegradationv1.7.txt`) from the [lbh_songtype_prevalence_and_degradation](https://github.com/maRce10/lbh_songtype_prevalence_and_degradation) project
+- Segments annotated with the wrong song are reassigned to the song whose contour contains them
+- W segments (single wide frequency sweep) are converted to ascending tones (U)
+
+```{r read data}
+
+contours <- read.csv("./data/raw/segment_classification/seltailor_output.csv")
+ff_cols <- grep("^ff", names(contours))
+
+segs <- imp_raven(path = "./data/raw/segment_classification", files = "FrameworkContourDegradationv1.7.txt",
+                  all.data = TRUE, warbler.format = TRUE)
+segs <- segs[!is.na(segs$Category) & segs$Category != "", ]
+segs <- segs[segs$ID %in% contours$song.type, ]
+
+# reassign segments annotated with the wrong song
+tol <- 0.005
+m <- match(segs$ID, contours$song.type)
+outside <- segs$end < contours$start[m] - tol | segs$start > contours$end[m] + tol
+segs$ID[outside] <- vapply(which(outside), function(i) {
+  k <- which(contours$start <= segs$start[i] + tol & contours$end >= segs$end[i] - tol)
+  if (length(k) == 1) contours$song.type[k] else NA_character_
+}, character(1))
+segs <- segs[!is.na(segs$ID), ]
+segs <- segs[order(segs$ID, segs$start), ]
+
+# W -> U
+segs$Category[segs$Category == "W"] <- "U"
+
+```
+
+## Conversion to 20 equal-length segments
+
+Each song (from the start to the end of its tailored contour) is split into 20 segments of equal duration. Each equal segment receives the manual category that covers the largest part of it. The proportion of the segment covered by that category (**purity**) is kept: segments spanning the boundary between two manual segments have low purity.
+
+```{r convert to 20 segments}
+
+to_equal_segments <- function(d, ct, n = 20) {
+  b <- seq(ct$start, ct$end, length.out = n + 1)
+  out <- lapply(seq_len(n), function(i) {
+    ov <- pmax(0, pmin(d$end, b[i + 1]) - pmax(d$start, b[i]))
+    cover <- tapply(ov, d$Category, sum)
+    data.frame(segment = i, start = b[i], end = b[i + 1],
+               Category = names(which.max(cover)), purity = max(cover) / (b[i + 1] - b[i]))
+  })
+  data.frame(ID = d$ID[1], do.call(rbind, out))
+}
+
+S20 <- do.call(rbind, lapply(split(segs, segs$ID), function(d)
+  to_equal_segments(d, contours[contours$song.type == d$ID[1], ])))
+S20$lek.song.type <- sub("-[0-9]{4}$", "", sub("^[0-9]+-", "", S20$ID))
+S20$year <- as.numeric(sub(".*-", "", S20$ID))
+rownames(S20) <- NULL
+
+data.frame(songs = length(unique(S20$ID)), lek_song_types = length(unique(S20$lek.song.type)), segments = nrow(S20))
+table(S20$Category)
+summary(S20$purity)
+mean(S20$purity >= 0.8)
+
+```
+
+## The 20-segment coding of the phylogenetic analyses
+
+The phylogenetic analyses use one 20-segment sequence per song type (`segments_by_song_type.csv`, also the source of the FASTA alignments in `data/processed/song_sequences`). This consensus was built in `LBH cult-evo/Song segment analysis 2019.Rmd` from the per-rendition coding (`complete_segment_analysis_nov-2019.RDS`), taking the most common state at each position across the renditions of a song type:
+
+```r
+mt <- matrix(Y$segment_type, ncol = 20)   # Y: all renditions of a song type, stacked
+res <- apply(mt, MARGIN = 2, mc)          # most common state per column
+```
+
+`matrix()` fills by column, so with *n* renditions each "column" contains *n* consecutive segments of a single rendition instead of the same position across renditions. The intended call is `matrix(Y$segment_type, ncol = 20, byrow = TRUE)`. With 4 renditions, for instance, each rendition is reduced to a 5-element summary and the 4 summaries are concatenated, which produces the 5-periodic sequences in the file (e.g. BR1-A1 = `sffddsffddsffddsffdd`).
+
+The original code is re-run below (`byrow = FALSE`) to confirm that it reproduces the file exactly, and the corrected consensus (`byrow = TRUE`) is built:
+
+```{r consensus coding}
+
+sgmt.est <- as.data.frame(readRDS("./data/processed/complete_segment_analysis_nov-2019.RDS"))
+for (a in c("/ft", "\\ft", "/mt", "\\mt"))
+  sgmt.est$segment_type <- gsub(a, paste0("-", substr(a, 2, 3)), sgmt.est$segment_type, fixed = TRUE)
+code <- c("-st" = "S", "-ft" = "F", "\\p" = "D", "/p" = "U", "-p" = "P", "-mt" = "M")
+mc <- function(x) { tb <- table(x); names(tb)[which.max(tb)] }
+
+consensus <- function(byrow) {
+  out <- lapply(unique(sgmt.est$lek.song.type), function(x) {
+    Y <- sgmt.est[sgmt.est$lek.song.type == x, ]
+    res <- if (nrow(Y) > 20) apply(matrix(Y$segment_type, ncol = 20, byrow = byrow), 2, mc) else Y$segment_type
+    unname(code[res])
+  })
+  M <- do.call(rbind, out); rownames(M) <- unique(sgmt.est$lek.song.type); M
+}
+cons_original <- consensus(byrow = FALSE)
+cons_corrected <- consensus(byrow = TRUE)
+
+paper <- read.csv("./data/raw/segments_by_song_type.csv")
+P_used <- toupper(as.matrix(paper[, paste0("X", 1:20)])); rownames(P_used) <- paper$song.type
+n_rend <- tapply(sgmt.est$sound.files, sgmt.est$lek.song.type, function(z) length(unique(z)))[paper$song.type]
+
+data.frame(song_types = nrow(P_used),
+           identical_to_original_code = sum(apply(P_used == cons_original[paper$song.type, ], 1, all)),
+           song_types_with_2plus_renditions = sum(n_rend > 1),
+           agreement_used_vs_corrected = round(mean(P_used == cons_corrected[paper$song.type, ]), 3))
+
+# examples
+data.frame(song_type = c("BR1-A1", "SUR-B1", "TR1-E3"),
+           used_in_trees = apply(P_used[c("BR1-A1", "SUR-B1", "TR1-E3"), ], 1, paste, collapse = ""),
+           corrected = apply(cons_corrected[c("BR1-A1", "SUR-B1", "TR1-E3"), ], 1, paste, collapse = ""))
+
+corrected_file <- paper
+corrected_file[, paste0("X", 1:20)] <- tolower(cons_corrected[paper$song.type, ])
+write.csv(corrected_file, "./data/processed/segments_by_song_type_corrected.csv", row.names = FALSE)
+
+```
+
+All song types in the phylogenetic data set have more than one rendition, so all of them are affected: the sequence used in the trees agrees with the corrected consensus at only `r sprintf("%.0f%%", 100 * mean(P_used == cons_corrected[paper$song.type, ]))` of the positions. The corrected file is saved as `data/processed/segments_by_song_type_corrected.csv`.
+
+## Comparison with the phylogenetic coding
+
+For song types present in both data sets, each rendition of the prevalence data set is compared position by position with the corrected consensus (and, for reference, with the file used in the trees):
+
+```{r compare with phylogenetic coding}
+
+to_long <- function(M) data.frame(key = paste(rep(rownames(M), each = 20), rep(1:20, nrow(M))), lab = as.vector(t(M)))
+L_corr <- to_long(cons_corrected[paper$song.type, ]); L_used <- to_long(P_used)
+key <- paste(S20$lek.song.type, S20$segment)
+S20$paper <- L_corr$lab[match(key, L_corr$key)]
+S20$paper_used <- L_used$lab[match(key, L_used$key)]
+shared <- !is.na(S20$paper)
+
+data.frame(shared_song_types = length(unique(S20$lek.song.type[shared])), shared_songs = length(unique(S20$ID[shared])),
+           segments = sum(shared))
+
+kappa <- function(a, b) {
+  lv <- union(a, b); cm <- table(factor(a, lv), factor(b, lv))
+  acc <- sum(diag(cm)) / sum(cm); pe <- sum(rowSums(cm) * colSums(cm)) / sum(cm)^2
+  (acc - pe) / (1 - pe)
+}
+coarse <- function(z) ifelse(z %in% c("F", "M", "S"), "Trill", "Tone")
+
+agree_tab <- function(lab, ref, keep = rep(TRUE, length(lab))) {
+  data.frame(segments = sum(keep),
+             agreement_6_states = mean(lab[keep] == ref[keep]), kappa_6_states = kappa(lab[keep], ref[keep]),
+             agreement_tone_trill = mean(coarse(lab[keep]) == coarse(ref[keep])),
+             kappa_tone_trill = kappa(coarse(lab[keep]), coarse(ref[keep])))
+}
+
+rbind(cbind(reference = "corrected consensus", segments_used = "all", agree_tab(S20$Category, S20$paper, shared)),
+      cbind(reference = "corrected consensus", segments_used = "purity >= 0.8", agree_tab(S20$Category, S20$paper, shared & S20$purity >= 0.8)),
+      cbind(reference = "file used in the trees", segments_used = "all", agree_tab(S20$Category, S20$paper_used, shared)))
+
+table(prevalence_manual = factor(S20$Category[shared], classes6), corrected_consensus = factor(S20$paper[shared], classes6))
+
+```
+
+Agreement between the two manual codings (prevalence labels vs. the corrected consensus) indicates how reproducible the 20-segment coding is when done independently (different segmentation protocol, observers and renditions). It also sets a reference for the automated classifiers below: agreement of a classifier with the phylogenetic coding cannot be expected to be much higher than agreement between the two manual codings.
+
+# Features
+
+Each 20th of a song lasts ~7 ms, shorter than one trill cycle (8 - 20 ms), so features are measured in three windows centred on each segment:
+
+- **w0**: the segment itself
+- **w1**: the segment ± 1 segment (~21 ms)
+- **w2**: the segment ± 2 segments (~35 ms)
+
+In each window the tailored contour is described as in `automated_segment_classification.qmd` (level, slope, curvature, modulation, oscillation rate, peak interval, autocorrelation period and, for w1 and w2, the contour shape resampled to 10 points). Trill period is also measured in the w2 window from the recording, using a peak frequency track guided by the tailored contour (0.25 ms resolution) and the amplitude envelope. Segment position (1 - 20) is also included.
+
+```{r feature functions}
+
+contour_features <- function(tt, ff, a, b, n_resample = 0) {
+  inside <- tt >= a & tt <= b
+  n <- max(8, sum(inside))
+  ti <- seq(a, b, length.out = n)
+  fi <- approx(tt, ff, xout = ti, rule = 2)$y
+  dur <- b - a
+  lin <- lm(fi ~ ti)
+  res <- residuals(lin)
+  ts <- (ti - a) / dur
+  quad <- coef(lm(fi ~ ts + I(ts^2)))[3]
+  d1 <- diff(fi)
+  sig <- sign(d1[abs(d1) > 0.05])
+  n_ext <- if (length(sig) > 1) sum(diff(sig) != 0) else 0
+  fd <- fi - fitted(lin)
+  pk <- which(diff(sign(diff(fd))) == -2) + 1; pk <- pk[fd[pk] > 0.1]
+  tr <- which(diff(sign(diff(fd))) == 2) + 1;  tr <- tr[fd[tr] < -0.1]
+  ivl <- c(diff(ti[pk]), diff(ti[tr]))
+  out <- c(f_mean = mean(fi), f_sd = sd(fi), f_range = diff(range(fi)), f_delta = fi[n] - fi[1],
+           slope = unname(coef(lin)[2]), curv = unname(quad), resid_sd = sd(res),
+           n_extrema = n_ext, osc_rate = n_ext / 2 / dur,
+           period_ms = if (length(ivl)) median(ivl) * 1000 else NA,
+           amp_osc = if (length(pk) && length(tr)) mean(fd[pk]) - mean(fd[tr]) else 0,
+           tv_rate = sum(abs(d1)) / dur, tv_rel = sum(abs(d1)) / max(diff(range(fi)), 1e-3))
+  if (n_resample > 0) {
+    rs <- approx(ti, fi, xout = seq(a, b, length.out = n_resample))$y
+    out <- c(out, setNames(rs - mean(rs), paste0("shape", seq_len(n_resample))))
+  }
+  out
+}
+
+# first autocorrelation peak between 3 and 40 ms
+ac_period <- function(x, dt) {
+  if (length(x) < 20 || sd(x) == 0) return(c(NA, NA))
+  x <- x - stats::lowess(seq_along(x), x, f = 0.5)$y
+  ac <- acf(x, lag.max = min(length(x) - 2, round(0.04 / dt)), plot = FALSE)$acf[-1]
+  lags <- seq_along(ac) * dt * 1000
+  lp <- which(diff(sign(diff(ac))) == -2) + 1; lp <- lp[lags[lp] >= 3]
+  if (!length(lp)) return(c(NA, NA))
+  b <- lp[which.max(ac[lp])]; c(lags[b], ac[b])
+}
+
+# guided peak frequency track and envelope for a whole song (0.25 ms hop)
+song_tracks <- function(y, sr, ct, WL = 128, HOP = 11, NFFT = 1024, guide_kHz = 1.5, margin = 0.04) {
+  ff <- unlist(ct[, ff_cols]); tt <- seq(ct$start, ct$end, length.out = length(ff))
+  win <- 0.5 - 0.5 * cos(2 * pi * (0:(WL - 1)) / (WL - 1))
+  fbin <- (0:(NFFT / 2)) * sr / NFFT / 1000
+  starts <- seq(round((ct$start - margin) * sr) - WL / 2, round((ct$end + margin) * sr) - WL / 2, by = HOP)
+  starts <- starts[starts > 0 & starts + WL <= length(y)]
+  tc <- (starts + WL / 2) / sr
+  guide <- approx(tt, ff, xout = tc, rule = 2)$y
+  pf <- env <- numeric(length(starts))
+  for (j in seq_along(starts)) {
+    fr <- y[starts[j] + 0:(WL - 1)] * win
+    sp <- Mod(fft(c(fr, rep(0, NFFT - WL))))[1:(NFFT / 2 + 1)]
+    ok <- abs(fbin - guide[j]) <= guide_kHz
+    pf[j] <- fbin[ok][which.max(sp[ok])]
+    env[j] <- sqrt(mean(fr^2))
+  }
+  list(t = tc, pf = pf, lenv = log(env + 1e-9), dt = HOP / sr)
+}
+
+build_features_20 <- function(S, contours, wave) {
+  sr <- wave@samp.rate
+  y <- ffilter(wave, f = sr, from = 1000, to = 12000, bandpass = TRUE, output = "matrix")[, 1]
+  rows <- lapply(split(S, factor(S$ID, levels = unique(S$ID))), function(d) {
+    ct <- contours[contours$song.type == d$ID[1], ]
+    ff <- unlist(ct[, ff_cols]); tt <- seq(ct$start, ct$end, length.out = length(ff))
+    sd_len <- d$end[1] - d$start[1]
+    trk <- song_tracks(y, sr, ct)
+    f <- t(sapply(seq_len(nrow(d)), function(i) {
+      a <- d$start[i]; b <- d$end[i]
+      w0 <- contour_features(tt, ff, a, b)
+      w1 <- contour_features(tt, ff, max(ct$start, a - sd_len), min(ct$end, b + sd_len), 10)
+      w2 <- contour_features(tt, ff, max(ct$start, a - 2 * sd_len), min(ct$end, b + 2 * sd_len), 10)
+      k <- trk$t >= a - 2 * sd_len & trk$t <= b + 2 * sd_len
+      au <- c(af_ac = ac_period(trk$pf[k], trk$dt), env_ac = ac_period(trk$lenv[k], trk$dt))
+      c(setNames(w0, paste0("w0_", names(w0))), setNames(w1, paste0("w1_", names(w1))),
+        setNames(w2, paste0("w2_", names(w2))),
+        af_ac_period_ms = au[[1]], af_ac_peak = au[[2]], env_ac_period_ms = au[[3]], env_ac_peak = au[[4]],
+        w0_f_rel = w0[["f_mean"]] - mean(ff))
+    }))
+    cbind(d, f)
+  })
+  do.call(rbind, rows)
+}
+
+```
+
+```{r build features}
+
+wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
+X <- build_features_20(S20, contours, wave)
+write.csv(X, "./data/processed/segment_classifier_20/segment_features_20.csv", row.names = FALSE)
+dim(X)
+
+```
+
+# Models
+
+All models are xgboost classifiers evaluated with grouped 5-fold cross-validation (whole lek song types held out, 3 repetitions with different fold assignments), with square-root balanced class weights.
+
+```{r model setup}
+
+non_feat <- c("ID", "segment", "start", "end", "Category", "purity", "lek.song.type", "year", "paper", "paper_used")
+feat <- c("segment", setdiff(names(X), non_feat))
+Xm <- X
+for (v in feat) Xm[[v]][is.na(Xm[[v]])] <- -999
+cat_manual <- X$Category
+
+params <- list(eta = 0.05, max_depth = 6, subsample = 0.8, colsample_bytree = 0.5, min_child_weight = 2)
+NROUNDS <- 500
+
+grouped_folds <- function(seed, k = 5) {
+  set.seed(seed)
+  types <- unique(X$lek.song.type)
+  setNames(sample(rep(seq_len(k), length.out = length(types))), types)[X$lek.song.type]
+}
+
+fit_model <- function(rows, lab_int, nc, w) {
+  xgb.train(params = c(params, objective = "multi:softprob", num_class = nc, nthread = 16),
+            data = xgb.DMatrix(as.matrix(Xm[rows, feat]), label = lab_int[rows], weight = w[rows]),
+            nrounds = NROUNDS, verbose = 0)
+}
+
+cv_scheme <- function(lab, reps = 3) {
+  lab <- factor(lab); cl <- levels(lab); k <- length(cl); yy <- as.integer(lab) - 1
+  w <- as.numeric(sqrt(max(table(yy)) / table(yy)))[yy + 1]
+  res <- list(); P1 <- NULL
+  for (r in seq_len(reps)) {
+    fold <- grouped_folds(r)
+    P <- matrix(NA, nrow(X), k, dimnames = list(NULL, cl))
+    for (f in 1:5) {
+      tr <- which(fold != f); te <- which(fold == f)
+      P[te, ] <- matrix(predict(fit_model(tr, yy, k, w), as.matrix(Xm[te, feat])), ncol = k, byrow = TRUE)
+    }
+    if (r == 1) P1 <- P
+    pred <- cl[max.col(P)]
+    res[[r]] <- c(accuracy = mean(pred == lab), kappa = kappa(pred, as.character(lab)),
+                  accuracy_pure = mean((pred == lab)[X$purity >= 0.8]))
+  }
+  list(metrics = do.call(rbind, res), oof = P1, classes = cl)
+}
+
+```
+
+## One-step models
+
+Three category schemes: the 6 states used in the phylogenetic analyses, trills merged (4 states) and tone vs. trill:
+
+```{r one step models}
+
+schemes <- list(
+  "6: D, U, P, F, M, S" = cat_manual,
+  "4: D, U, P, Trill" = ifelse(cat_manual %in% c("F", "M", "S"), "Trill", cat_manual),
+  "2: Tone, Trill" = coarse(cat_manual)
+)
+scheme_res <- lapply(schemes, cv_scheme)
+
+do.call(rbind, lapply(names(scheme_res), function(s) {
+  m <- scheme_res[[s]]$metrics
+  data.frame(scheme = s, t(sapply(colnames(m), function(v) sprintf("%.3f ± %.3f", mean(m[, v]), sd(m[, v])))))
+}))
+
+```
+
+`accuracy_pure` is the accuracy on segments with purity ≥ 0.8, i.e. excluding segments that straddle the boundary between two manual segments.
+
+```{r one step confusion, fig.width = 6.5, fig.height = 5.5}
+
+P6 <- scheme_res[["6: D, U, P, F, M, S"]]$oof
+X$one_step <- colnames(P6)[max.col(P6)]
+
+cm <- as.data.frame(table(true = factor(cat_manual, classes6), pred = factor(X$one_step, classes6)))
+cm$prop <- cm$Freq / ave(cm$Freq, cm$true, FUN = sum)
+ggplot(cm, aes(pred, true, fill = prop)) +
+  geom_tile() +
+  geom_text(aes(label = Freq, color = prop > 0.5)) +
+  scale_color_manual(values = c("white", "black"), guide = "none") +
+  scale_fill_viridis_c(option = "G", limits = c(0, 1), name = "Proportion\nof true class") +
+  scale_y_discrete(limits = rev) +
+  labs(x = "Predicted category (one-step model)", y = "Manual category")
+
+```
+
+## Two-step approach
+
+1. **Tone vs. trill**: the binary one-step model above
+2. **Sub-categories** from fixed thresholds on a single measurement:
+    - **Trills**: trill period. Because a single segment is shorter than a trill cycle, the period is measured over the whole **trill run** (consecutive segments classified as trills, i.e. the trill element) or in the w1/w2 windows
+    - **Tones**: frequency slope in the segment (w0) or in the w1 window
+
+Thresholds are fitted to maximise agreement with the manual labels on the training folds and evaluated on the held-out song types.
+
+```{r threshold functions}
+
+# 3-level threshold labelling: x < t1 -> levs[1]; t1 <= x < t2 -> levs[2]; x >= t2 -> levs[3]
+apply_thr <- function(x, t, levs) {
+  p <- ifelse(x < t[1], levs[1], ifelse(x < t[2], levs[2], levs[3]))
+  p[is.na(p)] <- levs[2]; p
+}
+fit_thr <- function(x, lab, levs, grid) {
+  best <- c(NA, NA, -1)
+  for (i in seq_along(grid)) for (j in i:length(grid)) {
+    a <- mean(apply_thr(x, grid[c(i, j)], levs) == lab)
+    if (a > best[3]) best <- c(grid[i], grid[j], a)
+  }
+  best[1:2]
+}
+
+# trill period (ms) measured over runs of consecutive trill segments within each song
+run_period <- function(is_trill) {
+  out <- rep(NA_real_, nrow(X))
+  for (id in unique(X$ID)) {
+    idx <- which(X$ID == id)
+    ct <- contours[contours$song.type == id, ]
+    ff <- unlist(ct[, ff_cols]); tt <- seq(ct$start, ct$end, length.out = length(ff))
+    r <- rle(is_trill[idx]); ends <- cumsum(r$lengths); starts <- ends - r$lengths + 1
+    for (k in which(r$values)) {
+      ii <- idx[starts[k]:ends[k]]
+      cf <- contour_features(tt, ff, min(X$start[ii]), max(X$end[ii]))
+      out[ii] <- if (cf[["osc_rate"]] > 0) 1000 / cf[["osc_rate"]] else Inf
+    }
+  }
+  out
+}
+
+period_from_rate <- function(rate) ifelse(rate > 0, 1000 / rate, Inf)
+
+```
+
+```{r threshold candidates}
+
+is_trill_manual <- cat_manual %in% c("F", "M", "S")
+X$run_period_manual <- run_period(is_trill_manual)
+
+trill_cands <- list(
+  "trill run period (ms)" = X$run_period_manual,
+  "w1 period from oscillation rate (ms)" = period_from_rate(X$w1_osc_rate),
+  "w2 period from oscillation rate (ms)" = period_from_rate(X$w2_osc_rate),
+  "w2 audio autocorrelation period (ms)" = X$af_ac_period_ms
+)
+tone_cands <- list("w0 slope (kHz/s)" = X$w0_slope, "w1 slope (kHz/s)" = X$w1_slope)
+
+k_tr <- cat_manual %in% c("F", "M", "S"); k_to <- cat_manual %in% c("D", "P", "U")
+grid_tr <- seq(5, 30, 0.25); grid_to <- seq(-40, 40, 0.5)
+
+cv_thr <- function(x, keep, levs, grid, reps = 3) {
+  sapply(seq_len(reps), function(r) {
+    fold <- grouped_folds(r); pred <- rep(NA, nrow(X))
+    for (f in 1:5) {
+      tr <- fold != f & keep; te <- fold == f & keep
+      pred[te] <- apply_thr(x[te], fit_thr(x[tr], cat_manual[tr], levs, grid), levs)
+    }
+    mean(pred[keep] == cat_manual[keep])
+  })
+}
+
+thr_res <- rbind(
+  do.call(rbind, lapply(names(trill_cands), function(n) {
+    a <- cv_thr(trill_cands[[n]], k_tr, c("F", "M", "S"), grid_tr)
+    data.frame(group = "trills", measurement = n, cv_agreement = mean(a), sd = sd(a))
+  })),
+  do.call(rbind, lapply(names(tone_cands), function(n) {
+    a <- cv_thr(tone_cands[[n]], k_to, c("D", "P", "U"), grid_to)
+    data.frame(group = "tones", measurement = n, cv_agreement = mean(a), sd = sd(a))
+  })))
+thr_res
+
+```
+
+Agreement is computed only for segments that are manual trills (or manual tones), so it measures the sub-category assignment alone.
+
+```{r fixed thresholds}
+
+best_tr <- thr_res$measurement[thr_res$group == "trills"][which.max(thr_res$cv_agreement[thr_res$group == "trills"])]
+best_to <- thr_res$measurement[thr_res$group == "tones"][which.max(thr_res$cv_agreement[thr_res$group == "tones"])]
+
+thr_tr_fit <- fit_thr(trill_cands[[best_tr]][k_tr], cat_manual[k_tr], c("F", "M", "S"), grid_tr)
+thr_to_fit <- fit_thr(tone_cands[[best_to]][k_to], cat_manual[k_to], c("D", "P", "U"), grid_to)
+
+# round values close to the optimum
+thr_tr <- round(thr_tr_fit * 2) / 2       # nearest 0.5 ms
+thr_to <- round(thr_to_fit)               # nearest 1 kHz/s
+
+data.frame(group = c("trills", "tones"), measurement = c(best_tr, best_to),
+           fitted = c(paste(thr_tr_fit, collapse = " / "), paste(thr_to_fit, collapse = " / ")),
+           fixed = c(paste(thr_tr, collapse = " / "), paste(thr_to, collapse = " / ")),
+           agreement_fixed = round(c(mean(apply_thr(trill_cands[[best_tr]][k_tr], thr_tr, c("F", "M", "S")) == cat_manual[k_tr]),
+                                     mean(apply_thr(tone_cands[[best_to]][k_to], thr_to, c("D", "P", "U")) == cat_manual[k_to])), 3),
+           rule = c("F below lower, M between, S above upper", "D below lower, P between, U above upper"))
+
+```
+
+```{r threshold plots, fig.width = 11, fig.height = 4.5}
+
+d_tr <- data.frame(Category = factor(cat_manual[k_tr], levels = c("F", "M", "S")), x = trill_cands[[best_tr]][k_tr])
+d_to <- data.frame(Category = factor(cat_manual[k_to], levels = c("D", "P", "U")), x = tone_cands[[best_to]][k_to])
+
+p1 <- ggplot(d_tr[is.finite(d_tr$x), ], aes(x, fill = Category)) + geom_density(alpha = 0.6) +
+  geom_vline(xintercept = thr_tr, linetype = 2) + scale_fill_manual(values = cat_cols) +
+  coord_cartesian(xlim = c(0, 40)) + labs(x = best_tr, y = "Density", title = "Trills")
+p2 <- ggplot(d_to, aes(x, fill = Category)) + geom_density(alpha = 0.6) +
+  geom_vline(xintercept = thr_to, linetype = 2) + scale_fill_manual(values = cat_cols) +
+  coord_cartesian(xlim = c(-60, 60)) + labs(x = best_to, y = "Density", title = "Tones")
+cowplot::plot_grid(p1, p2)
+
+```
+
+### Full two-step pipeline
+
+Tone/trill predictions on held-out song types (first repetition), with trill runs defined by the predicted trill segments, and the fixed thresholds:
+
+```{r two step pipeline}
+
+P2 <- scheme_res[["2: Tone, Trill"]]$oof
+is_trill_pred <- colnames(P2)[max.col(P2)] == "Trill"
+X$run_period_pred <- run_period(is_trill_pred)
+
+trill_measure_pred <- if (best_tr == "trill run period (ms)") X$run_period_pred else trill_cands[[best_tr]]
+X$two_step <- ifelse(is_trill_pred, apply_thr(trill_measure_pred, thr_tr, c("F", "M", "S")),
+                     apply_thr(tone_cands[[best_to]], thr_to, c("D", "P", "U")))
+
+data.frame(approach = c("one-step 6-state model", "two-step (tone/trill model + fixed thresholds)"),
+           agreement = round(c(mean(X$one_step == cat_manual), mean(X$two_step == cat_manual)), 3),
+           kappa = round(c(kappa(X$one_step, cat_manual), kappa(X$two_step, cat_manual)), 3),
+           agreement_pure = round(c(mean((X$one_step == cat_manual)[X$purity >= 0.8]),
+                                    mean((X$two_step == cat_manual)[X$purity >= 0.8])), 3))
+
+table(manual = factor(cat_manual, classes6), two_step = factor(X$two_step, classes6))
+
+```
+
+# Agreement with the phylogenetic coding
+
+How well do the automated labels reproduce the 20-segment coding of the phylogenetic analyses? All three labellings of the prevalence renditions are compared with the corrected consensus and with the file used in the trees, for the shared song types. Classifier predictions are from models that did not see the song type during training.
+
+```{r agreement with phylogenetic coding}
+
+rbind(
+  cbind(reference = "corrected consensus", labels = "manual (prevalence data set)", agree_tab(cat_manual, X$paper, shared)),
+  cbind(reference = "corrected consensus", labels = "one-step 6-state model", agree_tab(X$one_step, X$paper, shared)),
+  cbind(reference = "corrected consensus", labels = "two-step", agree_tab(X$two_step, X$paper, shared)),
+  cbind(reference = "file used in the trees", labels = "manual (prevalence data set)", agree_tab(cat_manual, X$paper_used, shared)),
+  cbind(reference = "file used in the trees", labels = "one-step 6-state model", agree_tab(X$one_step, X$paper_used, shared)),
+  cbind(reference = "file used in the trees", labels = "two-step", agree_tab(X$two_step, X$paper_used, shared))
+)
+
+```
+
+```{r agreement by state}
+
+by_state <- sapply(c("manual (prevalence)" = "Category", "one-step" = "one_step", "two-step" = "two_step"), function(v)
+  tapply(X[[v]][shared] == X$paper[shared], factor(X$paper[shared], classes6), mean))
+round(by_state, 3)
+
+```
+
+Proportion of segments of each state in the corrected consensus that received the same state in each labelling.
+
+# Consistency across renditions
+
+With 20 segments per song, renditions of the same song type can be compared position by position. Agreement between all pairs of renditions of the same lek song type:
+
+```{r rendition consistency}
+
+rendition_agreement <- function(lab) {
+  d <- data.frame(ID = X$ID, type = X$lek.song.type, segment = X$segment, lab = lab)
+  res <- lapply(split(d, d$type), function(z) {
+    ids <- unique(z$ID); if (length(ids) < 2) return(NULL)
+    pr <- combn(ids, 2)
+    t(apply(pr, 2, function(p) {
+      a <- z$lab[z$ID == p[1]][order(z$segment[z$ID == p[1]])]; b <- z$lab[z$ID == p[2]][order(z$segment[z$ID == p[2]])]
+      c(six = mean(a == b), coarse = mean(coarse(a) == coarse(b)))
+    }))
+  })
+  r <- do.call(rbind, res)
+  c(rendition_pairs = nrow(r), agreement_6_states = mean(r[, "six"]), agreement_tone_trill = mean(r[, "coarse"]))
+}
+
+round(rbind("manual (prevalence)" = rendition_agreement(cat_manual),
+            "one-step 6-state model" = rendition_agreement(X$one_step),
+            "two-step" = rendition_agreement(X$two_step)), 3)
+
+```
+
+# Final models
+
+Models fitted on all data and saved with the fixed thresholds:
+
+```{r final models}
+
+fit_all <- function(lab) {
+  lab <- factor(lab); yy <- as.integer(lab) - 1
+  w <- as.numeric(sqrt(max(table(yy)) / table(yy)))[yy + 1]
+  list(model = fit_model(seq_len(nrow(X)), yy, nlevels(lab), w), classes = levels(lab))
+}
+m6 <- fit_all(cat_manual)
+m2 <- fit_all(coarse(cat_manual))
+
+saveRDS(list(model = m6$model, classes = m6$classes, features = feat),
+        "./data/processed/segment_classifier_20/xgb_6_state_20_segments.RDS")
+saveRDS(list(model = m2$model, classes = m2$classes, features = feat,
+             trill_measure = best_tr, trill_period_cutoffs_ms = thr_tr,
+             tone_measure = best_to, tone_slope_cutoffs_kHz_s = thr_to),
+        "./data/processed/segment_classifier_20/xgb_tone_trill_20_segments.RDS")
+
+write.csv(X[, c("ID", "lek.song.type", "segment", "start", "end", "purity", "Category", "paper", "one_step", "two_step")],
+          "./data/processed/segment_classifier_20/cv_predictions_20.csv", row.names = FALSE)
+
+imp <- xgb.importance(feature_names = feat, model = m6$model)
+ggplot(head(imp, 20), aes(Gain, reorder(Feature, Gain))) +
+  geom_col(fill = "#3E4A89FF") + labs(y = NULL, x = "Importance (gain), 6-state model")
+
+```
+
+<div class="alert alert-success">
+
+# Takeaways {.unnumbered .unlisted}
+
+```{r takeaway numbers, echo = FALSE}
+ag <- function(lab) sprintf("%.0f%%", 100 * mean(lab[shared] == X$paper[shared]))
+ag2 <- function(lab) sprintf("%.0f%%", 100 * mean(coarse(lab[shared]) == coarse(X$paper[shared])))
+sm <- function(s, v) sprintf("%.3f", mean(scheme_res[[s]]$metrics[, v]))
+```
+
+- `r length(unique(X$ID))` songs (`r length(unique(X$lek.song.type))` lek song types) were converted to `r nrow(X)` equal-length segments; `r sprintf("%.0f%%", 100 * mean(X$purity >= 0.8))` of them are covered by a single manual category for at least 80% of their duration
+- **The 20-segment sequences used in the phylogenetic analyses (`segments_by_song_type.csv`) are not in temporal order**: the consensus across renditions was built with `matrix(..., ncol = 20)` filled by column, which mixes consecutive segments of single renditions. All `r nrow(P_used)` song types are affected; the sequences used agree with the corrected consensus at `r sprintf("%.0f%%", 100 * mean(P_used == cons_corrected[paper$song.type, ]))` of the positions. A corrected file is saved in `data/processed/segments_by_song_type_corrected.csv`
+- Independent manual codings (prevalence labels vs. corrected consensus) agree on `r ag(cat_manual)` of the 20-segment states and `r ag2(cat_manual)` for tone vs. trill, for the `r length(unique(X$lek.song.type[shared]))` shared song types (vs. `r sprintf("%.0f%%", 100 * mean(coarse(cat_manual[shared]) == coarse(X$paper_used[shared])))` for tone vs. trill with the file used in the trees)
+- On held-out song types, the one-step model reproduces the manual 20-segment states with accuracy `r sm(1, "accuracy")` (kappa `r sm(1, "kappa")`) and tone vs. trill with accuracy `r sm(3, "accuracy")` (kappa `r sm(3, "kappa")`)
+- Agreement with the corrected consensus: one-step `r ag(X$one_step)`, two-step `r ag(X$two_step)` (tone vs. trill: `r ag2(X$one_step)` and `r ag2(X$two_step)`), compared with `r ag(cat_manual)` (tone vs. trill: `r ag2(cat_manual)`) between the two manual codings
+
+</div>
+
+---
+
+&nbsp;
+
+<!-- add packages used, system details and versions  -->
+
+<font size="4">Session information</font>
+
+```{r session info, echo = FALSE}
+
+sessionInfo()
+
+```

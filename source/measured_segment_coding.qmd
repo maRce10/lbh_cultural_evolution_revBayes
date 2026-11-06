@@ -1,0 +1,559 @@
+---
+title: Measurement-based coding of song segments
+subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 2
+toc-location: left
+number-sections: true
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-tools: true
+    css: qmd.css
+editor_options:
+  chunk_output_type: console
+---
+
+```{r set root directory, echo = FALSE}
+
+# set working directory as project directory
+knitr::opts_knit$set(root.dir = "..")
+
+```
+
+```{r add link to github repo, echo = FALSE, results='asis'}
+
+# print link to github repo if any
+if (file.exists("./.git/config")){
+  config <- readLines("./.git/config")
+  url <- grep("url",  config, value = TRUE)
+  url <- gsub("\\turl = |.git$", "", url)
+  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
+  }
+
+```
+
+<div class="alert alert-info">
+
+# Purpose {.unnumbered .unlisted}
+
+Code song segments in three steps:
+
+1. **Segments and broad class from the manual segmentation**: the manually delimited segments of the prevalence data set define where each segment starts and ends and whether it is a pure tone or a trill
+2. **Sub-category from measurements**: each segment is assigned to one of three sub-categories from a single measurement on its tailored frequency contour (trill period for trills, frequency slope for pure tones) using fixed thresholds
+3. **20 equal-length segments**: each song is split into 20 segments of equal duration, the coding scheme used in the phylogenetic analyses
+
+The new (measured) classification is shown together with the original manual classification on the spectrograms of all recordings of the song types used in the RevBayes analyses (@sec-spectrograms).
+
+</div>
+
+&nbsp;
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages, message=FALSE, warning=FALSE}
+
+sketchy::load_packages(packages = c("knitr", "Rraven", "ggplot2", "viridis", "tuneR", "seewave"))
+
+theme_set(theme_classic(base_size = 13))
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+classes6 <- c("D", "U", "P", "F", "M", "S")
+cat_cols <- setNames(viridis(6, option = "H", begin = 0.05, end = 0.95), classes6)
+
+```
+
+# Step 1: segments and broad class
+
+Manual segments and tailored contours from the prevalence data set, with the same corrections as in `automated_segment_classification.qmd`: segments annotated with the wrong song are reassigned to the song whose contour contains them, and W segments (single wide frequency sweep) are treated as tones. Only the broad class of the manual label is used: **pure tone** (D, U, P, W) or **trill** (F, M, S).
+
+```{r read data}
+
+contours <- read.csv("./data/raw/segment_classification/seltailor_output.csv")
+ff_cols <- grep("^ff", names(contours))
+
+segs <- imp_raven(path = "./data/raw/segment_classification", files = "FrameworkContourDegradationv1.7.txt",
+                  all.data = TRUE, warbler.format = TRUE)
+segs <- segs[!is.na(segs$Category) & segs$Category != "" & segs$ID %in% contours$song.type, ]
+
+# reassign segments annotated with the wrong song
+tol <- 0.005
+m <- match(segs$ID, contours$song.type)
+outside <- segs$end < contours$start[m] - tol | segs$start > contours$end[m] + tol
+segs$ID[outside] <- vapply(which(outside), function(i) {
+  k <- which(contours$start <= segs$start[i] + tol & contours$end >= segs$end[i] - tol)
+  if (length(k) == 1) contours$song.type[k] else NA_character_
+}, character(1))
+segs <- segs[!is.na(segs$ID), ]
+segs <- segs[order(segs$ID, segs$start), ]
+
+segs$manual <- ifelse(segs$Category == "W", "U", segs$Category)
+segs$class <- ifelse(segs$manual %in% c("F", "M", "S"), "trill", "tone")
+segs$lek.song.type <- sub("-[0-9]{4}$", "", sub("^[0-9]+-", "", segs$ID))
+
+data.frame(songs = length(unique(segs$ID)), song_types = length(unique(segs$lek.song.type)), segments = nrow(segs))
+table(segs$class)
+
+```
+
+# Step 2: sub-categories from measurements
+
+Measurements on the tailored contour within each segment (interpolated to at least 8 points):
+
+- **Trill period** (ms per oscillation cycle) = 1000 / oscillation rate, where the oscillation rate is half the number of direction changes of the contour per second (changes < 50 Hz ignored). Segments without any oscillation get an infinite period
+- **Frequency slope** (kHz/s) of a linear fit to the contour
+
+```{r measurements}
+
+measure_segment <- function(tt, ff, a, b) {
+  n <- max(8, sum(tt >= a & tt <= b))
+  ti <- seq(a, b, length.out = n)
+  fi <- approx(tt, ff, xout = ti, rule = 2)$y
+  d1 <- diff(fi); sig <- sign(d1[abs(d1) > 0.05])
+  n_ext <- if (length(sig) > 1) sum(diff(sig) != 0) else 0
+  osc <- n_ext / 2 / (b - a)
+  c(slope = unname(coef(lm(fi ~ ti))[2]), period_ms = if (osc > 0) 1000 / osc else Inf, n_extrema = n_ext)
+}
+
+meas <- t(sapply(seq_len(nrow(segs)), function(i) {
+  ct <- contours[contours$song.type == segs$ID[i], ]
+  ff <- unlist(ct[, ff_cols]); tt <- seq(ct$start, ct$end, length.out = length(ff))
+  measure_segment(tt, ff, segs$start[i], segs$end[i])
+}))
+segs <- cbind(segs, meas)
+segs$duration_ms <- (segs$end - segs$start) * 1000
+
+```
+
+## Thresholds
+
+Thresholds are chosen to **maximise the consistency between recordings of the same song type** while keeping a **reasonably balanced number of examples per sub-category**:
+
+- **Consistency**: proportion of the 20 positions with the same state in two recordings of the same song type, over all pairs of recordings of each song type (each of the 20 equal-length positions is assigned to the manual segment that covers most of it)
+- **Balance constraint**: each sub-category must cover at least 25% of the total duration of its broad class (duration rather than number of segments, as long segments occupy more of the 20 positions)
+- **Trills**: all pairs of trill period thresholds between 6 and 30 ms (0.5 ms steps)
+- **Pure tones**: symmetric slope thresholds (-t, t), with t between 1 and 60 kHz/s (1 kHz/s steps), so that P keeps its meaning of an approximately flat tone
+
+Because a position can only agree between two recordings if both are trills or both are pure tones, the trill and tone thresholds can be optimised independently.
+
+```{r threshold optimisation}
+
+tr <- segs$class == "trill"; to <- segs$class == "tone"
+
+# each of the 20 positions of each recording -> manual segment covering most of it
+slots <- do.call(rbind, lapply(split(seq_len(nrow(segs)), segs$ID), function(ii) {
+  ct <- contours[contours$song.type == segs$ID[ii[1]], ]
+  b <- seq(ct$start, ct$end, length.out = 21)
+  data.frame(ID = segs$ID[ii[1]], type = segs$lek.song.type[ii[1]], pos = 1:20,
+             seg = sapply(1:20, function(k) ii[which.max(pmax(0, pmin(segs$end[ii], b[k + 1]) - pmax(segs$start[ii], b[k])))]))
+}))
+
+# position-matched pairs of recordings of the same song type
+pairs <- do.call(rbind, lapply(split(slots, slots$type), function(z) {
+  ids <- unique(z$ID); if (length(ids) < 2) return(NULL)
+  do.call(rbind, apply(combn(ids, 2), 2, function(p)
+    data.frame(a = z$seg[z$ID == p[1]][order(z$pos[z$ID == p[1]])], b = z$seg[z$ID == p[2]][order(z$pos[z$ID == p[2]])])))
+}))
+tr_pairs <- pairs[tr[pairs$a] & tr[pairs$b], ]
+to_pairs <- pairs[to[pairs$a] & to[pairs$b], ]
+
+label_trill <- function(cut) ifelse(segs$period_ms < cut[1], "F", ifelse(segs$period_ms < cut[2], "M", "S"))
+label_tone <- function(cut) ifelse(segs$slope < cut[1], "D", ifelse(segs$slope < cut[2], "P", "U"))
+share <- function(lab, k, lv) { v <- tapply(segs$duration_ms[k], factor(lab[k], lv), sum) / sum(segs$duration_ms[k]); v[is.na(v)] <- 0; v }
+
+g <- seq(6, 30, 0.5)
+grid_tr <- do.call(rbind, lapply(seq_along(g), function(i) do.call(rbind, lapply(i:length(g), function(j) {
+  L <- label_trill(g[c(i, j)]); sh <- share(L, tr, c("F", "M", "S"))
+  data.frame(lower = g[i], upper = g[j], consistency = mean(L[tr_pairs$a] == L[tr_pairs$b]),
+             F = sh[["F"]], M = sh[["M"]], S = sh[["S"]], min_share = min(sh))
+}))))
+grid_to <- do.call(rbind, lapply(1:60, function(t) {
+  L <- label_tone(c(-t, t)); sh <- share(L, to, c("D", "P", "U"))
+  data.frame(lower = -t, upper = t, consistency = mean(L[to_pairs$a] == L[to_pairs$b]),
+             D = sh[["D"]], P = sh[["P"]], U = sh[["U"]], min_share = min(sh))
+}))
+
+# trade-off between balance and consistency
+tradeoff <- function(grid) do.call(rbind, lapply(c(0.1, 0.15, 0.2, 0.25, 0.3), function(x) {
+  r <- grid[grid$min_share >= x, ]; if (!nrow(r)) return(NULL)
+  cbind(min_share_required = x, r[which.max(r$consistency), ])
+}))
+round(tradeoff(grid_tr), 3)
+round(tradeoff(grid_to), 3)
+
+min_share_required <- 0.25
+best_tr <- grid_tr[grid_tr$min_share >= min_share_required, ]; best_tr <- best_tr[which.max(best_tr$consistency), ]
+best_to <- grid_to[grid_to$min_share >= min_share_required, ]; best_to <- best_to[which.max(best_to$consistency), ]
+trill_cut_ms <- c(best_tr$lower, best_tr$upper)
+tone_cut <- c(best_to$lower, best_to$upper)
+
+segs$measured <- ifelse(tr, label_trill(trill_cut_ms), label_tone(tone_cut))
+segs$measured_previous <- ifelse(tr, label_trill(c(8.5, 15)), label_tone(c(-5, 5)))
+segs$measured_tertiles <- ifelse(tr, label_trill(c(10.5, 16.5)), label_tone(c(-5, 27)))
+
+compare_thr <- function(name, trc, toc, lab) {
+  sh_tr <- share(lab, tr, c("F", "M", "S")); sh_to <- share(lab, to, c("D", "P", "U"))
+  data.frame(thresholds = name, trill_cuts_ms = paste(trc, collapse = " / "), tone_cuts_kHz_s = paste(toc, collapse = " / "),
+             F = sh_tr[["F"]], M = sh_tr[["M"]], S = sh_tr[["S"]], D = sh_to[["D"]], P = sh_to[["P"]], U = sh_to[["U"]],
+             consistency_trills = mean(lab[tr_pairs$a] == lab[tr_pairs$b]), consistency_tones = mean(lab[to_pairs$a] == lab[to_pairs$b]),
+             consistency_all = mean(lab[pairs$a] == lab[pairs$b]), agreement_manual = mean(lab == segs$manual))
+}
+thr_table <- rbind(compare_thr("selected (max. consistency, min. share 25%)", trill_cut_ms, tone_cut, segs$measured),
+                   compare_thr("balanced (duration tertiles)", c(10.5, 16.5), c(-5, 27), segs$measured_tertiles),
+                   compare_thr("max. agreement with manual labels", c(8.5, 15), c(-5, 5), segs$measured_previous))
+thr_table[, -(1:3)] <- round(thr_table[, -(1:3)], 3)
+thr_table
+
+table(measured = factor(segs$measured, classes6))
+
+```
+
+Columns F - U give the proportion of the duration of each broad class in each sub-category; consistency is the agreement between recordings of the same song type (segments mapped to the 20 positions).
+
+```{r tradeoff plot, fig.width = 11, fig.height = 4.2}
+
+p1 <- ggplot(grid_tr, aes(min_share, consistency)) + geom_point(alpha = 0.3, size = 0.8, color = "gray40") +
+  geom_point(data = best_tr, color = "red", size = 3) + geom_vline(xintercept = min_share_required, linetype = 2) +
+  labs(x = "Smallest sub-category share", y = "Consistency between recordings", title = "Trills (all threshold pairs)")
+p2 <- ggplot(grid_to, aes(min_share, consistency)) + geom_point(color = "gray40") +
+  geom_point(data = best_to, color = "red", size = 3) + geom_vline(xintercept = min_share_required, linetype = 2) +
+  labs(x = "Smallest sub-category share", y = "Consistency between recordings", title = "Pure tones (symmetric thresholds)")
+cowplot::plot_grid(p1, p2)
+
+```
+
+The red points are the selected thresholds: the most consistent among those in which every sub-category covers at least 25% of its broad class (dashed line).
+
+Trill segments without any detected oscillation (labelled S by the rule) and their durations:
+
+```{r trills without oscillation}
+
+no_osc <- segs$class == "trill" & !is.finite(segs$period_ms)
+data.frame(trill_segments = sum(segs$class == "trill"), without_oscillation = sum(no_osc),
+           median_duration_ms_without_oscillation = median(segs$duration_ms[no_osc]))
+
+```
+
+## Measurements and thresholds
+
+```{r measurement plots, fig.width = 11, fig.height = 4.5}
+
+d_tr <- segs[segs$class == "trill" & is.finite(segs$period_ms), ]
+d_to <- segs[segs$class == "tone", ]
+d_tr$manual <- factor(d_tr$manual, c("F", "M", "S")); d_to$manual <- factor(d_to$manual, c("D", "P", "U"))
+
+p1 <- ggplot(d_tr, aes(period_ms, fill = manual)) + geom_density(alpha = 0.6) +
+  geom_vline(xintercept = trill_cut_ms, linetype = 2) + scale_fill_manual(values = cat_cols, name = "manual\nlabel") +
+  coord_cartesian(xlim = c(0, 40)) + labs(x = "Trill period (ms)", y = "Density", title = "Trills")
+p2 <- ggplot(d_to, aes(slope, fill = manual)) + geom_density(alpha = 0.6) +
+  geom_vline(xintercept = tone_cut, linetype = 2) + scale_fill_manual(values = cat_cols, name = "manual\nlabel") +
+  coord_cartesian(xlim = c(-80, 80)) + labs(x = "Frequency slope (kHz/s)", y = "Density", title = "Pure tones")
+cowplot::plot_grid(p1, p2)
+
+```
+
+Densities are coloured by the manual label (W segments shown as U); dashed lines are the thresholds.
+
+## Agreement with the manual sub-categories
+
+The selected thresholds do not try to reproduce the manual labels, so agreement is lower than with the thresholds that maximise it:
+
+```{r agreement with manual labels}
+
+agr <- function(lab) round(c(mean((lab == segs$manual)[segs$class == "trill"]), mean((lab == segs$manual)[segs$class == "tone"]),
+                             mean(lab == segs$manual)), 3)
+data.frame(segments = c("trills", "pure tones", "all"),
+           n = c(sum(segs$class == "trill"), sum(segs$class == "tone"), nrow(segs)),
+           agreement_selected_thresholds = agr(segs$measured), agreement_max_agreement_thresholds = agr(segs$measured_previous))
+
+table(manual = factor(segs$manual, classes6), measured = factor(segs$measured, classes6))
+
+# former W segments
+table(measured_label_of_former_W = segs$measured[segs$Category == "W"])
+
+```
+
+# Step 3: 20 equal-length segments
+
+Each song (from the start to the end of its tailored contour) is split into 20 segments of equal duration. Each equal segment takes the measured category of the manual segment that covers the largest part of it; **purity** is the proportion of the equal segment covered by that segment's category.
+
+```{r convert to 20 segments}
+
+to_equal_segments <- function(d, ct, lab, n = 20) {
+  b <- seq(ct$start, ct$end, length.out = n + 1)
+  out <- lapply(seq_len(n), function(i) {
+    ov <- pmax(0, pmin(d$end, b[i + 1]) - pmax(d$start, b[i]))
+    cover <- tapply(ov, d[[lab]], sum)
+    data.frame(segment = i, start = b[i], end = b[i + 1], label = names(which.max(cover)),
+               purity = max(cover) / (b[i + 1] - b[i]))
+  })
+  data.frame(ID = d$ID[1], do.call(rbind, out))
+}
+
+S20 <- do.call(rbind, lapply(split(segs, segs$ID), function(d) {
+  ct <- contours[contours$song.type == d$ID[1], ]
+  m20 <- to_equal_segments(d, ct, "measured")
+  m20$manual <- to_equal_segments(d, ct, "manual")$label
+  m20
+}))
+S20$lek.song.type <- sub("-[0-9]{4}$", "", sub("^[0-9]+-", "", S20$ID))
+S20$taxon <- sub("^[0-9]+-", "", S20$ID)
+S20$year <- as.numeric(sub(".*-", "", S20$ID))
+rownames(S20) <- NULL
+
+write.csv(S20, "./data/processed/segments_measured_20_by_recording.csv", row.names = FALSE)
+
+data.frame(recordings = length(unique(S20$ID)), segments = nrow(S20),
+           proportion_purity_0.8 = round(mean(S20$purity >= 0.8), 3))
+
+```
+
+## Sequences per song type and per song type and year
+
+Sequences in the same format as `segments_by_song_type.csv` (lower-case states):
+
+- **Per song type**: most common state at each of the 20 positions across the recordings of the song type (ties broken by the summed purity)
+- **Per song type and year**: the sequence of the recording of that year (one recording per song type and year in this data set)
+
+```{r sequences}
+
+consensus <- function(d) sapply(1:20, function(s) {
+  z <- d[d$segment == s, ]
+  n <- table(z$label); pur <- tapply(z$purity + 1e-6, z$label, sum)[names(n)]
+  names(n)[order(-n, -pur)][1]
+})
+
+by_type <- do.call(rbind, lapply(split(S20, S20$lek.song.type), function(d)
+  data.frame(lek = sub("-.*", "", d$lek.song.type[1]), song.type = d$lek.song.type[1],
+             n_recordings = length(unique(d$ID)), t(setNames(tolower(consensus(d)), paste0("X", 1:20))))))
+by_year <- do.call(rbind, lapply(split(S20, S20$taxon), function(d)
+  data.frame(lek = sub("-.*", "", d$lek.song.type[1]), song.type = d$lek.song.type[1], year = d$year[1],
+             taxon = d$taxon[1], n_recordings = length(unique(d$ID)), t(setNames(tolower(consensus(d)), paste0("X", 1:20))))))
+
+write.csv(by_type, "./data/processed/segments_by_song_type_measured.csv", row.names = FALSE)
+write.csv(by_year, "./data/processed/segments_by_song_type_year_measured.csv", row.names = FALSE)
+
+data.frame(song_types = nrow(by_type), song_type_years = nrow(by_year))
+
+head(by_type[, c("song.type", "n_recordings", paste0("X", 1:20))])
+
+```
+
+# Comparisons
+
+```{r comparison setup}
+
+kappa <- function(a, b) {
+  lv <- union(a, b); cm <- table(factor(a, lv), factor(b, lv))
+  acc <- sum(diag(cm)) / sum(cm); pe <- sum(rowSums(cm) * colSums(cm)) / sum(cm)^2
+  (acc - pe) / (1 - pe)
+}
+coarse <- function(z) ifelse(toupper(z) %in% c("F", "M", "S"), "Trill", "Tone")
+
+read_seqs <- function(f) {
+  d <- read.csv(f); M <- toupper(as.matrix(d[, paste0("X", 1:20)])); rownames(M) <- d$song.type; M
+}
+M_meas <- read_seqs("./data/processed/segments_by_song_type_measured.csv")
+M_prev <- read_seqs("./data/processed/segments_by_song_type_prevalence.csv")
+M_2019 <- read_seqs("./data/processed/segments_by_song_type_corrected.csv")
+
+```
+
+## Measured vs. manual sub-categories in the 20-segment sequences
+
+Same recordings, same segment boundaries: the only difference is how the sub-category is assigned (measured vs. manual).
+
+```{r measured vs manual 20}
+
+data.frame(agreement_6_states = round(mean(S20$label == S20$manual), 3), kappa = round(kappa(S20$label, S20$manual), 3),
+           agreement_tone_trill = round(mean(coarse(S20$label) == coarse(S20$manual)), 3))
+
+table(manual = factor(S20$manual, classes6), measured = factor(S20$label, classes6))
+
+```
+
+Tone vs. trill agreement is 1 by construction (the broad class comes from the manual labels).
+
+## Song type sequences
+
+```{r compare song type sequences}
+
+cmp <- function(A, B) {
+  sh <- intersect(rownames(A), rownames(B))
+  c(song_types = length(sh), agreement_6_states = round(mean(A[sh, ] == B[sh, ]), 3),
+    kappa_6_states = round(kappa(as.vector(A[sh, ]), as.vector(B[sh, ])), 3),
+    agreement_tone_trill = round(mean(coarse(A[sh, ]) == coarse(B[sh, ])), 3))
+}
+rbind("measured vs prevalence manual consensus" = cmp(M_meas, M_prev),
+      "measured vs 2019 corrected consensus" = cmp(M_meas, M_2019),
+      "prevalence manual vs 2019 corrected consensus" = cmp(M_prev, M_2019))
+
+```
+
+## State frequencies
+
+```{r state frequencies}
+
+sh <- Reduce(intersect, list(rownames(M_meas), rownames(M_prev), rownames(M_2019)))
+round(rbind(measured = prop.table(table(factor(M_meas[sh, ], classes6))),
+            prevalence_manual = prop.table(table(factor(M_prev[sh, ], classes6))),
+            coding_2019_corrected = prop.table(table(factor(M_2019[sh, ], classes6)))), 3)
+
+```
+
+## Consistency across recordings of the same song type
+
+Position-by-position agreement between all pairs of recordings of the same song type:
+
+```{r rendition consistency}
+
+rendition_agreement <- function(lab) {
+  d <- data.frame(ID = S20$ID, type = S20$lek.song.type, segment = S20$segment, lab = lab)
+  r <- do.call(rbind, lapply(split(d, d$type), function(z) {
+    ids <- unique(z$ID); if (length(ids) < 2) return(NULL)
+    t(apply(combn(ids, 2), 2, function(p) {
+      a <- z$lab[z$ID == p[1]][order(z$segment[z$ID == p[1]])]; b <- z$lab[z$ID == p[2]][order(z$segment[z$ID == p[2]])]
+      c(six = mean(a == b), coarse = mean(coarse(a) == coarse(b)))
+    }))
+  }))
+  c(recording_pairs = nrow(r), agreement_6_states = round(mean(r[, "six"]), 3), agreement_tone_trill = round(mean(r[, "coarse"]), 3))
+}
+
+rbind(measured = rendition_agreement(S20$label), manual = rendition_agreement(S20$manual))
+
+```
+
+## Coverage of the RevBayes song types
+
+```{r revbayes coverage}
+
+fs <- list.files("./data/processed/fossils", pattern = "taxa_.*\\.tsv$", full.names = TRUE)
+rb_taxa <- unique(unlist(lapply(fs, function(f) read.delim(f)[[1]])))
+rb_types <- unique(sub("-[0-9]{4}$", "", rb_taxa))
+
+data.frame(revbayes_song_types = length(rb_types), with_measured_sequence = sum(rb_types %in% by_type$song.type),
+           revbayes_taxa = length(rb_taxa), taxa_with_recording_that_year = sum(rb_taxa %in% by_year$taxon))
+
+```
+
+# Spectrograms: measured vs. manual classification {#sec-spectrograms}
+
+All prevalence recordings of the `r length(rb_types)` song types used in the RevBayes analyses, grouped by lek and song type. Each panel shows the spectrogram with the tailored frequency contour (orange) and four label strips:
+
+1. **manual**: original manual segments and labels (W shown as U); dashed lines on the spectrogram mark the segment boundaries
+2. **measured**: the same segments classified with the measurement thresholds; the number below each label is the measurement used (trill period in ms for trills, frequency slope in kHz/s for pure tones)
+3. **manual 20 seg**: manual labels converted to 20 equal-length segments
+4. **measured 20 seg**: measured labels converted to 20 equal-length segments (the coding of the song type sequences)
+
+Cells of the measured strips that differ from the manual label are outlined in red. Panel titles give the agreement between the two 20-segment codings.
+
+```{r spectrogram setup}
+
+wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
+sr <- wave@samp.rate
+txt_col <- setNames(c("white", "black", "black", "black", "black", "white"), classes6)
+
+plot_recording <- function(id, margin = 0.008, flim = c(1, 11)) {
+  ct <- contours[contours$song.type == id, ]
+  d <- segs[segs$ID == id, ]
+  z <- S20[S20$ID == id, ]; z <- z[order(z$segment), ]
+  t0 <- max(0, ct$start - margin); t1 <- ct$end + margin
+  sp <- spectro(cutw(wave, f = sr, from = t0, to = t1, output = "Wave"), f = sr, wl = 256, ovlp = 90, plot = FALSE, flim = c(0, 13))
+  amp <- sp$amp; amp[amp < -45] <- -45
+  tms <- sp$time * 1000; ms <- function(x) (x - t0) * 1000
+
+  h <- 1.1; top <- flim[2] + 4 * h
+  par(mar = c(3.3, 7.5, 2, 0.5))
+  plot(NA, xlim = range(tms), ylim = c(flim[1], top), xaxs = "i", yaxs = "i", xlab = "", ylab = "", yaxt = "n",
+       main = sprintf("%s   (20-segment agreement measured vs. manual: %d of 20)", id, sum(z$label == z$manual)), cex.main = 0.95)
+  mtext("Time (ms)", side = 1, line = 2.1, cex = 0.8)
+  axis(2, at = seq(ceiling(flim[1]), flim[2], 2), las = 1, cex.axis = 0.8)
+  mtext("kHz", side = 2, line = 2.2, at = mean(flim), cex = 0.8)
+  fsel <- sp$freq >= flim[1] & sp$freq <= flim[2]
+  image(tms, sp$freq[fsel], t(amp[fsel, ]), col = gray.colors(40, start = 1, end = 0), add = TRUE, useRaster = TRUE)
+  tt <- seq(ct$start, ct$end, length.out = length(ff_cols))
+  lines(ms(tt), unlist(ct[, ff_cols]), col = "white", lwd = 3.5)
+  lines(ms(tt), unlist(ct[, ff_cols]), col = "#FF8C00", lwd = 1.3)
+  abline(v = ms(c(d$start, tail(d$end, 1))), lty = 2, col = "gray35")
+  rect(min(tms), flim[2], max(tms), top, col = "white", border = NA)
+
+  b20 <- ms(seq(ct$start, ct$end, length.out = 21))
+  meas_txt <- ifelse(d$class == "trill", ifelse(is.finite(d$period_ms), sprintf("%.1f", d$period_ms), "Inf"), sprintf("%.0f", d$slope))
+  strips <- list(
+    list(name = "manual", xs = ms(d$start), xe = ms(d$end), lab = d$manual, ref = NULL, txt = NULL),
+    list(name = "measured", xs = ms(d$start), xe = ms(d$end), lab = d$measured, ref = d$manual, txt = meas_txt),
+    list(name = "manual 20 seg", xs = b20[-21], xe = b20[-1], lab = z$manual, ref = NULL, txt = NULL),
+    list(name = "measured 20 seg", xs = b20[-21], xe = b20[-1], lab = z$label, ref = z$manual, txt = NULL))
+  for (k in seq_along(strips)) {
+    st <- strips[[k]]; y0 <- top - k * h; y1 <- y0 + h
+    rect(st$xs, y0, st$xe, y1, col = cat_cols[st$lab], border = "white", lwd = 0.5)
+    if (!is.null(st$ref)) {
+      bad <- st$lab != st$ref
+      if (any(bad)) rect(st$xs[bad], y0 + 0.04, st$xe[bad], y1 - 0.04, border = "red", lwd = 2)
+    }
+    narrow <- (st$xe - st$xs) < 0.025 * diff(range(tms))
+    ylab_pos <- if (is.null(st$txt)) y0 + h / 2 else y0 + h * 0.62
+    text((st$xs + st$xe) / 2, ylab_pos, st$lab, col = txt_col[st$lab], cex = ifelse(narrow, 0.55, ifelse(k <= 2, 0.8, 0.6)), font = 2)
+    if (!is.null(st$txt)) text((st$xs + st$xe) / 2, y0 + h * 0.22, ifelse(narrow, "", st$txt), col = txt_col[st$lab], cex = 0.5)
+    mtext(st$name, side = 2, at = y0 + h / 2, las = 1, line = 0.3, cex = 0.65, adj = 1)
+  }
+  box()
+}
+
+```
+
+```{r spectrogram legend, fig.width = 11, fig.height = 0.9}
+
+par(mar = c(0, 0, 0, 0))
+plot.new()
+legend("center", horiz = TRUE, bty = "n", fill = cat_cols, border = NA, cex = 0.85,
+       legend = c("D: descending tone", "U: ascending tone", "P: flat tone", "F: fast trill", "M: medium trill", "S: slow trill"))
+
+```
+
+```{r spectrograms, fig.width = 11, fig.height = 4.6, results = "asis"}
+
+rec_types <- unique(S20[, c("ID", "lek.song.type", "year")])
+rec_types <- rec_types[rec_types$lek.song.type %in% rb_types, ]
+rec_types <- rec_types[order(rec_types$lek.song.type, rec_types$year), ]
+
+for (lk in unique(sub("-.*", "", rec_types$lek.song.type))) {
+  cat("\n\n## ", lk, "\n\n", sep = "")
+  for (ty in unique(rec_types$lek.song.type[sub("-.*", "", rec_types$lek.song.type) == lk])) {
+    cat("\n\n### ", ty, "\n\n", sep = "")
+    for (id in rec_types$ID[rec_types$lek.song.type == ty]) {
+      plot_recording(id)
+      cat("\n\n")
+    }
+  }
+}
+
+```
+
+<div class="alert alert-success">
+
+# Takeaways {.unnumbered .unlisted}
+
+- Segment boundaries and the tone/trill class come from the manual segmentation of `r length(unique(segs$ID))` recordings (`r length(unique(segs$lek.song.type))` song types); sub-categories are assigned with explicit, fixed thresholds on trill period (**F** < `r trill_cut_ms[1]` ms ≤ **M** < `r trill_cut_ms[2]` ms ≤ **S**) and frequency slope (**D** < `r tone_cut[1]` kHz/s ≤ **P** < `r tone_cut[2]` kHz/s ≤ **U**), chosen to maximise the consistency between recordings of the same song type (`r sprintf("%.0f%%", 100 * thr_table$consistency_all[1])` of the 20 positions) while each sub-category covers at least 25% of the duration of its broad class
+- The measured sub-categories agree with the manual ones for `r sprintf("%.0f%%", 100 * mean((segs$measured == segs$manual)[segs$class == "trill"]))` of the trill and `r sprintf("%.0f%%", 100 * mean((segs$measured == segs$manual)[segs$class == "tone"]))` of the tone segments
+- Song type sequences (20 segments) are saved in `data/processed/segments_by_song_type_measured.csv` and per song type and year in `data/processed/segments_by_song_type_year_measured.csv`, and cover all `r length(rb_types)` song types used in the RevBayes analyses
+
+</div>
+
+---
+
+&nbsp;
+
+<!-- add packages used, system details and versions  -->
+
+<font size="4">Session information</font>
+
+```{r session info, echo = FALSE}
+
+sessionInfo()
+
+```

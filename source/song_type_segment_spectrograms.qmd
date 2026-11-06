@@ -1,0 +1,214 @@
+---
+title: Segment classes of the song types used in the phylogenetic analyses
+subtitle: Understanding cultural evolution of songs in hummingbird leks through the fossilized birth-death process
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 2
+toc-location: left
+number-sections: false
+highlight-style: pygments
+format:
+  html:
+    df-print: kable
+    code-fold: true
+    code-tools: true
+    css: qmd.css
+editor_options:
+  chunk_output_type: console
+---
+
+```{r set root directory, echo = FALSE}
+
+# set working directory as project directory
+knitr::opts_knit$set(root.dir = "..")
+
+```
+
+<div class="alert alert-info">
+
+# Purpose {.unnumbered .unlisted}
+
+- Show the segment classes of each of the song types used in the RevBayes analyses on top of a spectrogram, to visually compare the different codings
+
+</div>
+
+&nbsp;
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages, message = FALSE, warning = FALSE}
+
+sketchy::load_packages(packages = c("knitr", "Rraven", "tuneR", "seewave", "viridis"))
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+```
+
+# Data
+
+- **Song types**: all song types included in any of the RevBayes taxa sets (`data/processed/fossils/*_taxa_*.tsv`)
+- **Recordings, contours and manual segments**: from the prevalence data set (`data/raw/segment_classification`), with the same corrections as in `automated_segment_classification.qmd` (segments annotated with the wrong song are reassigned; W converted to U)
+- **20-segment codings**: produced in `segment_classification_20_segments.qmd`
+
+```{r read data}
+
+# song types in the RevBayes analyses
+fs <- list.files("./data/processed/fossils", pattern = "taxa_.*\\.tsv$", full.names = TRUE)
+rb_taxa <- unique(unlist(lapply(fs, function(f) read.delim(f)[[1]])))
+rb_types <- sort(unique(sub("-[0-9]{4}$", "", rb_taxa)))
+
+# contours and recording
+contours <- read.csv("./data/raw/segment_classification/seltailor_output.csv")
+ff_cols <- grep("^ff", names(contours))
+wave <- readWave("./data/raw/segment_classification/contour-degradation_325_songs.wav")
+sr <- wave@samp.rate
+
+# manual (variable-length) segments with corrections
+segs <- imp_raven(path = "./data/raw/segment_classification", files = "FrameworkContourDegradationv1.7.txt",
+                  all.data = TRUE, warbler.format = TRUE)
+segs <- segs[!is.na(segs$Category) & segs$Category != "" & segs$ID %in% contours$song.type, ]
+tol <- 0.005
+m <- match(segs$ID, contours$song.type)
+outside <- segs$end < contours$start[m] - tol | segs$start > contours$end[m] + tol
+segs$ID[outside] <- vapply(which(outside), function(i) {
+  k <- which(contours$start <= segs$start[i] + tol & contours$end >= segs$end[i] - tol)
+  if (length(k) == 1) contours$song.type[k] else NA_character_
+}, character(1))
+segs <- segs[!is.na(segs$ID), ]
+segs$Category[segs$Category == "W"] <- "U"
+segs <- segs[order(segs$ID, segs$start), ]
+
+# 20-segment labels of each prevalence recording
+S20 <- read.csv("./data/processed/segment_classifier_20/cv_predictions_20.csv")
+
+# 20-segment sequences per song type
+read_seqs <- function(f) {
+  d <- read.csv(f); M <- toupper(as.matrix(d[, paste0("X", 1:20)])); rownames(M) <- d$song.type; M
+}
+cons_prev <- read_seqs("./data/processed/segments_by_song_type_prevalence.csv")
+cons_2019 <- read_seqs("./data/processed/segments_by_song_type_corrected.csv")
+used_trees <- read_seqs("./data/raw/segments_by_song_type.csv")
+
+data.frame(song_types_in_RevBayes = length(rb_types),
+           with_prevalence_recording = sum(rb_types %in% S20$lek.song.type),
+           by_lek = paste(names(table(sub("-.*", "", rb_types))), table(sub("-.*", "", rb_types)), sep = ": ", collapse = ", "))
+
+```
+
+For each song type, the recording shown is the prevalence recording whose 20-segment labels best match the prevalence consensus of that song type (i.e. the most representative recording).
+
+```{r choose recording}
+
+pick_rendition <- function(ty) {
+  ids <- unique(S20$ID[S20$lek.song.type == ty])
+  score <- sapply(ids, function(id) {
+    d <- S20[S20$ID == id, ]; d <- d[order(d$segment), ]
+    mean(d$Category == cons_prev[ty, ])
+  })
+  ids[which.max(score)]
+}
+shown <- setNames(sapply(rb_types, pick_rendition), rb_types)
+
+```
+
+# Spectrograms
+
+Each panel shows the spectrogram of one recording with the tailored frequency contour (orange) and, above it, five label strips:
+
+1. **prevalence manual**: manually delimited segments of this recording (variable length; dashed lines on the spectrogram mark their boundaries)
+2. **prevalence 20 seg**: the same recording converted to 20 equal-length segments (category covering most of each segment)
+3. **prevalence consensus**: consensus across all prevalence recordings of the song type
+4. **2019 corrected**: consensus of the 2019 coding, built in temporal order (`byrow = TRUE`)
+5. **2019 used in trees**: the sequence used in the RevBayes analyses (`segments_by_song_type.csv`, built with `byrow = FALSE`, so not in temporal order)
+
+The 20-segment strips (2 - 5) span the song from the start to the end of its contour, so positions can be compared with the spectrogram, although strips 3 - 5 are consensus sequences that are not specific to the recording shown. The panel title gives the number of prevalence recordings of the song type.
+
+```{r plotting function}
+
+cat_cols <- setNames(viridis(6, option = "H", begin = 0.05, end = 0.95), c("D", "U", "P", "F", "M", "S"))
+txt_col <- setNames(c("white", "black", "black", "black", "black", "white"), names(cat_cols))
+
+plot_song_type <- function(ty, margin = 0.008, flim = c(1, 11)) {
+  id <- shown[[ty]]
+  ct <- contours[contours$song.type == id, ]
+  d <- segs[segs$ID == id, ]
+  t0 <- max(0, ct$start - margin); t1 <- ct$end + margin
+  clip <- cutw(wave, f = sr, from = t0, to = t1, output = "Wave")
+  sp <- spectro(clip, f = sr, wl = 256, ovlp = 90, plot = FALSE, flim = c(0, 13))
+  amp <- sp$amp; amp[amp < -45] <- -45
+  tms <- sp$time * 1000
+  ms <- function(x) (x - t0) * 1000
+
+  strips <- list("prevalence manual" = NULL,
+                 "prevalence 20 seg" = S20$Category[S20$ID == id][order(S20$segment[S20$ID == id])],
+                 "prevalence consensus" = cons_prev[ty, ],
+                 "2019 corrected" = if (ty %in% rownames(cons_2019)) cons_2019[ty, ] else NULL,
+                 "2019 used in trees" = if (ty %in% rownames(used_trees)) used_trees[ty, ] else NULL)
+  h <- 1.1; top <- flim[2] + h * length(strips)
+
+  par(mar = c(3.5, 9, 2.2, 0.5))
+  plot(NA, xlim = range(tms), ylim = c(flim[1], top), xaxs = "i", yaxs = "i", xlab = "", ylab = "", yaxt = "n",
+       main = sprintf("%s   (recording shown: %s; %d prevalence recording(s))", ty, id, length(unique(S20$ID[S20$lek.song.type == ty]))),
+       cex.main = 0.95)
+  mtext("Time (ms)", side = 1, line = 2.2, cex = 0.8)
+  axis(2, at = seq(ceiling(flim[1]), flim[2], 2), las = 1, cex.axis = 0.8)
+  mtext("kHz", side = 2, line = 2.2, at = mean(flim), cex = 0.8)
+  fsel <- sp$freq >= flim[1] & sp$freq <= flim[2]
+  image(tms, sp$freq[fsel], t(amp[fsel, ]), col = gray.colors(40, start = 1, end = 0), add = TRUE, useRaster = TRUE)
+
+  tt <- seq(ct$start, ct$end, length.out = length(ff_cols))
+  lines(ms(tt), unlist(ct[, ff_cols]), col = "white", lwd = 3.5)
+  lines(ms(tt), unlist(ct[, ff_cols]), col = "#FF8C00", lwd = 1.3)
+  abline(v = ms(c(d$start, tail(d$end, 1))), lty = 2, col = "gray35")
+
+  rect(min(tms), flim[2], max(tms), top, col = "white", border = NA)
+  b20 <- ms(seq(ct$start, ct$end, length.out = 21))
+  for (k in seq_along(strips)) {
+    y0 <- top - k * h; y1 <- y0 + h
+    if (k == 1) { xs <- ms(d$start); xe <- ms(d$end); lab <- d$Category } else {
+      lab <- strips[[k]]; if (is.null(lab)) { text(mean(range(tms)), y0 + h / 2, "not available", cex = 0.7, col = "gray40"); next }
+      xs <- b20[-21]; xe <- b20[-1]
+    }
+    rect(xs, y0, xe, y1, col = cat_cols[lab], border = "white", lwd = 0.5)
+    text((xs + xe) / 2, y0 + h / 2, lab, col = txt_col[lab], cex = ifelse(k == 1, 0.8, 0.6), font = 2)
+    mtext(names(strips)[k], side = 2, at = y0 + h / 2, las = 1, line = 0.3, cex = 0.65, adj = 1)
+  }
+  box()
+}
+
+```
+
+```{r legend, fig.width = 11, fig.height = 0.9}
+
+par(mar = c(0, 0, 0, 0))
+plot.new()
+legend("center", horiz = TRUE, bty = "n", fill = cat_cols, border = NA, cex = 0.9,
+       legend = c("D: descending tone", "U: ascending tone", "P: flat tone", "F: fast trill", "M: medium trill", "S: slow trill"))
+
+```
+
+```{r spectrograms, fig.width = 11, fig.height = 5.2, results = "asis"}
+
+for (lk in unique(sub("-.*", "", rb_types))) {
+  cat("\n\n## ", lk, "\n\n", sep = "")
+  for (ty in rb_types[sub("-.*", "", rb_types) == lk]) {
+    plot_song_type(ty)
+    cat("\n\n")
+  }
+}
+
+```
+
+---
+
+&nbsp;
+
+<!-- add packages used, system details and versions  -->
+
+<font size="4">Session information</font>
+
+```{r session info, echo = FALSE}
+
+sessionInfo()
+
+```
