@@ -1,0 +1,66 @@
+#NEXUS
+Begin data;
+dimensions ntax=58 nchar=78;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+SUR-A1-1969	------ddpuuuuusssssssssssssss-puuuuddd--------------------------------pp------
+SUR-A1-1972	------ddpuuuuusssssssssssssss-puuuuddd--------------------------------pp------
+SUR-A2-1969	------ddpuuupu-----------------ufff---fff-------ffffffffu----------uuudd------
+SUR-A2-1970	------ddpuuupu-----------------ufff---fff-------ffffffffu----------uuudd------
+SUR-A3-1969	----ddddpuuuuusssssssssssssss---uuupdd----------------------------------------
+SUR-A3-1970	----ddddpuuuuusssssssssssssss---uuupdd----------------------------------------
+SUR-A4-1970	-----ddppuuuuusssssssssssssssdpuuu---d----------------------------------------
+SUR-A5-1970	------ddpuuuuu-----------------ufff---fff-------ffffffffp----------pp---------
+SUR-B1-1969	-----dddpuuuuusssssssssssss---------------------fffffff-----------------------
+SUR-B1-1972	-----dddpuuuuusssssssssssss---------------------fffffff-----------------------
+SUR-B3-1981	----pppppuuuusssssssssssssss--------------------------------------------------
+SUR-D1-1969	-----upppuuuuu-----------------uuuu---fff-------fffffffffddd--------uuud------
+SUR-D1-1972	-----upppuuuuu-----------------uuuu---fff-------fffffffffddd--------uuud------
+SUR-D2-1970	-------dpuuuuu-----------------uuuf---fff-------ffffffff--dd--------uuud------
+SUR-D2-1972	-------dpuuuuu-----------------uuuf---fff-------ffffffff--dd--------uuud------
+SUR-E1-1981	------dppuuuussssssssssssssss---ss---s-----------------------------uuu--------
+SUR-E1-1989	------dppuuuussssssssssssssss---ss---s-----------------------------uuu--------
+SUR-E2-1981	----dddpppuusssssssssssssssss---ss---s----------------------------------------
+SUR-E3-1981	-----dpppuuuussssssssssssssss---sd---d----------------------------------------
+SUR-E4-1989	----ppppppps-------ssssssssss---ss---sfff-------ffffffu-----------------------
+SUR-E5-1989	----dddppppsssssssssssssss----------------------fffffff-----------------------
+SUR-F1-2008	-------pppppuf-----------------ffff---fff-------fffffffff----------fffff------
+SUR-F1-2012	-------pppppuf-----------------ffff---fff-------fffffffff----------fffff------
+SUR-F2-2008	---------uuupu-----------------ufff---fff-------fffffffff----------fffff------
+SUR-F2-2011	---------uuupu-----------------ufff---fff-------fffffffff----------fffff------
+SUR-F3-2009	-----dpppppssssssssssssssssss---ss---s-----------------dd---------------------
+SUR-F4-2011	-----------uuu-----------------uuuf---fff-------fffffffff----------ffffd------
+SUR-F4-2012	-----------uuu-----------------uuuf---fff-------fffffffff----------ffffd------
+SUR-F5-2011	-----------uuu-----------------uuff---fff-------fffffffff----------ffffu------
+SUR-G1-2008	-----ppppppssssss-------sssss---sp---d-----------------dd---------------------
+SUR-G1-2009	-----ppppppssssss-------sssss---sp---d-----------------dd---------------------
+SUR-H1-2008	-----ppppuuuuu-----------------uuuu----------------------ddddddpppdpuudd------
+SUR-H1-2012	-----ppppuuuuu-----------------uuuu----------------------ddddddpppdpuudd------
+SUR-H2-2010	---------uuuuu-----------------uuuuppp------------fffffd-ddp----pddpuuuduu----
+SUR-H2-2012	---------uuuuu-----------------uuuuppp------------fffffd-ddp----pddpuuuduu----
+SUR-H3-2011	-------dpuuuuu-----------------uuuu---fff-------ffffff----dd----ppppuu--------
+SUR-I1-2008	-------------------------------uuuppppuuu-------fffffffd-ddd----dddppussssssss
+SUR-J1-2010	-----uuuppussssssssssssssssss-------------------------------------------------
+SUR-J1-2015	-----uuuppussssssssssssssssss-------------------------------------------------
+SUR-J2-2012	-----uuppppsssssssssssssssss--------------------------------------------------
+SUR-J3-2012	------uuppsssssssssssssssssss---ss--------------------------------------------
+SUR-J3-2019	------uuppsssssssssssssssssss---ss--------------------------------------------
+SUR-J4-2014	-------uppsssssssssssssssssss---ss---s----------------------------------------
+SUR-J5-2017	------dppusssssssssssssssssss---ss---s----------------------------------------
+SUR-J5-2019	------dppusssssssssssssssssss---ss---s----------------------------------------
+SUR-J6-2017	--------pppssssssssssssssssss---ss---s----------------------------------------
+SUR-J7-2019	------upppsssssssssssssssssss---ss---d----------------------------------------
+SUR-K1-2012	---------uuuud-----------------dpuf---fff-------fffffffff----------ffff-------
+SUR-K1-2017	---------uuuud-----------------dpuf---fff-------fffffffff----------ffff-------
+SUR-K2-2012	---------uuuud-----------------duff---fff-------fffffffff----------fffff------
+SUR-K2-2017	---------uuuud-----------------duff---fff-------fffffffff----------fffff------
+SUR-K3-2014	---------uuuud-----------------dpuf---fff-------fffffffff----------ffu--------
+SUR-K4-2015	puuuddd--------------usssssss---ss---s---sspppuu------------------------------
+SUR-K4-2016	puuuddd--------------usssssss---ss---s---sspppuu------------------------------
+SUR-K5-2018	-uuudddpsssssssssssssssssssss---ss---s---ssppuuu------------------------------
+SUR-K5-2019	-uuudddpsssssssssssssssssssss---ss---s---ssppuuu------------------------------
+SUR-K6-2019	----------uuud-----------------dpuf---fff-------fffffffff----------fffff------
+SUR-L1-2012	---------------------------------uupppuuf-------fffffffd-ddp----pu------uu----
+;
+end;

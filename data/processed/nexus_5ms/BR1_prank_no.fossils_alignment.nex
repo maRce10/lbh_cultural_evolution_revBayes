@@ -1,0 +1,17 @@
+#NEXUS
+Begin data;
+dimensions ntax=9 nchar=80;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+BR1-A1-2014	---------------------------ffffffffffffffffdddd------------------------ddddddddp
+BR1-A2-2014	-----------------------------------------------------upduussssssssssuppddddddddd
+BR1-C1-2014	-------pppppuusssssssssssfffffffff----------dd----------------------------------
+BR1-C2-2014	-----uuupppsssssssssssssffffffffff----------dd----------------------------------
+BR1-D2-2014	-----uuppppu------------ffffffffffffddfffffddd----------------------------------
+BR1-E1-2014	-------------------------ffffffffffffffffffddddddddduuuu------------------------
+BR1-E2-2014	-----------------------------------------------------uudduussssssssspppddddddddd
+BR1-E3-2014	uuuupuuuddpu------------uffffffffff------------------------------------ddddddddd
+BR1-F1-2014	--------------------------------------uupuuuudduuudduuuuuusssssssssuuupd--------
+;
+end;

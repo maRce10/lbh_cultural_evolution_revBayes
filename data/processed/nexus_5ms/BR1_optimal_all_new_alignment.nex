@@ -1,0 +1,31 @@
+#NEXUS
+Begin data;
+dimensions ntax=23 nchar=60;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+BR1-A1-2011	-------------------------------ffffffffffffffffddddddddddddp
+BR1-A1-2012	-------------------------------ffffffffffffffffddddddddddddp
+BR1-A1-2013	-------------------------------ffffffffffffffffddddddddddddp
+BR1-A1-2014	-------------------------------ffffffffffffffffddddddddddddp
+BR1-A2-2014	--------------------upduussssssssssu---------ppddddddddd----
+BR1-C1-2011	----------------p---ppppuusssssssssssfffffff-ffdd-----------
+BR1-C1-2012	----------------p---ppppuusssssssssssfffffff-ffdd-----------
+BR1-C1-2013	----------------p---ppppuusssssssssssfffffff-ffdd-----------
+BR1-C1-2014	----------------p---ppppuusssssssssssfffffff-ffdd-----------
+BR1-C2-2014	---------------uu---upppsssssssssssssffffffffffdd-----------
+BR1-D1-2011	fffffff---------------------fffffffffffffffffffdd-----------
+BR1-D1-2012	fffffff---------------------fffffffffffffffffffdd-----------
+BR1-D1-2013	fffffff---------------------fffffffffffffffffffdd-----------
+BR1-D2-2013	---------------uu---ppppu---ffffffffffffddfffffddd----------
+BR1-D2-2014	---------------uu---ppppu---ffffffffffffddfffffddd----------
+BR1-D3-2013	----------u----pd---dpppu---fffffffffffffffffffddd----------
+BR1-D4-2013	---------------pp---ppupp---pffffffffffffffffffddd----------
+BR1-E1-2012	-----------------------------ffffffffffffffffffddddddddduuuu
+BR1-E1-2013	-----------------------------ffffffffffffffffffddddddddduuuu
+BR1-E1-2014	-----------------------------ffffffffffffffffffddddddddduuuu
+BR1-E2-2014	--------------------uudduusssssssssp---------ppddddddddd----
+BR1-E3-2014	----------uuuupuu---uddpuu-----------ffffffffffddddddddd----
+BR1-F1-2014	------uupuuuudduuudduuuuuusssssssssu---------uupd-----------
+;
+end;

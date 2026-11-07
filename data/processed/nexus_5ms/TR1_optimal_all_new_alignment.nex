@@ -1,0 +1,41 @@
+#NEXUS
+Begin data;
+dimensions ntax=33 nchar=51;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+TR1-A1-2007	----------ddppuusssssssssspppu---------uuuuuuuuuddd
+TR1-C1-2009	------------uuuusssssssfffffffffffffffd------------
+TR1-D1-2009	--------------uussssssssssssssssss-----------------
+TR1-D1-2010	--------------uussssssssssssssssss-----------------
+TR1-D1-2011	--------------uussssssssssssssssss-----------------
+TR1-D1-2012	--------------uussssssssssssssssss-----------------
+TR1-D1-2013	--------------uussssssssssssssssss-----------------
+TR1-D1-2014	--------------uussssssssssssssssss-----------------
+TR1-D2-2011	---------------dsssssssssssssssss------------------
+TR1-D2-2012	---------------dsssssssssssssssss------------------
+TR1-D2-2013	---------------dsssssssssssssssss------------------
+TR1-D2-2014	---------------dsssssssssssssssss------------------
+TR1-D3-2012	----------uudddpssssssssssss-----------------------
+TR1-D3-2013	----------uudddpssssssssssss-----------------------
+TR1-D3-2014	----------uudddpssssssssssss-----------------------
+TR1-D4-2012	--------------uussssssssssssssss-------------------
+TR1-D4-2013	--------------uussssssssssssssss-------------------
+TR1-D4-2014	--------------uussssssssssssssss-------------------
+TR1-D5-2013	--------uuuuppppssssssssssssu----------------------
+TR1-D5-2014	--------uuuuppppssssssssssssu----------------------
+TR1-E1-2011	---dpuu-uuuuuuuu--------------fffffffddddudd------d
+TR1-E2-2011	---ppuuuupuuupppssssssssssdddd---------------------
+TR1-E3-2011	---ppuu-uuuuuuuuf------------fffffffffdduu---------
+TR1-E3-2012	---ppuu-uuuuuuuuf------------fffffffffdduu---------
+TR1-E3-2013	---ppuu-uuuuuuuuf------------fffffffffdduu---------
+TR1-E3-2014	---ppuu-uuuuuuuuf------------fffffffffdduu---------
+TR1-E4-2012	ddpppuu-uuuuuuuuf------------ffffffffffddd--------d
+TR1-E4-2013	ddpppuu-uuuuuuuuf------------ffffffffffddd--------d
+TR1-F1-2011	----uuu-updddpuuf-------------ffffffffddduuu------d
+TR1-F1-2012	----uuu-updddpuuf-------------ffffffffddduuu------d
+TR1-F1-2013	----uuu-updddpuuf-------------ffffffffddduuu------d
+TR1-F1-2014	----uuu-updddpuuf-------------ffffffffddduuu------d
+TR1-F2-2014	--------------uusssssssssssssssssu-----------------
+;
+end;
