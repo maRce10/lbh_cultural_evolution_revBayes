@@ -1,0 +1,39 @@
+#NEXUS
+Begin data;
+dimensions ntax=31 nchar=56;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+HC1-A1-1991	--pppppuu---uuuu--------------------uudduudddddddd------
+HC1-A2-1997	upppuuuuu---uuuu--------------------fffffffddddddddd----
+HC1-C1-1991	uuuuuuuuu---uuussssssssss-----------------dddddd--------
+HC1-C2-1991	---pppuuu---uuuu--------------------uuuuuuudddddddduud-d
+HC1-C3-1997	-pppuuuuu---uuuu--------------------ffffffdddddddd------
+HC1-C4-2011	-ppppppuu---uuuu--------------------ffffffddddddddd-----
+HC1-C4-2012	-ppppppuu---uuuu--------------------ffffffddddddddd-----
+HC1-C4-2013	-ppppppuu---uuuu--------------------ffffffddddddddd-----
+HC1-D1-1991	--ppuppuu---uuussssssssssssss-------------ppp-----------
+HC1-E1-1992	puuuppdp-------sssssssssp-----------------pdddduu-------
+HC1-F1-1992	----ddpp-------ssssssssssss-------------------uuudduup--
+HC1-F2-1992	----uupp-------ssssssssssssp--------------pppppuudd-----
+HC1-F2-1993	----uupp-------ssssssssssssp--------------pppppuudd-----
+HC1-F2-1994	----uupp-------ssssssssssssp--------------pppppuudd-----
+HC1-F2-1995	----uupp-------ssssssssssssp--------------pppppuudd-----
+HC1-F2-1996	----uupp-------ssssssssssssp--------------pppppuudd-----
+HC1-F2-1997	----uupp-------ssssssssssssp--------------pppppuudd-----
+HC1-F3-1997	---ppppp-------ssssssss--------------------ddduuupdpuuud
+HC1-G1-1997	--dddppp-------sssssssssssssssssssss--------------------
+HC1-H1-1997	-ppppppuu---uuuu--------------------uuuuuuudddddddddd---
+HC1-I1-1997	--ddpppuu---uuuffff-----------------fffffffdddd---------
+HC1-J1-1997	--pppppuu---------------------------------pddpuuudduuuud
+HC1-K1-2011	uupppppuusssuuu---------------------------dpdddddddpppuu
+HC1-K1-2012	uupppppuusssuuu---------------------------dpdddddddpppuu
+HC1-K1-2013	uupppppuusssuuu---------------------------dpdddddddpppuu
+HC1-K2-2011	--dppppuu---uuuffff-----------------ffffffdddppuu-------
+HC1-K2-2012	--dppppuu---uuuffff-----------------ffffffdddppuu-------
+HC1-K2-2013	--dppppuu---uuuffff-----------------ffffffdddppuu-------
+HC1-K3-2011	dpuuppppu---uppf--------------------ffffffddddduupppdd--
+HC1-L1-2011	--pppppp-------sssssssssssss--------------dpuuuuud------
+HC1-M1-2011	---dpuuuu---uuuu--------------------dduuuuppppdddddd----
+;
+end;

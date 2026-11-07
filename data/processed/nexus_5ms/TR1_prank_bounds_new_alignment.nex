@@ -1,0 +1,29 @@
+#NEXUS
+Begin data;
+dimensions ntax=21 nchar=65;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+TR1-A1-2007	-----------------ddppuussssssssssp----------------ppuuuuuuuuuuddd
+TR1-C1-2009	--------uuuu---------------sssssssfffffffffffffffd---------------
+TR1-D1-2009	---------uus-----sssssssssssssssss-------------------------------
+TR1-D1-2014	---------uus-----sssssssssssssssss-------------------------------
+TR1-D2-2011	-----------d-----sssssssssssssssss-------------------------------
+TR1-D2-2014	-----------d-----sssssssssssssssss-------------------------------
+TR1-D3-2012	---------uud-----ddpssssssssssss---------------------------------
+TR1-D3-2014	---------uud-----ddpssssssssssss---------------------------------
+TR1-D4-2012	---------uus-----sssssssssssssss---------------------------------
+TR1-D4-2014	---------uus-----sssssssssssssss---------------------------------
+TR1-D5-2013	--------uuuu-----ppppssssssssssssu-------------------------------
+TR1-D5-2014	--------uuuu-----ppppssssssssssssu-------------------------------
+TR1-E1-2011	---dpuuuuuuu-----u--------------uufffffffdddd----------------uddd
+TR1-E2-2011	---ppuuuupuu-----upppssssssssss------------------------------dddd
+TR1-E3-2011	---ppuuuuuuu-----u--------------uufffffff-fff----------------dduu
+TR1-E3-2014	---ppuuuuuuu-----u--------------uufffffff-fff----------------dduu
+TR1-E4-2012	ddpppuuuuuuu-----u--------------uufffffffffff----------------dddd
+TR1-E4-2013	ddpppuuuuuuu-----u--------------uufffffffffff----------------dddd
+TR1-F1-2011	--------uuuupdddpu--------------ufffffffffddd----------------uuud
+TR1-F1-2014	--------uuuupdddpu--------------ufffffffffddd----------------uuud
+TR1-F2-2014	---------uus-----ssssssssssssssssu-------------------------------
+;
+end;

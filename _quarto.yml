@@ -4,6 +4,7 @@ project:
   render:
     - index.qmd
     - source/song_segment_coding_5ms.qmd
+    - source/song_alignment_5ms.qmd
 
 execute:
   freeze: auto
@@ -21,6 +22,8 @@ website:
         text: Home
       - href: source/song_segment_coding_5ms.qmd
         text: Song segmenting
+      - href: source/song_alignment_5ms.qmd
+        text: Song alignment
     right:
       - icon: github
         href: https://github.com/maRce10/lbh_cultural_evolution_revBayes

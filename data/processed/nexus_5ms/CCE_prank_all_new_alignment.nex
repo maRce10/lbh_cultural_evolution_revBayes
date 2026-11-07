@@ -1,0 +1,33 @@
+#NEXUS
+Begin data;
+dimensions ntax=25 nchar=48;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+CCE-H1-2008	--ppuuussssssssssssssssss--------------------ssu
+CCE-H1-2009	--ppuuussssssssssssssssss--------------------ssu
+CCE-I1-2008	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I1-2009	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I1-2010	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I1-2011	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I1-2012	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I1-2013	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I1-2014	----uuuusssssssssssdddduupddd--------------uuudu
+CCE-I2-2008	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I2-2009	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I2-2010	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I2-2011	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I2-2012	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I2-2013	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I2-2014	-----uuuffffffffffdddddpuuddddpfffffffffff------
+CCE-I3-2011	---uuufffffffffff---dddpuudddd------------uuuddd
+CCE-I4-2018	---uuuffffffffffffddd---------ppdffff-----ppuudd
+CCE-I5-2018	----upppfffffffff---pddpuuddd--------------puudd
+CCE-J1-2011	----ffffffffffffffddddd---ddddppuu--------------
+CCE-J1-2012	----ffffffffffffffddddd---ddddppuu--------------
+CCE-J1-2013	----ffffffffffffffddddd---ddddppuu--------------
+CCE-J1-2014	----ffffffffffffffddddd---ddddppuu--------------
+CCE-J2-2014	--puffffffffffffffddddd---dddpppfffff-----------
+CCE-K1-2011	uupddpsssssssssssssddddpu--------------------udd
+;
+end;

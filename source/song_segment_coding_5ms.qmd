@@ -24,17 +24,6 @@ knitr::opts_knit$set(root.dir = "..")
 
 ```
 
-```{r add link to github repo, echo = FALSE, results='asis'}
-
-# print link to github repo if any
-if (file.exists("./.git/config")){
-  config <- readLines("./.git/config")
-  url <- grep("url",  config, value = TRUE)
-  url <- gsub("\\turl = |.git$", "", url)
-  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
-  }
-
-```
 
 <div class="alert alert-info">
 
@@ -81,7 +70,7 @@ The goal is to turn each song into a string of letters, one letter per `r segmen
 | **P** | flat tone | frequency slope from `r -tone_cut` to `r tone_cut` kHz/s |
 | **U** | ascending tone | frequency slope ≥ `r tone_cut` kHz/s |
 
-The **trill period** is the duration of one oscillation cycle of the frequency contour. The **frequency slope** is how fast the frequency changes over time. Both are measured on the tailored frequency contour of each song, so only the first step is done by hand. The rest follows from fixed rules.
+The **trill period** is the duration of one oscillation cycle of the frequency contour. The **frequency slope** is how fast the frequency changes over time. Both are measured on the frequency contour of each song. Contours were extracted as dominant frequency contours with the function `freq_ts()` from the warbleR package and then manually tailored where needed. Apart from this tailoring, only the first step is done by hand. The rest follows from fixed rules.
 
 The coding has four steps:
 

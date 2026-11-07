@@ -14,7 +14,7 @@ evolutionary patterns
 **Website:** [Modelling birdsong cultural
 evolution](https://marce10.github.io/lbh_cultural_evolution_revBayes/)
 
-*Updated on 2026-11-06 16:01:03.698653*
+*Updated on 2026-11-07 11:41:07.207871*
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -22,6 +22,7 @@ evolution](https://marce10.github.io/lbh_cultural_evolution_revBayes/)
 
 - [General info](#general-info)
 - [Song segmenting](#song-segmenting)
+- [Song alignment](#song-alignment)
 - [Next steps](#next-steps)
 - [Analysis](#analysis)
 - [In progress](#in-progress)
@@ -39,7 +40,9 @@ and analyzing evolutionary patterns.
 Songs are now coded as sequences of 5 ms segments with 5 possible
 states, in four steps. The [full
 report](https://marce10.github.io/lbh_cultural_evolution_revBayes/source/song_segment_coding_5ms.html)
-is built from `source/song_segment_coding_5ms.qmd`.
+is built from `source/song_segment_coding_5ms.qmd`. Measurements use
+dominant frequency contours extracted with warbleR’s `freq_ts()` and
+manually tailored where needed.
 
 1.  **Manual broad sections**: each song is divided into pure tone and
     trill sections. Consecutive pure tone sections are merged, and
@@ -62,38 +65,79 @@ Output files are in `data/processed`:
 | FASTA of all recordings | `song_sequences_5ms/all_recordings.fa` | `song_sequences_5ms/all_recordings_all_leks.fa` |
 | FASTA files for alignment | `song_sequences_5ms/song_type_sequence/` and `song_sequences_5ms/year_specific_sequence/` | not available |
 
+## Song alignment
+
+The songs of the five leks in the paper are aligned using one sequence
+per song type (`song_sequences_5ms/song_type_sequence/`), as in the
+first version of the study. The [full
+report](https://marce10.github.io/lbh_cultural_evolution_revBayes/source/song_alignment_5ms.html)
+is built from `source/song_alignment_5ms.qmd`.
+
+There are three alignment strategies:
+
+| Strategy | File name | Method |
+|:---|:---|:---|
+| MAFFT-optimal | `optimal` | MAFFT L-INS-i with optimized scores: -2 (different category), -0.75 (same category), 2 (same state) |
+| MAFFT-agnostic | `all.equal` | MAFFT L-INS-i with the same score for any mismatch: 1 (mismatch), 1.5 (same state) |
+| PRANK | `prank` | The most central alignment among 100 seeds |
+
+Each song type is aligned once, and the datasets are built from that
+alignment, so `all` and `bounds` have identical aligned rows:
+
+| Dataset | Songs included | Leks | Nexus files (× 3 strategies) | RevBayes models (× 2 clocks) |
+|:---|:---|:---|---:|---:|
+| `all_new` | All years, recordings after 2000 | BR1, CCE, HC1, SUR, TR1 | 15 | 30 |
+| `bounds_new` | First and last year of each song type, recordings after 2000 | BR1, CCE, HC1, SUR, TR1 | 15 | 30 |
+| `all_old` | All years, including earlier recordings | CCE, HC1, SUR | 9 | 18 |
+| `bounds_old` | First and last year of each song type, including earlier recordings | CCE, HC1, SUR | 9 | 18 |
+| `no.fossils` | Song types in the last year of sampling | BR1, SUR, TR1 | 9 | 18 |
+| **Total** |  |  | **57** | **114** |
+
+`bounds` replaces `early` (only the first year of each song type) from
+the first version of the study. `early` misses song types that persist
+until the last year of sampling, which conflicts with assuming that all
+songs in that year were sampled (rho = 1), so it is now used only as the
+base alignment. Files named `early` are not analyzed.
+
+Output files and scripts:
+
+| Output | Location | Script |
+|:---|:---|:---|
+| Nexus files for RevBayes | `data/processed/nexus_5ms/` | `source/write_nexus_5ms.R` |
+| Alignments, scoring matrices and results | `data/processed/mafft_alignments_5ms/` | `source/align_song_types_5ms.R` |
+| PRANK runs and selection | `data/processed/mafft_alignments_5ms/prank_seeds/` | `source/prank_seeds_5ms.R` |
+| MAFFT score optimization | `data/processed/mafft_optimization_5ms/` | `source/optimize_mafft_costs_5ms.R` |
+
+The raw results of the score optimization
+(`data/processed/mafft_optimization_5ms/by_cost/`) are not in the
+repository and are needed to re-render the alignment report.
+
 ## Next steps
 
 The analyses below were run on the earlier sequences
 (`segments_by_song_type.csv`, 20 segments, 6 states) and **need to be
 redone** with the new 5 ms, 5-state sequences, in this order.
 
-**Sequences**
+**Sequences and alignments**
 
-- [ ] Choose the FASTA version for the alignments: `song_type_sequence`
-  (all years of a song type share one sequence) or
-  `year_specific_sequence` (each taxon uses its own year’s recording; 41
-  of 238 taxa have none and use the representative sequence)
-
-**Alignments**
-
-- [ ] Redo the MAFFT cost optimization for the 5 states
-  (`source/Optimizing_alignment.Rmd`), including the simulated songs and
-  `data/processed/song_segment_lexic.txt`
-- [ ] Update the cost matrices, which still include state `m`
-  (`data/processed/mafft_alignments/*_cost_matrix.txt`)
-- [ ] Update `source/aligning_song_types.Rmd`: read the new FASTA files,
-  and change `symbols="dfmpsu"` to `symbols="dfpsu"` in the nexus files
-- [ ] Rerun the MAFFT and PRANK alignments, and check convergence and
-  gaps (sequences now vary in length: 18 - 38 segments)
-- [ ] Regenerate `data/processed/nexus/`
+- [x] Choose the FASTA version for the alignments: `song_type_sequence`,
+  as in the first version of the study
+- [x] Redo the MAFFT cost optimization for the 5 states
+- [x] Rerun the MAFFT and PRANK alignments, and check gaps and
+  convergence
+- [x] Replace `early` with `bounds` and write the nexus files
+  (`data/processed/nexus_5ms/`)
 
 **RevBayes**
 
+- [ ] Point the `.Rev` scripts to `data/processed/nexus_5ms/`, with the
+  new file names (e.g. `BR1_optimal_bounds_new_alignment.nex`)
 - [ ] Change the GTR model from 6 to 5 states, which means 5 stationary
   frequencies and 10 exchangeability rates (`source/model_GTRG.Rev`,
   `source/no_fossils/model_GTRG_BD.Rev`)
-- [ ] Rerun all models (`source/*.Rev`,
+- [ ] Confirm that rho = 1 and the treatment of gaps still fit the new
+  data (about half of each alignment is gaps)
+- [ ] Rerun all 114 models (`source/*.Rev`,
   `source/trees_with_revbayes.Rmd`), including those with no fossils
 - [ ] Rerun the posterior predictions (P3; `source/Write_P3.Rmd`,
   `source/run_P3_*.sh`)
@@ -109,12 +153,22 @@ redone** with the new 5 ms, 5-state sequences, in this order.
   `source/song_sequence_similarity.qmd`)
 - [ ] Assess the effect of the redundancy of 5 ms sequences
   (neighbouring segments mostly repeat the same state) on the trees
+- [ ] Check which results depend on the alignment strategy, and
+  interpret results found only with PRANK with care, especially in BR1,
+  SUR and the `old` datasets, where PRANK alignments vary among seeds
 
 **Manuscript**
 
 - [ ] Rewrite the methods on sound classification and song coding (now 5
   ms segments and 5 states instead of 20 segments and 6 categories),
   including Fig. 2
+- [ ] Update the methods on alignment: new MAFFT scores and how they
+  were selected, PRANK selection among seeds (both rules were set after
+  inspecting the results), later years taking the aligned row of their
+  song type, MAFFT convergence, and `bounds` instead of `early`
+- [ ] Correct the leks in the analyses with no fossils: the text says “3
+  or more distinct songs” in the last year, but the code uses more than
+  3, which excludes HC1 (exactly 3)
 - [ ] Replace the repeatability results with the agreement between
   copies of the same song type, and update the supplementary text
   (`source/segment_classification_repeatability.qmd`)
@@ -125,7 +179,8 @@ redone** with the new 5 ms, 5-state sequences, in this order.
 
 **Website**
 
-- [ ] Add the alignment and RevBayes sections once they are redone
+- [x] Add the song alignment section
+- [ ] Add the RevBayes section once it is redone
 
 ## Analysis
 
@@ -134,11 +189,8 @@ steps](#next-steps)).
 
 - [Song
   segmenting](https://marce10.github.io/lbh_cultural_evolution_revBayes/source/song_segment_coding_5ms.html)
-- [Optimizing cost for MAFFT
-  alignments](https://rpubs.com/marcelo-araya-salas/601010) (*to be
-  redone*)
-- [Aligning song sequences with mafft and
-  prank](https://rpubs.com/marcelo-araya-salas/601065) (*to be redone*)
+- [Song
+  alignment](https://marce10.github.io/lbh_cultural_evolution_revBayes/source/song_alignment_5ms.html)
 - Revbayes models done (*to be redone*)
 - Making trees with RevBayes (*to be redone*)
 - Run revbayes posterior predictions (P3) (*to be redone*)

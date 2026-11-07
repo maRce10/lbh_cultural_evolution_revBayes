@@ -1,0 +1,31 @@
+#NEXUS
+Begin data;
+dimensions ntax=23 nchar=81;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+BR1-A1-2011	------------------------------------ffffffffffffffff----------------ddddddddddddp
+BR1-A1-2012	------------------------------------ffffffffffffffff----------------ddddddddddddp
+BR1-A1-2013	------------------------------------ffffffffffffffff----------------ddddddddddddp
+BR1-A1-2014	------------------------------------ffffffffffffffff----------------ddddddddddddp
+BR1-A2-2014	----------------------------------------up----------duussssssssssuppddddddddd----
+BR1-C1-2011	------pp--pppuusssssssssssff------------------ffffff----------------fdd----------
+BR1-C1-2012	------pp--pppuusssssssssssff------------------ffffff----------------fdd----------
+BR1-C1-2013	------pp--pppuusssssssssssff------------------ffffff----------------fdd----------
+BR1-C1-2014	------pp--pppuusssssssssssff------------------ffffff----------------fdd----------
+BR1-C2-2014	----uuup--ppsssssssssssssfff------------------ffffff----------------fdd----------
+BR1-D1-2011	-------------------------ffffff--fffffffffffffffffff----------------fdd----------
+BR1-D1-2012	-------------------------ffffff--fffffffffffffffffff----------------fdd----------
+BR1-D1-2013	-------------------------ffffff--fffffffffffffffffff----------------fdd----------
+BR1-D2-2013	-----uup--pppu-------------------ffffffffffffddfffff----------------ddd----------
+BR1-D2-2014	-----uup--pppu-------------------ffffffffffffddfffff----------------ddd----------
+BR1-D3-2013	------upddpppu-------------------fffffffffffffffffff----------------ddd----------
+BR1-D4-2013	-------p--pppu-----------------pppffffffffffffffffff----------------ddd----------
+BR1-E1-2012	----------------------------------ffffffffffffffffff----------------ddddddddduuuu
+BR1-E1-2013	----------------------------------ffffffffffffffffff----------------ddddddddduuuu
+BR1-E1-2014	----------------------------------ffffffffffffffffff----------------ddddddddduuuu
+BR1-E2-2014	----------------------------------------uu----------dduussssssssspppddddddddd----
+BR1-E3-2014	----uuu------u-------------------puuuddpuuffffffffff----------------ddddddddd----
+BR1-F1-2014	uupuuuu------d-------------------duuudduuu----------uuusssssssssuuupd------------
+;
+end;

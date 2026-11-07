@@ -1,0 +1,20 @@
+#NEXUS
+Begin data;
+dimensions ntax=12 nchar=61;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+HC1-C4-2011	-pppppp--------------uu---uuuu----ffffffdd-------ddddddd-----
+HC1-C4-2012	-pppppp--------------uu---uuuu----ffffffdd-------ddddddd-----
+HC1-C4-2013	-pppppp--------------uu---uuuu----ffffffdd-------ddddddd-----
+HC1-K1-2011	uuppppp--------------uusssuuu-----------dp-------dddddddpppuu
+HC1-K1-2012	uuppppp--------------uusssuuu-----------dp-------dddddddpppuu
+HC1-K1-2013	uuppppp--------------uusssuuu-----------dp-------dddddddpppuu
+HC1-K2-2011	---dppp--------------pu---uuuuffffffffffdd-------dppuu-------
+HC1-K2-2012	---dppp--------------pu---uuuuffffffffffdd-------dppuu-------
+HC1-K2-2013	---dppp--------------pu---uuuuffffffffffdd-------dppuu-------
+HC1-K3-2011	dpuuppp--------------pu---upp----fffffffdd-------ddduupp--pdd
+HC1-L1-2011	-ppppppsssssssssssssdpu---uuuu----------d--------------------
+HC1-M1-2011	---dpuu--------------uu---uuuu----------dduuuuppppdddddd-----
+;
+end;

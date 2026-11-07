@@ -1,0 +1,38 @@
+#NEXUS
+Begin data;
+dimensions ntax=30 nchar=85;
+format datatype=standard gap=- missing=? symbols="dfpsu";
+matrix
+
+CCE-A1-1969	-----------ddfffffffff------------------ffffffffffff---fffffffduuud------------------
+CCE-A1-1971	-----------ddfffffffff------------------ffffffffffff---fffffffduuud------------------
+CCE-C1-1969	uupuuuuuuu------------------------------ffffffffffff-----fffffdduupd-----------------
+CCE-C1-1971	uupuuuuuuu------------------------------ffffffffffff-----fffffdduupd-----------------
+CCE-C2-1970	-------uuu------------------------------ffffffffffff---fffffffdpuud------------------
+CCE-C3-1971	uu-ppu-uuu------------------------------pddfffffffff----ffffddduuuduu----------------
+CCE-D1-1969	uu-uuuuuuu------------------------------fffff----------------puuuuddddpppd-----------
+CCE-D1-1971	uu-uuuuuuu------------------------------fffff----------------puuuuddddpppd-----------
+CCE-E1-1970	----u--ppu---sssssssssssss------puuuuuuufffffff--------------------------------------
+CCE-E1-1971	----u--ppu---sssssssssssss------puuuuuuufffffff--------------------------------------
+CCE-F1-1982	-------uuu---ssssssssss-----------------fffff-------------ffddd---dddduupd-----------
+CCE-F1-1989	-------uuu---ssssssssss-----------------fffff-------------ffddd---dddduupd-----------
+CCE-F2-1982	----------------------------------------ffffffffffff---fffffff-uuddddduuddd----------
+CCE-F3-1989	-------uuu-------------------------------fffffffffff------ffffddpddddd----fff-------u
+CCE-F4-1989	--------uu------------------------------ffffffffffff------ffffpuuuddd----------------
+CCE-F5-1989	---uuuuuuu------------------------------ffffffffffff---fffffff-----------------------
+CCE-G1-1989	--------uu---ssssssssssss---------------ffffffffffff------ffffp----------------------
+CCE-H1-2008	---pp--uuu---ssssssssssssssssssssu---------------------------------------------------
+CCE-H1-2009	---pp--uuu---ssssssssssssssssssssu---------------------------------------------------
+CCE-I1-2008	----u--uuu---ssssssssss------------------------------------sdddduupddduuudu----------
+CCE-I1-2014	----u--uuu---ssssssssss------------------------------------sdddduupddduuudu----------
+CCE-I2-2008	-------uuu------------------------------ffffffffff--------dddddpuuddddp---fffffffffff
+CCE-I2-2014	-------uuu------------------------------ffffffffff--------dddddpuuddddp---fffffffffff
+CCE-I3-2011	-------uuu------------------------------fffffffff---------ffdddpuudddduuudd---------d
+CCE-I4-2018	-------uuu------------------------------ffffffffffffdddppdffffppuudd-----------------
+CCE-I5-2018	--------up------------------------------ppfffffff---------ffpddpuudddpuudd-----------
+CCE-J1-2011	------------------------------------------ffffffffff------ffffdddddddddppuu----------
+CCE-J1-2014	------------------------------------------ffffffffff------ffffdddddddddppuu----------
+CCE-J2-2014	--------pu--------------------------------ffffffffff------ffffddddddddpppffff-------f
+CCE-K1-2011	-------uupddpssssssssssss----------------------------------sddddpuudd----------------
+;
+end;
