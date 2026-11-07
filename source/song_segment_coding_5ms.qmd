@@ -24,17 +24,6 @@ knitr::opts_knit$set(root.dir = "..")
 
 ```
 
-```{r add link to github repo, echo = FALSE, results='asis'}
-
-# print link to github repo if any
-if (file.exists("./.git/config")){
-  config <- readLines("./.git/config")
-  url <- grep("url",  config, value = TRUE)
-  url <- gsub("\\turl = |.git$", "", url)
-  cat("\nSource code and data found at [", url, "](", url, ")", sep = "")
-  }
-
-```
 
 <div class="alert alert-info">
 

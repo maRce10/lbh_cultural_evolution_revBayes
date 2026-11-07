@@ -10,8 +10,9 @@ This site contains the analyses behind the manuscript on the cultural evolution 
 ## Analysis reports
 
 - **[Song segmenting](source/song_segment_coding_5ms.qmd)**: coding of songs as sequences of 5 ms segments with five possible states (two kinds of trills and three kinds of pure tones), agreement between copies of the same song type, and FASTA files for alignment
+- **[Song alignment](source/song_alignment_5ms.qmd)**: choice of the MAFFT scores, alignments with MAFFT and PRANK, the datasets for the analyses, and nexus files for RevBayes
 
-## Song segmenting at a glance
+## Song segmenting example
 
 ::: {.figure-gallery}
 ![The four steps of the coding, shown on one song. From top to bottom: manual broad sections, classification of trills, splitting into 5 ms segments, and classification of pure tones.](output/figures/song_coding_steps.png)

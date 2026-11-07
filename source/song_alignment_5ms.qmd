@@ -8,8 +8,6 @@ toc-depth: 2
 toc-location: left
 number-sections: true
 highlight-style: pygments
-execute:
-  freeze: false
 format:
   html:
     df-print: kable
