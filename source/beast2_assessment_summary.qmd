@@ -9,7 +9,7 @@ toc-location: left
 number-sections: true
 highlight-style: pygments
 execute:
-  freeze: false
+  freeze: auto
 format:
   html:
     df-print: kable
