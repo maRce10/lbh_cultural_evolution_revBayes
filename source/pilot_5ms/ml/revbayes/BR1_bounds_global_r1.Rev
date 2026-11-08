@@ -1,0 +1,7 @@
+alignment = "./data/processed/pilot_5ms/nexus/BR1_5ms_bounds.nex"
+fossils = "./data/processed/pilot_5ms/taxa/BR1_5ms_bounds.tsv"
+clade_extant = clade("BR1-A1-2014", "BR1-A2-2014", "BR1-C1-2014", "BR1-C2-2014", "BR1-D2-2014", "BR1-E1-2014", "BR1-E2-2014", "BR1-E3-2014", "BR1-F1-2014")
+base_str = "./output/pilot_5ms/ml/revbayes/BR1_bounds_global_r1"
+clock_model = "./source/model_Global.Rev"
+rep_seed = 101
+source("./source/pilot_5ms/ml/control_ml.Rev")

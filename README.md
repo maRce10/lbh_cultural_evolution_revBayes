@@ -14,7 +14,7 @@ evolutionary patterns
 **Website:** [Modelling birdsong cultural
 evolution](https://marce10.github.io/lbh_cultural_evolution_revBayes/)
 
-*Updated on 2026-11-07 11:41:07.207871*
+*Updated on 2026-11-07 11:56:47.240031*
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -107,10 +107,6 @@ Output files and scripts:
 | Alignments, scoring matrices and results | `data/processed/mafft_alignments_5ms/` | `source/align_song_types_5ms.R` |
 | PRANK runs and selection | `data/processed/mafft_alignments_5ms/prank_seeds/` | `source/prank_seeds_5ms.R` |
 | MAFFT score optimization | `data/processed/mafft_optimization_5ms/` | `source/optimize_mafft_costs_5ms.R` |
-
-The raw results of the score optimization
-(`data/processed/mafft_optimization_5ms/by_cost/`) are not in the
-repository and are needed to re-render the alignment report.
 
 ## Next steps
 

@@ -1,0 +1,11 @@
+model,exit_code,seconds
+HC1_15ms_bounds,1,285
+HC1_15ms_all,1,285
+HC1_5ms_bounds,0,3959
+HC1_5ms_all,0,4775
+BR1_5ms_all,0,7531
+BR1_5ms_bounds,1,11407
+BR1_5ms_bounds,stopped (stuck after burn-in),11445
+BR1_5ms_bounds,0,3971
+SUR_5ms_bounds,0,19634
+SUR_5ms_all,0,26369

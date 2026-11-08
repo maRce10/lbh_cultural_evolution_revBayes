@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beast version="2.7" namespace="beast.base.core:beast.base.inference:beast.base.evolution.alignment:beast.base.evolution.tree:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.base.inference.operator:beast.base.evolution.operator">
+
+  <data id="song" spec="beast.base.evolution.alignment.Alignment" dataType="user defined">
+    <userDataType spec="beast.base.evolution.datatype.UserDataType" codelength="1" states="5" codeMap="D=0,F=1,P=2,S=3,U=4,-=0 1 2 3 4,?=0 1 2 3 4"/>
+    <sequence taxon="BR1-A1-2011" totalcount="5" value="-------------------------------ffffffffffffffffddddddddddddp"/>
+    <sequence taxon="BR1-A1-2014" totalcount="5" value="-------------------------------ffffffffffffffffddddddddddddp"/>
+    <sequence taxon="BR1-A2-2014" totalcount="5" value="--------------------upduussssssssssu---------ppddddddddd----"/>
+    <sequence taxon="BR1-C1-2011" totalcount="5" value="----------------p---ppppuusssssssssssfffffff-ffdd-----------"/>
+    <sequence taxon="BR1-C1-2014" totalcount="5" value="----------------p---ppppuusssssssssssfffffff-ffdd-----------"/>
+    <sequence taxon="BR1-C2-2014" totalcount="5" value="---------------uu---upppsssssssssssssffffffffffdd-----------"/>
+    <sequence taxon="BR1-D1-2011" totalcount="5" value="fffffff---------------------fffffffffffffffffffdd-----------"/>
+    <sequence taxon="BR1-D1-2013" totalcount="5" value="fffffff---------------------fffffffffffffffffffdd-----------"/>
+    <sequence taxon="BR1-D2-2013" totalcount="5" value="---------------uu---ppppu---ffffffffffffddfffffddd----------"/>
+    <sequence taxon="BR1-D2-2014" totalcount="5" value="---------------uu---ppppu---ffffffffffffddfffffddd----------"/>
+    <sequence taxon="BR1-D3-2013" totalcount="5" value="----------u----pd---dpppu---fffffffffffffffffffddd----------"/>
+    <sequence taxon="BR1-D4-2013" totalcount="5" value="---------------pp---ppupp---pffffffffffffffffffddd----------"/>
+    <sequence taxon="BR1-E1-2012" totalcount="5" value="-----------------------------ffffffffffffffffffddddddddduuuu"/>
+    <sequence taxon="BR1-E1-2014" totalcount="5" value="-----------------------------ffffffffffffffffffddddddddduuuu"/>
+    <sequence taxon="BR1-E2-2014" totalcount="5" value="--------------------uudduusssssssssp---------ppddddddddd----"/>
+    <sequence taxon="BR1-E3-2014" totalcount="5" value="----------uuuupuu---uddpuu-----------ffffffffffddddddddd----"/>
+    <sequence taxon="BR1-F1-2014" totalcount="5" value="------uupuuuudduuudduuuuuusssssssssu---------uupd-----------"/>
+  </data>
+
+  <taxonset id="taxonSet" spec="beast.base.evolution.alignment.TaxonSet">
+      <taxon id="BR1-A1-2011" spec="Taxon"/>
+      <taxon id="BR1-A1-2014" spec="Taxon"/>
+      <taxon id="BR1-A2-2014" spec="Taxon"/>
+      <taxon id="BR1-C1-2011" spec="Taxon"/>
+      <taxon id="BR1-C1-2014" spec="Taxon"/>
+      <taxon id="BR1-C2-2014" spec="Taxon"/>
+      <taxon id="BR1-D1-2011" spec="Taxon"/>
+      <taxon id="BR1-D1-2013" spec="Taxon"/>
+      <taxon id="BR1-D2-2013" spec="Taxon"/>
+      <taxon id="BR1-D2-2014" spec="Taxon"/>
+      <taxon id="BR1-D3-2013" spec="Taxon"/>
+      <taxon id="BR1-D4-2013" spec="Taxon"/>
+      <taxon id="BR1-E1-2012" spec="Taxon"/>
+      <taxon id="BR1-E1-2014" spec="Taxon"/>
+      <taxon id="BR1-E2-2014" spec="Taxon"/>
+      <taxon id="BR1-E3-2014" spec="Taxon"/>
+      <taxon id="BR1-F1-2014" spec="Taxon"/>
+  </taxonset>
+
+  <run spec="modelselection.inference.PathSampler" nrOfSteps="100" alpha="0.2" chainLength="1200000" burnInPercentage="60" preBurnin="1500000" rootdir="/home/m/lbh_ml_work/BR1_bounds_global_r1" deleteOldLogs="true">
+cd $(dir)
+$(java) -cp $(java.class.path) beast.pkgmgmt.launcher.BeastLauncher $(resume/overwrite) -java -seed $(seed) beast.xml
+  <mcmc id="mcmc" spec="MCMC" chainLength="1200000">
+    <state id="state" storeEvery="10000">
+      <tree id="tree" spec="beast.base.evolution.tree.Tree" name="stateNode">
+        <trait id="dates" spec="beast.base.evolution.tree.TraitSet" traitname="date-backward" value="BR1-A1-2011=3,BR1-A1-2014=0,BR1-A2-2014=0,BR1-C1-2011=3,BR1-C1-2014=0,BR1-C2-2014=0,BR1-D1-2011=3,BR1-D1-2013=1,BR1-D2-2013=1,BR1-D2-2014=0,BR1-D3-2013=1,BR1-D4-2013=1,BR1-E1-2012=2,BR1-E1-2014=0,BR1-E2-2014=0,BR1-E3-2014=0,BR1-F1-2014=0">
+          <taxa idref="taxonSet"/>
+        </trait>
+        <taxonset idref="taxonSet"/>
+      </tree>
+      <parameter id="origin" name="stateNode" lower="0.0" upper="1000.0">50.0</parameter>
+      <parameter id="birth" name="stateNode" lower="0.0">0.1</parameter>
+      <parameter id="death" name="stateNode" lower="0.0">0.05</parameter>
+      <parameter id="psi" name="stateNode" lower="0.0">0.1</parameter>
+      <parameter id="clockMean" name="stateNode" lower="0.0">0.1</parameter>
+      <parameter id="alpha" name="stateNode" lower="0.0">1.0</parameter>
+      <parameter id="er" name="stateNode" lower="0.0" upper="1.0" dimension="10">0.1</parameter>
+      <parameter id="sf" name="stateNode" lower="0.0" upper="1.0" dimension="5">0.2</parameter>
+    </state>
+
+    <init estimate="false" id="startTree" initial="@tree" spec="beast.base.evolution.tree.coalescent.RandomTree" taxonset="@taxonSet">
+      <populationModel spec="beast.base.evolution.tree.coalescent.ConstantPopulation"><parameter name="popSize">1.0</parameter></populationModel>
+    </init>
+
+    <distribution id="posterior" spec="CompoundDistribution">
+      <distribution id="prior" spec="CompoundDistribution">
+        <distribution id="treePrior" spec="sa.evolution.speciation.SABirthDeathModel" tree="@tree" origin="@origin" birthRate="@birth" deathRate="@death" samplingRate="@psi" conditionOnSampling="false" conditionOnRhoSampling="false">
+          <parameter estimate="false" name="removalProbability" lower="0.0" upper="1.0">0.0</parameter>
+          <parameter estimate="false" name="rho" lower="0.0" upper="1.0">1.0</parameter>
+        </distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@origin"><distr spec="beast.base.inference.distribution.Uniform" lower="0.0" upper="1000.0"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@birth"><distr spec="beast.base.inference.distribution.Exponential" mean="0.1"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@death"><distr spec="beast.base.inference.distribution.Exponential" mean="0.1"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@psi"><distr spec="beast.base.inference.distribution.Exponential" mean="0.1"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@clockMean"><distr spec="beast.base.inference.distribution.Exponential" mean="0.1"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@alpha"><distr spec="beast.base.inference.distribution.Exponential" mean="1.0"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@er"><distr spec="beast.base.inference.distribution.Dirichlet" alpha="1 1 1 1 1 1 1 1 1 1"/></distribution>
+        <distribution spec="beast.base.inference.distribution.Prior" x="@sf"><distr spec="beast.base.inference.distribution.Dirichlet" alpha="1 1 1 1 1"/></distribution>
+      </distribution>
+      <distribution id="likelihood" spec="TreeLikelihood" data="@song" tree="@tree">
+        <siteModel id="siteModel" spec="SiteModel" gammaCategoryCount="4" shape="@alpha">
+          <substModel id="gtr" spec="beastclassic.evolution.substitutionmodel.SVSGeneralSubstitutionModel" symmetric="true" rates="@er">
+            <rateIndicator spec="parameter.BooleanParameter" estimate="false" dimension="10">true</rateIndicator>
+            <frequencies spec="Frequencies" frequencies="@sf"/>
+          </substModel>
+        </siteModel>
+        <branchRateModel id="clock" spec="beast.base.evolution.branchratemodel.StrictClockModel" clock.rate="@clockMean"/>
+      </distribution>
+    </distribution>
+
+    <operator spec="sa.evolution.operators.LeafToSampledAncestorJump" tree="@tree" weight="10"/>
+    <operator spec="sa.evolution.operators.SAWilsonBalding" tree="@tree" weight="10"/>
+    <operator spec="sa.evolution.operators.SAExchange" isNarrow="false" tree="@tree" weight="10"/>
+    <operator spec="sa.evolution.operators.SAExchange" tree="@tree" weight="10"/>
+    <operator spec="sa.evolution.operators.SAUniform" tree="@tree" weight="20"/>
+    <operator spec="sa.evolution.operators.SAScaleOperator" scaleFactor="0.95" tree="@tree" weight="10"/>
+    <operator spec="sa.evolution.operators.SAScaleOperator" scaleFactor="0.95" rootOnly="true" tree="@tree" weight="5"/>
+    <operator spec="ScaleOperator" parameter="@origin" scaleFactor="0.75" weight="5"/>
+    <operator spec="ScaleOperator" parameter="@birth" scaleFactor="0.75" weight="5"/>
+    <operator spec="ScaleOperator" parameter="@death" scaleFactor="0.75" weight="5"/>
+    <operator spec="ScaleOperator" parameter="@psi" scaleFactor="0.75" weight="5"/>
+    <operator spec="ScaleOperator" parameter="@clockMean" scaleFactor="0.75" weight="5"/>
+    <operator spec="ScaleOperator" parameter="@alpha" scaleFactor="0.75" weight="5"/>
+    <operator spec="DeltaExchangeOperator" parameter="@er" delta="0.05" weight="20"/>
+    <operator spec="DeltaExchangeOperator" parameter="@sf" delta="0.05" weight="20"/>
+
+    <logger id="tracelog" fileName="trace.log" logEvery="12000" model="@posterior" sanitiseHeaders="true">
+      <log idref="posterior"/>
+      <log idref="likelihood"/>
+      <log idref="prior"/>
+      <log idref="clockMean"/>
+      <log idref="origin"/>
+    </logger>
+  </mcmc>
+</run>
+</beast>
+

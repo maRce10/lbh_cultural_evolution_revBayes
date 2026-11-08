@@ -5,6 +5,8 @@ project:
     - index.qmd
     - source/song_segment_coding_5ms.qmd
     - source/song_alignment_5ms.qmd
+    - source/revbayes_beast2_comparison.qmd
+    - source/beast2_assessment_summary.qmd
 
 execute:
   freeze: auto
@@ -24,6 +26,10 @@ website:
         text: Song segmenting
       - href: source/song_alignment_5ms.qmd
         text: Song alignment
+      - href: source/revbayes_beast2_comparison.qmd
+        text: Compare RevBayes and BEAST2
+      - href: source/beast2_assessment_summary.qmd
+        text: BEAST2 assessment
     right:
       - icon: github
         href: https://github.com/maRce10/lbh_cultural_evolution_revBayes

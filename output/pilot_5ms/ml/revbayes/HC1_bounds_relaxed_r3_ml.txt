@@ -1,0 +1,2 @@
+stepping_stone,-199.0964
+path_sampling,-199.075

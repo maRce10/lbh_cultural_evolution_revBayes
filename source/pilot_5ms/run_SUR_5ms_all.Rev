@@ -1,0 +1,8 @@
+alignment = "./data/processed/pilot_5ms/nexus/SUR_5ms_all.nex"
+fossils = "./data/processed/pilot_5ms/taxa/SUR_5ms_all.tsv"
+base_str = "./output/pilot_5ms/SUR_5ms_all"
+clade_extant = clade("SUR-J3-2019", "SUR-J5-2019", "SUR-J7-2019", "SUR-K5-2019", "SUR-K6-2019")
+burnin_generations = 100000
+run_generations = 300000
+tuning_interval = 400
+source("./source/pilot_5ms/control.Rev")

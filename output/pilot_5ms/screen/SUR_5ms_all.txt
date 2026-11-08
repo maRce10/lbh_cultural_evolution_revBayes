@@ -1,0 +1,23 @@
+   Processing file "./source/pilot_5ms/control.Rev"
+   Successfully read one character matrix from file './data/processed/pilot_5ms/nexus/SUR_5ms_all.nex'
+   Processing file "./source/pilot_5ms/model_FBDP.Rev"
+   Processing of file "./source/pilot_5ms/model_FBDP.Rev" completed
+   Processing file "./source/model_UExp.Rev"
+   Processing of file "./source/model_UExp.Rev" completed
+   
+   Running burn-in phase of Monte Carlo sampler for 100000 iterations.
+   This simulation runs 2 independent replicates.
+   The MCMCMC simulator runs 1 cold chain and 3 heated chains.
+   The simulator uses 411 different moves in a random move schedule with 617 moves per iteration
+   
+
+Progress:
+0---------------25---------------50---------------75--------------100
+********************************************************************
+
+   
+   Running MCMC simulation
+   This simulation runs 2 independent replicates.
+   The MCMCMC simulator runs 1 cold chain and 3 heated chains.
+   The simulator uses 411 different moves in a random move schedule with 617 moves per iteration
+   

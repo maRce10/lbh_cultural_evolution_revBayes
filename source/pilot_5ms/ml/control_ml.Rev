@@ -1,0 +1,57 @@
+################################################################################
+# Marginal likelihood of the 5 ms pilot models (stepping stone and path sampling)
+#
+# Same model as source/pilot_5ms/control.Rev, with the clock model given by
+# clock_model (global or uncorrelated exponential). Same power posterior settings
+# as the first version of the study (source/no_fossils/ML.Rev): 100 powers,
+# 5000 generations of pre-burnin and 2000 generations per power.
+################################################################################
+
+seed(rep_seed)
+
+taxa <- readTaxonData(fossils)
+song <- readDiscreteCharacterData(alignment)
+
+n_taxa <- taxa.size()
+moves = VectorMoves()
+
+source("./source/pilot_5ms/model_FBDP.Rev")
+source(clock_model)
+
+##### GTR + G with 5 states #####
+sf_hp <- v(1,1,1,1,1)
+sf ~ dnDirichlet(sf_hp)
+
+er_hp <- v(1,1,1,1,1,1,1,1,1,1)
+er ~ dnDirichlet(er_hp)
+
+moves.append( mvSimplexElementScale(er, alpha=10.0, weight=20.0) )
+moves.append( mvSimplexElementScale(sf, alpha=10.0, weight=20.0) )
+
+Q_song := fnGTR(er,sf)
+
+alpha_song ~ dnExponential( 1.0 )
+moves.append( mvScale(alpha_song, lambda=0.01, weight=5.0) )
+moves.append( mvScale(alpha_song, lambda=0.1,  weight=5.0) )
+moves.append( mvScale(alpha_song, lambda=1,    weight=5.0) )
+
+rates_song := fnDiscretizeGamma( alpha_song, alpha_song, 4 )
+
+phySong ~ dnPhyloCTMC(tree=fbd_tree, Q=Q_song, siteRates=rates_song, branchRates=branch_rates, type="Standard")
+phySong.clamp(song)
+
+##### Power posterior #####
+mymodel = model(fbd_tree)
+monitors = VectorMonitors()
+
+pow_p = powerPosterior(mymodel, moves, monitors, base_str + ".out", cats=100, alpha=0.2)
+pow_p.burnin(generations=5000, tuningInterval=200)
+pow_p.run(generations=2000)
+
+ss = steppingStoneSampler(file=base_str + ".out", powerColumnName="power", likelihoodColumnName="likelihood")
+ps = pathSampler(file=base_str + ".out", powerColumnName="power", likelihoodColumnName="likelihood")
+write("stepping_stone", ss.marginal(), filename=base_str + "_ml.txt", separator=",")
+write("\npath_sampling", ps.marginal(), filename=base_str + "_ml.txt", separator=",", append=TRUE)
+write("\n", filename=base_str + "_ml.txt", append=TRUE)
+
+q()

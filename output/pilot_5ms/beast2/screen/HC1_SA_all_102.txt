@@ -1,0 +1,163 @@
+
+                        BEAST v2.7.8, 2002-2025
+             Bayesian Evolutionary Analysis Sampling Trees
+                       Designed and developed by
+ Remco Bouckaert, Alexei J. Drummond, Andrew Rambaut & Marc A. Suchard
+                                    
+                   Centre for Computational Evolution
+                         University of Auckland
+                       r.bouckaert@auckland.ac.nz
+                        alexei@cs.auckland.ac.nz
+                                    
+                   Institute of Evolutionary Biology
+                        University of Edinburgh
+                           a.rambaut@ed.ac.uk
+                                    
+                    David Geffen School of Medicine
+                 University of California, Los Angeles
+                           msuchard@ucla.edu
+                                    
+                      Downloads, Help & Resources:
+                           http://beast2.org/
+                                    
+  Source code distributed under the GNU Lesser General Public License:
+                   http://github.com/CompEvol/beast2
+                                    
+                           BEAST developers:
+   Alex Alekseyenko, Trevor Bedford, Erik Bloomquist, Joseph Heled, 
+ Sebastian Hoehna, Denise Kuehnert, Philippe Lemey, Wai Lok Sibon Li, 
+Gerton Lunter, Sidney Markowitz, Vladimir Minin, Michael Defoin Platel, 
+          Oliver Pybus, Tim Vaughan, Chieh-Hsi Wu, Walter Xie
+                                    
+                               Thanks to:
+          Roald Forsberg, Beth Shapiro and Korbinian Strimmer
+
+Writing state to file output/pilot_5ms/beast2/screen/HC1_SA_all_102.state
+Random number seed: 102
+
+File: HC1_SA_all.xml seed: 102 threads: 1
+Loading package BEAST_CLASSIC v1.6.4 BEAST.app v2.7.8 SRanges v0.1.3 BEAST.base v2.7.8 SA v2.1.1 BEASTLabs v2.0.3 MM v1.2.1    
+HC1-C4-2011=2
+HC1-C4-2012=1
+HC1-C4-2013=0
+HC1-K1-2011=2
+HC1-K1-2012=1
+HC1-K1-2013=0
+HC1-K2-2011=2
+HC1-K2-2012=1
+HC1-K2-2013=0
+HC1-K3-2011=2
+HC1-L1-2011=2
+HC1-M1-2011=2
+HC1-C4-2011 = 2 (2.0)
+HC1-C4-2012 = 1 (1.0)
+HC1-C4-2013 = 0 (0.0)
+HC1-K1-2011 = 2 (2.0)
+HC1-K1-2012 = 1 (1.0)
+HC1-K1-2013 = 0 (0.0)
+HC1-K2-2011 = 2 (2.0)
+HC1-K2-2012 = 1 (1.0)
+HC1-K2-2013 = 0 (0.0)
+HC1-K3-2011 = 2 (2.0)
+2 more...
+HC1-C4-2011: 61 5
+HC1-C4-2012: 61 5
+HC1-C4-2013: 61 5
+HC1-K1-2011: 61 5
+HC1-K1-2012: 61 5
+HC1-K1-2013: 61 5
+HC1-K2-2011: 61 5
+HC1-K2-2012: 61 5
+HC1-K2-2013: 61 5
+HC1-K3-2011: 61 5
+HC1-L1-2011: 61 5
+HC1-M1-2011: 61 5
+Alignment(song)
+  12 taxa
+  61 sites
+  26 patterns
+
+Starting frequencies: [0.2, 0.2, 0.2, 0.2, 0.2]
+  UCRelaxedClockModel: using 22 rate categories to approximate rate distribution across branches.
+Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path: /usr/local/lib:/home/m/beast2_7/beast/jre/lib/amd64
+TreeLikelihood(likelihood) uses BeerLikelihoodCore
+  Alignment(song): [taxa, patterns, sites] = [12, 26, 61]
+===============================================================================
+Citations for this model:
+
+Bouckaert, Remco, Timothy G. Vaughan, Joëlle Barido-Sottani, Sebastián Duchêne, Mathieu Fourment, 
+Alexandra Gavryushkina, Joseph Heled, Graham Jones, Denise Kühnert, Nicola De Maio, Michael Matschiner, 
+Fábio K. Mendes, Nicola F. Müller, Huw A. Ogilvie, Louis du Plessis, Alex Popinga, Andrew Rambaut, 
+David Rasmussen, Igor Siveroni, Marc A. Suchard, Chieh-Hsi Wu, Dong Xie, Chi Zhang, Tanja Stadler, 
+Alexei J. Drummond 
+  BEAST 2.5: An advanced software platform for Bayesian evolutionary analysis. 
+  PLoS computational biology 15, no. 4 (2019): e1006650.
+
+Gavryushkina A, Welch D, Stadler T, Drummond AJ (2014) 
+Bayesian inference of sampled ancestor trees for epidemiology and fossil calibration. 
+PLoS Comput Biol 10(12): e1003919. doi:10.1371/journal.pcbi.1003919
+
+Edwards, C. J., Suchard, M. A., Lemey, P., ... & Valdiosera, C. E. (2011).
+Ancient hybridization and an Irish origin for the modern polar bear matriline.
+Current Biology, 21(15), 1251-1258.
+
+Drummond AJ, Ho SYW, Phillips MJ, Rambaut A (2006) Relaxed Phylogenetics and
+  Dating with Confidence. PLoS Biol 4(5): e88
+
+===============================================================================
+Start likelihood: -417.22801558598815 
+Writing file output/pilot_5ms/beast2/HC1_SA_all.102.log
+Writing file output/pilot_5ms/beast2/HC1_SA_all.102.trees
+         Sample      posterior     likelihood
+              0      -417.2280      -356.0943 --
+        2500000      -202.8032      -177.1080 --
+        5000000      -202.5918      -176.8669 --
+        7500000      -203.0323      -174.5633 --
+       10000000      -203.8601      -172.8697 --
+       12500000      -197.4213      -175.4048 --
+       15000000      -200.9249      -170.5567 18s/Msamples
+       17500000      -199.6946      -171.7251 18s/Msamples
+       20000000      -195.6900      -173.4126 19s/Msamples
+       22500000      -198.4363      -174.2512 21s/Msamples
+       25000000      -201.2135      -178.4803 22s/Msamples
+       27500000      -204.6731      -175.3436 23s/Msamples
+       30000000      -202.3987      -173.7675 23s/Msamples
+       32500000      -208.1208      -178.5146 24s/Msamples
+       35000000      -208.2453      -184.0517 25s/Msamples
+       37500000      -200.4953      -173.0771 25s/Msamples
+       40000000      -201.1997      -177.8175 24s/Msamples
+       42500000      -199.9284      -171.0150 24s/Msamples
+       45000000      -204.2007      -175.5953 25s/Msamples
+       47500000      -203.0508      -176.8639 25s/Msamples
+       50000000      -198.6045      -172.7361 25s/Msamples
+
+Operator                                                         Tuning    #accept    #reject      Pr(m)  Pr(acc|m)
+sa.evolution.operators.LeafToSampledAncestorJump(unknown)             -      90206    2765072    0.05714    0.03159 
+sa.evolution.operators.SAWilsonBalding(unknown)                       -     242204    2616649    0.05714    0.08472 
+sa.evolution.operators.SAExchange(unknown)                            -     100109    2757653    0.05714    0.03503 
+sa.evolution.operators.SAExchange(unknown)                            -     648439    2209380    0.05714    0.22690 
+sa.evolution.operators.SAUniform(unknown)                             -    3633760    2077585    0.11429    0.63624 
+sa.evolution.operators.SAScaleOperator(unknown)                 0.52805     558993    2299579    0.05714    0.19555 
+sa.evolution.operators.SAScaleOperator(unknown)                 0.47162     278142    1151980    0.02857    0.19449 
+ScaleOperator(unknown)                                          0.46084     352100    1075905    0.02857    0.24657 
+ScaleOperator(unknown)                                          0.21516     398343    1030572    0.02857    0.27877 
+ScaleOperator(unknown)                                          0.17909     384512    1043766    0.02857    0.26921 
+ScaleOperator(unknown)                                          0.24032     381996    1046945    0.02857    0.26733 
+ScaleOperator(unknown)                                          0.29079     371140    1056559    0.02857    0.25996 
+ScaleOperator(unknown)                                          0.18471     367566    1059122    0.02857    0.25764 
+beast.base.inference.operator.DeltaExchangeOperator(unknown)    2.57889     224926    5490042    0.11429    0.03936 Try setting delta to about 1.289
+beast.base.inference.operator.DeltaExchangeOperator(unknown)    0.61133    1071652    4641838    0.11429    0.18757 
+beast.base.inference.operator.IntRandomWalkOperator(unknown)          -    1714486    1144148    0.05714    0.59976 
+beast.base.inference.operator.SwapOperator(unknown)                   -    1695257    1160128    0.05714    0.59371 
+beast.base.inference.operator.UniformOperator(unknown)                -    2054642     804605    0.05714    0.71860 
+
+     Tuning: The value of the operator's tuning parameter, or '-' if the operator can't be optimized.
+    #accept: The total number of times a proposal by this operator has been accepted.
+    #reject: The total number of times a proposal by this operator has been rejected.
+      Pr(m): The probability this operator is chosen in a step of the MCMC (i.e. the normalized weight).
+  Pr(acc|m): The acceptance probability (#accept as a fraction of the total proposals for this operator).
+
+
+Total calculation time: 1360.166 seconds
+End likelihood: -198.60451758729857
+Done!

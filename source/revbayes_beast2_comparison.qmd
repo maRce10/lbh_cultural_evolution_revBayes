@@ -1,0 +1,553 @@
+---
+title: RevBayes and BEAST2 comparison
+subtitle: Fossilized birth-death and stratigraphic range models on the 5 ms song sequences
+author: <a href="https://marce10.github.io/">Marcelo Araya-Salas</a>
+date: "`r Sys.Date()`"
+toc: true
+toc-depth: 2
+toc-location: left
+number-sections: true
+highlight-style: pygments
+execute:
+  freeze: false
+format:
+  html:
+    df-print: kable
+    code-fold: true
+    code-tools: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r set root directory, echo = FALSE}
+
+# set working directory as project directory
+knitr::opts_knit$set(root.dir = "..")
+
+```
+
+<div class="alert alert-info">
+
+# Purpose {.unnumbered .unlisted}
+
+Evaluate BEAST2 as an option for modelling song evolution, by asking two questions on two leks (HC1 and BR1):
+
+1. Does BEAST2 give the same results as RevBayes under the same model? This is tested with the `bounds` and `all` datasets
+2. Does treating the first and last year of a song type as a stratigraphic range change the results? This is tested with the `bounds` dataset, which has the first and last year of each song type
+3. Do marginal likelihoods computed from BEAST2 runs lead to the same clock model choice (global vs relaxed) as RevBayes?
+
+</div>
+
+&nbsp;
+
+# Load packages {.unnumbered .unlisted}
+
+```{r load packages, message = FALSE, warning = FALSE}
+
+sketchy::load_packages(packages = c("knitr", "ggplot2", "ape", "coda"))
+
+theme_set(theme_classic(base_size = 13))
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, dpi = 120, fig.retina = 1)
+
+leks <- c("HC1", "BR1")
+rb_dir <- "./output/pilot_5ms"
+bt_dir <- "./output/pilot_5ms/beast2"
+burnin <- 0.1          # discarded from the start of BEAST2 runs. RevBayes runs have a separate burn-in stage
+n_trees <- 1500        # trees per run used to compare clades
+models <- c("RevBayes FBD", "BEAST2 SA", "BEAST2 sRanges")
+
+```
+
+# The models
+
+All models use the same data for each lek: the `bounds` dataset aligned with MAFFT-optimal, with the first and last year of each song type. RevBayes FBD and BEAST2 SA are also compared on the `all` dataset, with all the years of each song type. Sequences have 5 states and all years of a song type share one sequence.
+
+| Model | Software | Tree prior | First and last year of a song type |
+|:---|:---|:---|:---|
+| **RevBayes FBD** | RevBayes 1.4.2 | Fossilized birth-death with sampled ancestors (`dnFBDP`) | Two separate samples |
+| **BEAST2 SA** | BEAST 2.7.7 (BEAST.base 2.7.8), SA 2.1.1 | Fossilized birth-death with sampled ancestors | Two separate samples |
+| **BEAST2 sRanges** | BEAST 2.7.7 (BEAST.base 2.7.8), SRanges 0.1.3 | Birth-death stratigraphic ranges | The two ends of one range |
+
+The rest of the model is shared:
+
+- **Substitution model**: GTR + gamma with 4 rate categories, 5 stationary frequencies and 10 exchangeability rates, both with flat Dirichlet priors, and an exponential prior (mean 1) on the gamma shape
+- **Clock**: relaxed, with branch rates drawn from an exponential distribution. Its mean has an exponential prior (mean 0.1)
+- **Tree prior**: exponential priors (mean 0.1) on the origination, loss and sampling rates, a uniform prior between 0 and 1000 years on the origin, and all songs in the last year sampled (rho = 1), conditioned on the origin time
+- **Gaps**: treated as missing data
+
+The models differ in three other ways:
+
+- **MCMC**: RevBayes uses 2 runs with 4 chains each, a burn-in of 50,000 generations and 150,000 generations after it. BEAST2 uses 2 independent replicates with a single chain, 50 million generations each, of which the first 10% are discarded
+- **Relaxed clock**: rates are continuous in RevBayes and take discrete categories in BEAST2
+- **Tree moves**: the moves for sRanges are those enabled in the example of the package, without the jumps between tips and sampled ancestors or the exchange moves used in SA. The example flags some of these moves as pending review
+
+In sRanges the sequence of a song type is placed at both ends of its range, as in the examples of the package. The scripts are in `source/pilot_5ms/` and `source/pilot_5ms/beast2/`.
+
+```{r datasets}
+
+taxa <- lapply(setNames(leks, leks), function(l) read.delim(file.path("./data/processed/pilot_5ms/taxa", paste0(l, "_5ms_bounds.tsv")))$taxon)
+song_type <- function(x) sub("-[0-9]{4}$", "", x)
+
+data.frame(lek = leks, taxa = lengths(taxa), song_types = sapply(taxa, function(x) length(unique(song_type(x)))),
+           song_types_in_more_than_one_year = sapply(taxa, function(x) sum(table(song_type(x)) > 1)))
+
+```
+
+# Convergence
+
+```{r read logs}
+
+read_log <- function(file) read.delim(file, comment.char = "#", check.names = FALSE)
+drop_burnin <- function(d) d[-seq_len(floor(nrow(d) * burnin)), ]
+
+rb_names <- c(likelihood = "Likelihood", origin = "origin_time", origination = "speciation_rate", loss = "extinction_rate",
+              sampling = "psi", clock = "branch_rates_mean", alpha = "alpha_song")
+bt_names <- c(likelihood = "likelihood", origin = "origin", origination = "birth", loss = "death",
+              sampling = "psi", clock = "clockMean", alpha = "alpha")
+par_labels <- c(likelihood = "Log likelihood", origin = "Origin age (years)", origination = "Song origination rate", loss = "Song loss rate",
+                sampling = "Sampling rate (psi)", clock = "Mean rate of change", alpha = "Gamma shape")
+
+# same columns and names for all logs, including frequencies and exchangeability rates
+standardize <- function(d, names_map, sep) {
+  er <- d[, grep(paste0("^er", sep), names(d))]
+  sf <- d[, grep(paste0("^sf", sep), names(d))]
+  out <- d[, unname(names_map)]
+  names(out) <- names(names_map)
+  names(er) <- paste0("er", seq_len(10))
+  names(sf) <- paste0("sf", seq_len(5))
+  cbind(out, er, sf)
+}
+
+rb_file <- function(lek, set, run) file.path(rb_dir, sprintf("%s_5ms_%s_run_%d.log", lek, set, run))
+bt_file <- function(lek, model, seed) file.path(bt_dir, sprintf("%s_%s.%d.log", lek, model, seed))
+
+read_runs <- function(lek) {
+  r <- list()
+  if (file.exists(rb_file(lek, "bounds", 2)))
+    r[["RevBayes FBD"]] <- lapply(1:2, function(i) standardize(read_log(rb_file(lek, "bounds", i)), rb_names, "\\["))
+  r[["BEAST2 SA"]] <- lapply(c(101, 102), function(s) standardize(drop_burnin(read_log(bt_file(lek, "SA", s))), bt_names, "\\."))
+  r[["BEAST2 sRanges"]] <- lapply(c(101, 102), function(s) standardize(drop_burnin(read_log(bt_file(lek, "SR", s))), bt_names, "\\."))
+  if (file.exists(rb_file(lek, "all", 2)))
+    r[["RevBayes FBD, all"]] <- lapply(1:2, function(i) standardize(read_log(rb_file(lek, "all", i)), rb_names, "\\["))
+  if (file.exists(bt_file(lek, "SA_all", 102)))
+    r[["BEAST2 SA, all"]] <- lapply(c(101, 102), function(s) standardize(drop_burnin(read_log(bt_file(lek, "SA_all", s))), bt_names, "\\."))
+  r
+}
+
+runs <- lapply(setNames(leks, leks), read_runs)
+pooled <- lapply(runs, function(x) lapply(x, function(r) do.call(rbind, r)))
+available <- lapply(runs, function(x) intersect(models, names(x)))
+missing <- unlist(lapply(leks, function(l) if (!"RevBayes FBD" %in% available[[l]]) l))
+
+```
+
+```{r missing runs, echo = FALSE, results = "asis"}
+
+if (length(missing))
+  cat(sprintf('\n\n::: {.callout-warning}\n**Pending**: the RevBayes FBD runs with the `bounds` dataset of %s have not finished, so they are not included yet.\n:::\n\n',
+              paste(missing, collapse = " and ")))
+
+```
+
+Two independent runs of the same model should give the same results. We use the effective sample size (ESS, the smallest across parameters and runs) and the potential scale reduction factor (PSRF, the largest across parameters), which is close to 1 when the runs agree.
+
+```{r convergence}
+
+psrf <- function(a, b, p) {
+  n <- min(nrow(a), nrow(b))
+  gelman.diag(mcmc.list(mcmc(a[[p]][seq_len(n)]), mcmc(b[[p]][seq_len(n)])), autoburnin = FALSE)$psrf[1]
+}
+
+convergence <- do.call(rbind, lapply(leks, function(l) do.call(rbind, lapply(names(runs[[l]]), function(m) {
+  r <- runs[[l]][[m]]
+  data.frame(lek = l, model = m, samples_per_run = nrow(r[[1]]),
+             minimum_ESS = round(min(sapply(r, function(d) sapply(names(par_labels), function(p) effectiveSize(mcmc(d[[p]])))))),
+             maximum_PSRF = round(max(sapply(names(par_labels), function(p) psrf(r[[1]], r[[2]], p))), 3))
+}))))
+
+convergence
+
+```
+
+All runs converged.
+
+# Parameters
+
+Medians with 95% intervals, combining both runs of each model.
+
+```{r parameter functions}
+
+ci <- function(x) sprintf("%.3g (%.3g to %.3g)", median(x), quantile(x, 0.025), quantile(x, 0.975))
+med <- function(l, m, p) median(pooled[[l]][[m]][[p]])
+rel <- function(l, a, b, p) round(100 * (med(l, b, p) / med(l, a, p) - 1))
+
+par_table <- function(l) data.frame(parameter = unname(par_labels),
+                                    sapply(available[[l]], function(m) sapply(names(par_labels), function(p) ci(pooled[[l]][[m]][[p]]))),
+                                    check.names = FALSE, row.names = NULL)
+
+par_plot <- function(l) {
+  d <- do.call(rbind, lapply(available[[l]], function(m) do.call(rbind, lapply(names(par_labels), function(p) {
+    x <- pooled[[l]][[m]][[p]]
+    data.frame(model = m, parameter = par_labels[[p]], median = median(x), low = quantile(x, 0.025), high = quantile(x, 0.975))
+  }))))
+  d$model <- factor(d$model, rev(models))
+  d$parameter <- factor(d$parameter, par_labels)
+  ggplot(d, aes(median, model)) +
+    geom_linerange(aes(xmin = low, xmax = high), linewidth = 0.7, color = "#408AB4") +
+    geom_point(size = 2.8, color = "#408AB4") +
+    facet_wrap(~ parameter, scales = "free_x", ncol = 2) +
+    labs(x = "Median and 95% interval", y = NULL) +
+    theme(panel.grid.major.y = element_line(color = "gray92"))
+}
+
+```
+
+::: {.panel-tabset}
+
+## HC1
+
+```{r parameters HC1, fig.width = 10, fig.height = 6.5}
+
+par_table("HC1")
+par_plot("HC1")
+
+```
+
+## BR1
+
+```{r parameters BR1, fig.width = 10, fig.height = 6.5}
+
+par_table("BR1")
+par_plot("BR1")
+
+```
+
+:::
+
+```{r parameter differences}
+
+pars <- setdiff(names(par_labels), "likelihood")
+shift <- do.call(rbind, lapply(leks, function(l) {
+  d <- data.frame(lek = l, parameter = unname(par_labels[pars]), sRanges_vs_SA = sapply(pars, function(p) sprintf("%+d%%", rel(l, "BEAST2 SA", "BEAST2 sRanges", p))))
+  d$SA_vs_RevBayes <- if ("RevBayes FBD" %in% available[[l]]) sapply(pars, function(p) sprintf("%+d%%", rel(l, "RevBayes FBD", "BEAST2 SA", p))) else "pending"
+  d
+}))
+rownames(shift) <- NULL
+
+shift
+
+```
+
+Differences between medians. BEAST2 SA reproduces RevBayes when both are available. sRanges changes the parameters of the tree prior more in BR1 than in HC1: in BR1 it has a higher song loss rate (`r sprintf("%+d%%", rel("BR1", "BEAST2 SA", "BEAST2 sRanges", "loss"))`) and origination rate (`r sprintf("%+d%%", rel("BR1", "BEAST2 SA", "BEAST2 sRanges", "origination"))`), although intervals overlap. Parameters of song change (mean rate of change and gamma shape) are similar in all models. Intervals are wide, so the priors probably contribute to these estimates.
+
+# Trees
+
+## Comparing trees between models
+
+The two models represent persisting song types differently. With sampled ancestors, the first year of a song type can be the direct ancestor of other song types, so its two years do not necessarily form a clade. With stratigraphic ranges, both years belong to one lineage. Comparing clades of individual taxa would therefore mix real differences with differences in representation.
+
+We compare clades at the level of **song types**: each clade is the set of song types below a node, counting a song type when any of its years is there. Support is the proportion of trees with that set, out of `r n_trees` trees per run.
+
+```{r read trees}
+
+read_rb_trees <- function(lek, run, set = "bounds") {
+  d <- read_log(file.path(rb_dir, sprintf("%s_5ms_%s_run_%d.trees", lek, set, run)))
+  s <- d[[ncol(d)]]
+  lapply(s[round(seq(1, length(s), length.out = n_trees))], function(t) read.tree(text = t))
+}
+
+read_bt_trees <- function(lek, model, seed) {
+  x <- read.nexus(file.path(bt_dir, sprintf("%s_%s.%d.trees", lek, model, seed)))
+  x <- x[-seq_len(floor(length(x) * burnin))]
+  x <- x[round(seq(1, length(x), length.out = n_trees))]
+  lapply(seq_along(x), function(i) x[[i]])
+}
+
+# clades as sets of song types, without single song types or all of them
+type_clades <- function(trees) {
+  counts <- list()
+  for (tr in trees) {
+    tr <- collapse.singles(tr)
+    types <- song_type(tr$tip.label)
+    n_types <- length(unique(types))
+    parts <- prop.part(tr)
+    keys <- unique(vapply(parts, function(p) paste(sort(unique(types[p])), collapse = " "), ""))
+    size <- lengths(strsplit(keys, " "))
+    for (k in keys[size > 1 & size < n_types]) counts[[k]] <- (if (is.null(counts[[k]])) 0 else counts[[k]]) + 1
+  }
+  unlist(counts) / length(trees)
+}
+
+clade_table <- lapply(setNames(leks, leks), function(l) {
+  sets <- list("BEAST2 SA 1" = read_bt_trees(l, "SA", 101), "BEAST2 SA 2" = read_bt_trees(l, "SA", 102),
+               "BEAST2 sRanges 1" = read_bt_trees(l, "SR", 101), "BEAST2 sRanges 2" = read_bt_trees(l, "SR", 102))
+  if ("RevBayes FBD" %in% available[[l]]) sets <- c(list("RevBayes FBD 1" = read_rb_trees(l, 1), "RevBayes FBD 2" = read_rb_trees(l, 2)), sets)
+  support <- lapply(sets, type_clades)
+  all_clades <- unique(unlist(lapply(support, names)))
+  m <- sapply(support, function(x) { v <- x[all_clades]; v[is.na(v)] <- 0; v })
+  rownames(m) <- gsub(paste0(l, "-"), "", all_clades)
+  m
+})
+
+mean_support <- lapply(clade_table, function(m) {
+  out <- data.frame(row.names = rownames(m))
+  for (mod in models) { k <- grep(paste0("^", mod, " [12]$"), colnames(m)); if (length(k)) out[[mod]] <- rowMeans(m[, k, drop = FALSE]) }
+  out
+})
+
+```
+
+## Agreement
+
+```{r agreement}
+
+agreement <- function(l, a, b) {
+  m <- clade_table[[l]]
+  if (!all(c(a, b) %in% colnames(m))) return(NULL)
+  data.frame(lek = l, comparison = paste(a, "vs", b), correlation = round(cor(m[, a], m[, b]), 3),
+             largest_difference = round(max(abs(m[, a] - m[, b])), 2))
+}
+
+do.call(rbind, lapply(leks, function(l) rbind(
+  agreement(l, "RevBayes FBD 1", "RevBayes FBD 2"), agreement(l, "BEAST2 SA 1", "BEAST2 SA 2"),
+  agreement(l, "BEAST2 sRanges 1", "BEAST2 sRanges 2"), agreement(l, "RevBayes FBD 1", "BEAST2 SA 1"),
+  agreement(l, "BEAST2 SA 1", "BEAST2 sRanges 1"), agreement(l, "BEAST2 SA 2", "BEAST2 sRanges 2"))))
+
+```
+
+Replicates of the same model agree in all cases, so differences between models are not due to a lack of convergence.
+
+```{r support plot, fig.width = 9, fig.height = 8}
+
+support_plot <- do.call(rbind, lapply(leks, function(l) {
+  s <- mean_support[[l]]
+  out <- data.frame(lek = l, x = s[["BEAST2 SA"]], y = s[["BEAST2 sRanges"]], panel = "BEAST2 sRanges")
+  if (!is.null(s[["RevBayes FBD"]])) out <- rbind(out, data.frame(lek = l, x = s[["BEAST2 SA"]], y = s[["RevBayes FBD"]], panel = "RevBayes FBD"))
+  out
+}))
+support_plot$lek <- factor(support_plot$lek, leks)
+
+ggplot(support_plot, aes(x, y)) +
+  geom_abline(slope = 1, intercept = 0, color = "gray70") +
+  geom_point(size = 2.2, color = "#408AB4", alpha = 0.7) +
+  facet_grid(lek ~ panel) +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
+  labs(x = "Clade support in BEAST2 SA", y = "Clade support in the other model")
+
+```
+
+Each point is a clade of song types, and the line marks equal support.
+
+## Supported clades
+
+Clades with at least 20% support in any model, ordered by their largest support:
+
+::: {.panel-tabset}
+
+```{r clade tables, results = "asis", echo = FALSE}
+
+for (l in leks) {
+  s <- mean_support[[l]]
+  s <- s[apply(s, 1, max) >= 0.2, , drop = FALSE]
+  s <- s[order(-apply(s, 1, max)), , drop = FALSE]
+  cat("\n\n## ", l, "\n\n", sep = "")
+  print(kable(data.frame(clade = rownames(s), round(s, 2), check.names = FALSE, row.names = NULL)))
+  cat("\n\n")
+}
+
+```
+
+:::
+
+```{r br1 differences, echo = FALSE}
+
+s <- mean_support[["BR1"]]
+d <- s[["BEAST2 sRanges"]] - s[["BEAST2 SA"]]
+names(d) <- rownames(s)
+top_loss <- names(d)[which.min(d)]
+top_gain <- names(d)[which.max(d)]
+strong <- sapply(c(SA = "BEAST2 SA", sRanges = "BEAST2 sRanges"), function(m) sum(s[[m]] >= 0.5))
+
+```
+
+In HC1, the models support the same clades of song types. In BR1, sRanges changes them: the largest drop is for {`r top_loss`} (from `r round(s[top_loss, "BEAST2 SA"], 2)` with SA to `r round(s[top_loss, "BEAST2 sRanges"], 2)` with sRanges), and the largest increase for {`r top_gain`} (from `r round(s[top_gain, "BEAST2 SA"], 2)` to `r round(s[top_gain, "BEAST2 sRanges"], 2)`). SA supports `r strong[["SA"]]` clades with more than 50% support and sRanges `r strong[["sRanges"]]`.
+
+# RevBayes and BEAST2 with the same model
+
+RevBayes FBD and BEAST2 SA implement the same model, so they should give the same results with both datasets.
+
+```{r equivalence parameters}
+
+pairs <- list(bounds = c("RevBayes FBD", "BEAST2 SA"), all = c("RevBayes FBD, all", "BEAST2 SA, all"))
+
+equivalence <- do.call(rbind, lapply(leks, function(l) do.call(rbind, lapply(names(pairs), function(ds) {
+  m <- pairs[[ds]]
+  if (!all(m %in% names(pooled[[l]]))) return(NULL)
+  do.call(rbind, lapply(pars, function(p) data.frame(lek = l, dataset = ds, parameter = par_labels[[p]],
+    RevBayes = ci(pooled[[l]][[m[1]]][[p]]), BEAST2_SA = ci(pooled[[l]][[m[2]]][[p]]),
+    difference = 100 * (median(pooled[[l]][[m[2]]][[p]]) / median(pooled[[l]][[m[1]]][[p]]) - 1))))
+}))))
+rownames(equivalence) <- NULL
+
+data.frame(equivalence[, 1:5], difference = sprintf("%+.0f%%", equivalence$difference))
+
+```
+
+```{r equivalence trees}
+
+equivalence_trees <- do.call(rbind, lapply(leks, function(l) do.call(rbind, lapply(names(pairs), function(ds) {
+  if (!all(pairs[[ds]] %in% names(pooled[[l]]))) return(NULL)
+  if (ds == "bounds") {
+    m <- clade_table[[l]]
+    a <- rowMeans(m[, c("RevBayes FBD 1", "RevBayes FBD 2")]); b <- rowMeans(m[, c("BEAST2 SA 1", "BEAST2 SA 2")])
+  } else {
+    s <- list(rb = c(type_clades(read_rb_trees(l, 1, "all")), type_clades(read_rb_trees(l, 2, "all"))),
+              sa = c(type_clades(read_bt_trees(l, "SA_all", 101)), type_clades(read_bt_trees(l, "SA_all", 102))))
+    s <- lapply(s, function(x) tapply(x, names(x), sum) / 2)
+    k <- union(names(s$rb), names(s$sa))
+    a <- s$rb[k]; b <- s$sa[k]; a[is.na(a)] <- 0; b[is.na(b)] <- 0
+  }
+  data.frame(lek = l, dataset = ds, clades = length(a), correlation = round(cor(a, b), 3), largest_difference = round(max(abs(a - b)), 2))
+}))))
+
+equivalence_trees
+
+```
+
+Support of clades of song types, combining both runs of each model. Across both leks and datasets, parameter medians differ by at most `r round(max(abs(equivalence$difference)))`% and clade support by at most `r max(equivalence_trees$largest_difference)`, so BEAST2 SA reproduces RevBayes.
+
+# RevBayes with all and bounds
+
+For reference, the same comparison between datasets in RevBayes:
+
+```{r all vs bounds}
+
+do.call(rbind, lapply(leks, function(l) data.frame(lek = l, parameter = unname(par_labels),
+  bounds = if ("RevBayes FBD" %in% names(pooled[[l]])) sapply(names(par_labels), function(p) ci(pooled[[l]][["RevBayes FBD"]][[p]])) else "pending",
+  all = sapply(names(par_labels), function(p) ci(pooled[[l]][["RevBayes FBD, all"]][[p]])), row.names = NULL)))
+
+```
+
+The sampling rate is higher with `all`, as this dataset has more samples.
+
+# Marginal likelihood: global vs relaxed clock
+
+The first version of the study chose the clock model with marginal likelihoods (stepping stone and path sampling in RevBayes). Here the same comparison is run in both programs, for both leks and datasets, with the FBD (SA) tree prior:
+
+- **RevBayes**: `powerPosterior` with the settings of the first version: 100 powers, 5,000 generations of pre-burnin and 2,000 generations per power (RevBayes 1.4.2 adds 2,000 generations of pre-burnin per power and discards the first 25%)
+- **BEAST2**: path sampler of the MODEL_SELECTION package (1.6.2) with 100 steps, 1.2 million states per step (60% discarded) and 1.5 million states of pre-burnin. This is about the same number of proposals per power as RevBayes (281 moves per generation in HC1 `bounds`)
+- **Powers**: in both, quantiles of a Beta(0.2, 1) distribution
+- **Relaxed clock in BEAST2**: continuous branch rates with an exponential prior, as in RevBayes. The rate categories of the BEAST2 runs above have no prior term, which leaves the posterior unchanged but would inflate the marginal likelihood by about *n* log(*n*) for *n* branches
+- **Replicates**: 3 per model and program, with different seeds
+
+Stepping stone (Xie et al. 2011) and path sampling are computed with the same code for both programs, from the log-likelihood samples at each power (`source/pilot_5ms/ml/summarise_ml.R`). For RevBayes this reproduces the estimates printed by RevBayes. The estimate printed by the BEAST2 path sampler is not used: it is 37 to 48 log units lower than what its own samples give. The scripts are in `source/pilot_5ms/ml/`.
+
+```{r marginal likelihoods}
+
+ml <- read.csv("./output/pilot_5ms/ml/ml_estimates.csv")
+ml$program <- factor(ml$program, levels = c("RevBayes", "BEAST2"))
+ml$dataset <- factor(ml$dataset, levels = c("bounds", "all"))
+ml$lek <- factor(ml$lek, levels = leks)
+
+msd <- function(x) sprintf("%.1f ± %.1f", mean(x), sd(x))
+ml_table <- aggregate(stepping_stone ~ lek + dataset + program + clock, ml, msd)
+ml_table <- reshape(ml_table, idvar = c("lek", "dataset", "program"), timevar = "clock", direction = "wide")
+names(ml_table) <- sub("stepping_stone.", "", names(ml_table))
+
+# Bayes factors (relaxed minus global), with all combinations of replicates
+bf <- do.call(rbind, lapply(split(ml, list(ml$lek, ml$dataset, ml$program), drop = TRUE), function(x) {
+  d <- outer(x$stepping_stone[x$clock == "relaxed"], x$stepping_stone[x$clock == "global"], "-")
+  data.frame(lek = x$lek[1], dataset = x$dataset[1], program = x$program[1], log_BF = mean(d), min = min(d), max = max(d))
+}))
+ml_table <- merge(ml_table, bf, sort = FALSE)
+ml_table <- ml_table[order(ml_table$lek, ml_table$dataset, ml_table$program), ]
+rownames(ml_table) <- NULL
+data.frame(ml_table[, c("lek", "dataset", "program", "global", "relaxed")],
+           log_BF = sprintf("%.1f (%.1f to %.1f)", ml_table$log_BF, ml_table$min, ml_table$max))
+
+```
+
+Mean ± standard deviation of the log marginal likelihood (stepping stone) across replicates, and the log Bayes factor of the relaxed over the global clock (mean and range across all pairs of replicates). Path sampling gives the same values within 0.2 log units.
+
+```{r bayes factor plot, fig.width = 7, fig.height = 3.5}
+
+ggplot(bf, aes(x = dataset, y = log_BF, color = program)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray60") +
+  geom_pointrange(aes(ymin = min, ymax = max), position = position_dodge(width = 0.4)) +
+  facet_wrap(~ lek) +
+  scale_color_manual(values = c(RevBayes = "#2a6f97", BEAST2 = "#e07a5f")) +
+  labs(x = NULL, y = "log Bayes factor\n(relaxed vs global)", color = NULL)
+
+```
+
+```{r ml differences, echo = FALSE}
+
+bfw <- reshape(bf[, c("lek", "dataset", "program", "log_BF")], idvar = c("lek", "dataset"), timevar = "program", direction = "wide")
+bf_diff <- max(abs(bfw$log_BF.BEAST2 - bfw$log_BF.RevBayes))
+raw <- aggregate(stepping_stone ~ lek + dataset + clock + program, ml, mean)
+raw <- reshape(raw, idvar = c("lek", "dataset", "clock"), timevar = "program", direction = "wide")
+raw$diff <- raw$stepping_stone.BEAST2 - raw$stepping_stone.RevBayes
+raw_br1 <- max(abs(raw$diff[raw$lek == "BR1"]))
+raw_hc1 <- range(raw$diff[raw$lek == "HC1"])
+
+```
+
+Both programs favor the relaxed clock in both leks and datasets, with log Bayes factors between `r round(min(bf$log_BF), 1)` and `r round(max(bf$log_BF), 1)`. The two programs differ by at most `r round(bf_diff, 1)` log units in the Bayes factor, which is close to the variation between replicates.
+
+The marginal likelihoods themselves agree within `r round(raw_br1, 1)` log units in BR1. In HC1, BEAST2 gives values `r round(-raw_hc1[2], 1)` to `r round(-raw_hc1[1], 1)` log units lower than RevBayes, with more variation between replicates. The difference comes from the powers below about 0.1, where the samples are close to the prior: there, the mean log-likelihood falls faster in BEAST2. It is not caused by different priors. Sampling the HC1 `bounds` model from the prior, ignoring the data, gives the same prior distributions in both programs:
+
+```{r prior check}
+
+pc_dir <- "./output/pilot_5ms/ml/prior_check"
+rb_prior <- read.table(file.path(pc_dir, "HC1_bounds_revbayes_prior.log"), header = TRUE, sep = "\t", check.names = FALSE)
+bt_prior <- read.table(file.path(pc_dir, "HC1_bounds_beast2_prior.7.log"), header = TRUE, comment.char = "#", check.names = FALSE)
+bt_prior <- bt_prior[-seq_len(nrow(bt_prior) * burnin), ]
+
+prior_pairs <- list("origin time" = c("origin_time", "origin"), "origination rate" = c("speciation_rate", "birth"),
+                    "loss rate" = c("extinction_rate", "death"), "sampling rate" = c("psi", "psi"),
+                    "mean clock rate" = c("branch_rates_mean", "clockMean"), "gamma shape" = c("alpha_song", "alpha"),
+                    "sampled ancestors" = c("num_samp_anc", "tree.SAcount"))
+
+do.call(rbind, lapply(names(prior_pairs), function(p) data.frame(parameter = p,
+  RevBayes = ci(rb_prior[[prior_pairs[[p]][1]]]), BEAST2_SA = ci(bt_prior[[prior_pairs[[p]][2]]]))))
+
+```
+
+Prior medians and 95% intervals. The priors match, so the difference in HC1 comes from how each program samples the powers close to the prior. It affects both clock models alike and cancels out in the Bayes factor.
+
+```{r save summary, echo = FALSE}
+
+# key results, read by source/beast2_assessment_summary.qmd
+tree_agreement <- do.call(rbind, lapply(leks, function(l) rbind(
+  agreement(l, "RevBayes FBD 1", "RevBayes FBD 2"), agreement(l, "BEAST2 SA 1", "BEAST2 SA 2"),
+  agreement(l, "BEAST2 sRanges 1", "BEAST2 sRanges 2"), agreement(l, "RevBayes FBD 1", "BEAST2 SA 1"),
+  agreement(l, "BEAST2 SA 1", "BEAST2 sRanges 1"), agreement(l, "BEAST2 SA 2", "BEAST2 sRanges 2"))))
+strong_by_lek <- sapply(leks, function(l) sapply(c(SA = "BEAST2 SA", sRanges = "BEAST2 sRanges"), function(m) sum(mean_support[[l]][[m]] >= 0.5)))
+saveRDS(list(convergence = convergence, shift = shift, equivalence = equivalence, equivalence_trees = equivalence_trees,
+             tree_agreement = tree_agreement, mean_support = mean_support, strong = strong_by_lek, top_loss = top_loss, top_gain = top_gain,
+             bf = bf, raw_ml = raw, prior_check = prior_pairs),
+        "./output/pilot_5ms/comparison_summary.rds")
+
+```
+
+# Conclusions
+
+- **BEAST2 and RevBayes agree** when using the same model, in both leks and with both datasets, which supports the BEAST2 setup
+- **Stratigraphic ranges can change the trees**: they made little difference in HC1, but in BR1 they changed the support of several clades of song types and the rates of song origination and loss. BR1 has more song types and more of them recorded in more than one year
+- **The models differ in more than ranges**: sRanges uses fewer tree moves than SA. Its replicates agree, but this does not rule out effects of the moves on the results
+- **Marginal likelihoods can be computed from BEAST2 runs**: computed from the BEAST2 path sampler samples (not its printed estimate), they lead to the same choice as RevBayes, with the relaxed clock favored in both leks and datasets and similar Bayes factors
+- **Still to test**: SUR, the lek with the most song types, and posterior predictive tests in BEAST2
+
+---
+
+&nbsp;
+
+<!-- add packages used, system details and versions  -->
+
+<font size="4">Session information</font>
+
+```{r session info, echo = FALSE}
+
+sessionInfo()
+
+```

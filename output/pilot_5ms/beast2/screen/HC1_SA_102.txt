@@ -1,0 +1,421 @@
+
+                        BEAST v2.7.8, 2002-2025
+             Bayesian Evolutionary Analysis Sampling Trees
+                       Designed and developed by
+ Remco Bouckaert, Alexei J. Drummond, Andrew Rambaut & Marc A. Suchard
+                                    
+                   Centre for Computational Evolution
+                         University of Auckland
+                       r.bouckaert@auckland.ac.nz
+                        alexei@cs.auckland.ac.nz
+                                    
+                   Institute of Evolutionary Biology
+                        University of Edinburgh
+                           a.rambaut@ed.ac.uk
+                                    
+                    David Geffen School of Medicine
+                 University of California, Los Angeles
+                           msuchard@ucla.edu
+                                    
+                      Downloads, Help & Resources:
+                           http://beast2.org/
+                                    
+  Source code distributed under the GNU Lesser General Public License:
+                   http://github.com/CompEvol/beast2
+                                    
+                           BEAST developers:
+   Alex Alekseyenko, Trevor Bedford, Erik Bloomquist, Joseph Heled, 
+ Sebastian Hoehna, Denise Kuehnert, Philippe Lemey, Wai Lok Sibon Li, 
+Gerton Lunter, Sidney Markowitz, Vladimir Minin, Michael Defoin Platel, 
+          Oliver Pybus, Tim Vaughan, Chieh-Hsi Wu, Walter Xie
+                                    
+                               Thanks to:
+          Roald Forsberg, Beth Shapiro and Korbinian Strimmer
+
+Random number seed: 102
+
+File: HC1_SA.xml seed: 102 threads: 1
+Loading package BEAST_CLASSIC v1.6.4 BEAST.app v2.7.8 SRanges v0.1.3 BEAST.base v2.7.8 SA v2.1.1 BEASTLabs v2.0.3 MM v1.2.1    
+HC1-C4-2011=2
+HC1-C4-2013=0
+HC1-K1-2011=2
+HC1-K1-2013=0
+HC1-K2-2011=2
+HC1-K2-2013=0
+HC1-K3-2011=2
+HC1-L1-2011=2
+HC1-M1-2011=2
+HC1-C4-2011 = 2 (2.0)
+HC1-C4-2013 = 0 (0.0)
+HC1-K1-2011 = 2 (2.0)
+HC1-K1-2013 = 0 (0.0)
+HC1-K2-2011 = 2 (2.0)
+HC1-K2-2013 = 0 (0.0)
+HC1-K3-2011 = 2 (2.0)
+HC1-L1-2011 = 2 (2.0)
+HC1-M1-2011 = 2 (2.0)
+HC1-C4-2011: 61 5
+HC1-C4-2013: 61 5
+HC1-K1-2011: 61 5
+HC1-K1-2013: 61 5
+HC1-K2-2011: 61 5
+HC1-K2-2013: 61 5
+HC1-K3-2011: 61 5
+HC1-L1-2011: 61 5
+HC1-M1-2011: 61 5
+Alignment(song)
+  9 taxa
+  61 sites
+  26 patterns
+
+Starting frequencies: [0.2, 0.2, 0.2, 0.2, 0.2]
+  UCRelaxedClockModel: using 16 rate categories to approximate rate distribution across branches.
+Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path: /usr/local/lib:/home/m/beast2_7/beast/jre/lib/amd64
+TreeLikelihood(likelihood) uses BeerLikelihoodCore
+  Alignment(song): [taxa, patterns, sites] = [9, 26, 61]
+===============================================================================
+Citations for this model:
+
+Bouckaert, Remco, Timothy G. Vaughan, Joëlle Barido-Sottani, Sebastián Duchêne, Mathieu Fourment, 
+Alexandra Gavryushkina, Joseph Heled, Graham Jones, Denise Kühnert, Nicola De Maio, Michael Matschiner, 
+Fábio K. Mendes, Nicola F. Müller, Huw A. Ogilvie, Louis du Plessis, Alex Popinga, Andrew Rambaut, 
+David Rasmussen, Igor Siveroni, Marc A. Suchard, Chieh-Hsi Wu, Dong Xie, Chi Zhang, Tanja Stadler, 
+Alexei J. Drummond 
+  BEAST 2.5: An advanced software platform for Bayesian evolutionary analysis. 
+  PLoS computational biology 15, no. 4 (2019): e1006650.
+
+Gavryushkina A, Welch D, Stadler T, Drummond AJ (2014) 
+Bayesian inference of sampled ancestor trees for epidemiology and fossil calibration. 
+PLoS Comput Biol 10(12): e1003919. doi:10.1371/journal.pcbi.1003919
+
+Edwards, C. J., Suchard, M. A., Lemey, P., ... & Valdiosera, C. E. (2011).
+Ancient hybridization and an Irish origin for the modern polar bear matriline.
+Current Biology, 21(15), 1251-1258.
+
+Drummond AJ, Ho SYW, Phillips MJ, Rambaut A (2006) Relaxed Phylogenetics and
+  Dating with Confidence. PLoS Biol 4(5): e88
+
+===============================================================================
+Start likelihood: -348.21146007874677 
+Writing file output/pilot_5ms/beast2/HC1_SA.102.log
+Writing file output/pilot_5ms/beast2/HC1_SA.102.trees
+         Sample      posterior     likelihood
+              0      -348.2114      -308.4768 --
+        2500000      -192.0883      -169.0997 --
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+        5000000      -199.1873      -173.6544 --
+        7500000      -189.0850      -171.4113 --
+       10000000      -198.5323      -174.9909 --
+       12500000      -199.6257      -169.3637 --
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new -> HC1_SA.xml.state
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       15000000      -195.6730      -169.7431 26s/Msamples
+       17500000      -192.3809      -174.7898 26s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       20000000      -186.1691      -169.6317 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       22500000      -201.9665      -185.2458 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new -> HC1_SA.xml.state
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       25000000      -189.6154      -166.1810 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       27500000      -190.9936      -169.9483 27s/Msamples
+       30000000      -193.1159      -176.1523 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       32500000      -192.7899      -173.4079 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new -> HC1_SA.xml.state
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       35000000      -200.4536      -173.8201 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       37500000      -192.8908      -170.7741 27s/Msamples
+       40000000      -198.6731      -182.0936 27s/Msamples
+       42500000      -195.9163      -174.4647 27s/Msamples
+       45000000      -191.3451      -169.5383 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       47500000      -198.1272      -178.3604 27s/Msamples
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+java.nio.file.NoSuchFileException: HC1_SA.xml.state.new
+	at java.base/sun.nio.fs.UnixException.translateToIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(Unknown Source)
+	at java.base/sun.nio.fs.UnixCopyFile.move(Unknown Source)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.move(Unknown Source)
+	at java.base/java.nio.file.Files.move(Unknown Source)
+	at beast.base.inference.State.storeToFile(Unknown Source)
+	at beast.base.inference.MCMC.doLoop(Unknown Source)
+	at beast.base.inference.MCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMCMC.run(Unknown Source)
+	at beastfx.app.beast.BeastMain.main(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.run(Unknown Source)
+	at beast.pkgmgmt.launcher.BeastLauncher.main(Unknown Source)
+       50000000      -200.1272      -176.9745 27s/Msamples
+
+Operator                                                         Tuning    #accept    #reject      Pr(m)  Pr(acc|m)
+sa.evolution.operators.LeafToSampledAncestorJump(unknown)             -      73633    2782317    0.05714    0.02578 
+sa.evolution.operators.SAWilsonBalding(unknown)                       -     301913    2555209    0.05714    0.10567 
+sa.evolution.operators.SAExchange(unknown)                            -     152741    2706352    0.05714    0.05342 
+sa.evolution.operators.SAExchange(unknown)                            -     814869    2044043    0.05714    0.28503 
+sa.evolution.operators.SAUniform(unknown)                             -    3607323    2106285    0.11429    0.63136 
+sa.evolution.operators.SAScaleOperator(unknown)                 0.52746     611251    2243721    0.05714    0.21410 
+sa.evolution.operators.SAScaleOperator(unknown)                 0.46198     289688    1138007    0.02857    0.20291 
+ScaleOperator(unknown)                                          0.43121     366604    1060997    0.02857    0.25680 
+ScaleOperator(unknown)                                          0.20571     375088    1051111    0.02857    0.26300 
+ScaleOperator(unknown)                                          0.17892     385093    1044256    0.02857    0.26942 
+ScaleOperator(unknown)                                          0.21272     393467    1035536    0.02857    0.27534 
+ScaleOperator(unknown)                                          0.28842     372172    1057625    0.02857    0.26030 
+ScaleOperator(unknown)                                          0.18902     378486    1048202    0.02857    0.26529 
+beast.base.inference.operator.DeltaExchangeOperator(unknown)    2.70347     212275    5503553    0.11429    0.03714 Try setting delta to about 1.352
+beast.base.inference.operator.DeltaExchangeOperator(unknown)    0.62583    1046654    4667637    0.11429    0.18316 
+beast.base.inference.operator.IntRandomWalkOperator(unknown)          -    1608796    1249251    0.05714    0.56290 
+beast.base.inference.operator.SwapOperator(unknown)                   -    1459434    1396416    0.05714    0.51103 
+beast.base.inference.operator.UniformOperator(unknown)                -    1891622     968374    0.05714    0.66141 
+
+     Tuning: The value of the operator's tuning parameter, or '-' if the operator can't be optimized.
+    #accept: The total number of times a proposal by this operator has been accepted.
+    #reject: The total number of times a proposal by this operator has been rejected.
+      Pr(m): The probability this operator is chosen in a step of the MCMC (i.e. the normalized weight).
+  Pr(acc|m): The acceptance probability (#accept as a fraction of the total proposals for this operator).
+
+
+Total calculation time: 1386.57 seconds
+End likelihood: -200.12726608057656
+Done!

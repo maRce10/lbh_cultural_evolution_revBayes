@@ -1,0 +1,8 @@
+alignment = "./data/processed/pilot_5ms/nexus/BR1_5ms_bounds.nex"
+fossils = "./data/processed/pilot_5ms/taxa/BR1_5ms_bounds.tsv"
+base_str = "./output/pilot_5ms/BR1_5ms_bounds"
+clade_extant = clade("BR1-A1-2014", "BR1-A2-2014", "BR1-C1-2014", "BR1-C2-2014", "BR1-D2-2014", "BR1-E1-2014", "BR1-E2-2014", "BR1-E3-2014", "BR1-F1-2014")
+burnin_generations = 50000
+run_generations = 150000
+tuning_interval = 200
+source("./source/pilot_5ms/control.Rev")

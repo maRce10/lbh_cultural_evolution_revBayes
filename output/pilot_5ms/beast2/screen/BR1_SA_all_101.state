@@ -1,0 +1,34 @@
+<itsabeastystatewerein version='2.0' sample='50000000'>
+<statenode id='tree'>((((0:0.0,(((11:0.0,(12:0.0,21:1.0)24:1.0)26:0.8147700249329901,(13:0.0,14:1.0)42:1.8147700249329901)35:0.1323600998946528,(17:0.0,(18:0.0,19:1.0)30:1.0)39:0.9471301248276429)27:0.052869875172357084)44:0.3513535593671264,(((1:0.0,(2:0.0,3:1.0)29:1.0)25:0.3573012870077248,15:1.3573012870077248)36:0.6426987129922752,10:0.0)37:0.3513535593671264)23:0.8055152328093049,16:3.1568687921764313)40:4.333544149543759,(((4:2.712090254786141,(20:2.4239349555141825,22:2.4239349555141825)33:0.2881552992719585)32:1.6444917259181993,(5:0.0,(6:0.0,(7:0.0,8:1.0)31:1.0)34:1.0)43:1.3565819807043402)41:1.3593900514680008,9:5.715972032172341)38:2.7744409095478497)28:0.0</statenode>
+<statenode id='origin'>origin[1 1] (0.0,1000.0): 9.056200984455073 </statenode>
+<statenode id='birth'>birth[1 1] (0.0,Infinity): 0.19666866400252092 </statenode>
+<statenode id='death'>death[1 1] (0.0,Infinity): 0.06828823324072986 </statenode>
+<statenode id='psi'>psi[1 1] (0.0,Infinity): 0.3584314941633307 </statenode>
+<statenode id='clockMean'>clockMean[1 1] (0.0,Infinity): 0.03343303754916697 </statenode>
+<statenode id='rateCategories'>rateCategories[44 1] (0,43): 32 11 32 42 8 1 24 24 29 19 38 11 34 25 30 41 38 11 33 15 11 40 25 8 2 34 38 35 29 0 0 17 39 28 7 12 7 36 31 42 40 28 33 0 </statenode>
+<statenode id='alpha'>alpha[1 1] (0.001,1000.0): 3.4245370914019158 </statenode>
+<statenode id='er'>er[10 1] (0.0,1.0): 0.013316309505392513 0.11608246274006181 0.003646690539122883 0.1076800213572853 0.08562188998715076 0.0424591288932689 0.002025823887716431 0.008124677916002854 0.5187665088192528 0.10227648635473008 </statenode>
+<statenode id='sf'>sf[5 1] (0.0,1.0): 0.2709376951227936 0.262908629592547 0.0961038804430485 0.17260768693586145 0.19744210790576378 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"unknown","p":"NaN","accept":92163,"reject":2767620,"acceptFC":92110,"rejectFC":2766517,"rejectIv":1449030,"rejectOp":1449030},
+{"id":"unknown","p":"NaN","accept":187178,"reject":2669093,"acceptFC":187093,"rejectFC":2668072,"rejectIv":156995,"rejectOp":86551},
+{"id":"unknown","p":"NaN","accept":91612,"reject":2766193,"acceptFC":91565,"rejectFC":2765001,"rejectIv":2018311,"rejectOp":2018311},
+{"id":"unknown","p":"NaN","accept":652193,"reject":2205932,"acceptFC":651885,"rejectFC":2204986,"rejectIv":1710415,"rejectOp":1710415},
+{"id":"unknown","p":"NaN","accept":3682688,"reject":2029173,"acceptFC":3681193,"rejectFC":2028321,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.30236777067644693,"accept":101266,"reject":2755922,"acceptFC":100625,"rejectFC":2755414,"rejectIv":2683343,"rejectOp":2555998},
+{"id":"unknown","p":0.5203642942232938,"accept":290245,"reject":1139092,"acceptFC":289738,"rejectFC":1139010,"rejectIv":924176,"rejectOp":268635},
+{"id":"unknown","p":0.49655169359090806,"accept":350118,"reject":1078379,"acceptFC":349814,"rejectFC":1078121,"rejectIv":301179,"rejectOp":0},
+{"id":"unknown","p":0.26226388887517205,"accept":362263,"reject":1066271,"acceptFC":361841,"rejectFC":1066116,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.17131804119229296,"accept":376993,"reject":1051713,"acceptFC":376502,"rejectFC":1051601,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.27907872583670135,"accept":367835,"reject":1059259,"acceptFC":367334,"rejectFC":1059123,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.3745275861783654,"accept":367548,"reject":1060986,"acceptFC":367129,"rejectFC":1060805,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.1966992540734306,"accept":372673,"reject":1055837,"acceptFC":372232,"rejectFC":1055729,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":1.218987846805867,"accept":296661,"reject":5415243,"acceptFC":295158,"rejectFC":5414397,"rejectIv":4644445,"rejectOp":4644445},
+{"id":"unknown","p":0.487062641051706,"accept":1026419,"reject":4687778,"acceptFC":1024521,"rejectFC":4687290,"rejectIv":1304016,"rejectOp":1304016},
+{"id":"unknown","p":"NaN","accept":1811838,"reject":1046099,"acceptFC":1811105,"rejectFC":1045688,"rejectIv":1002349,"rejectOp":1002349},
+{"id":"unknown","p":"NaN","accept":1807608,"reject":1050181,"acceptFC":1806929,"rejectFC":1049712,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":2167064,"reject":690865,"acceptFC":2166226,"rejectFC":690569,"rejectIv":0,"rejectOp":0}
+]}
+-->
