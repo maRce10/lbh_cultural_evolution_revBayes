@@ -456,6 +456,91 @@ do.call(rbind, lapply(leks, function(l) data.frame(lek = l, parameter = unname(p
 
 The sampling rate is higher with `all`, as this dataset has more samples.
 
+# sRanges vs RevBayes with all
+
+sRanges and RevBayes FBD with `all` are two ways of using the persistence of song types. sRanges treats a song type as one lineage between its first and last year. RevBayes with `all` keeps every year as a separate sample, so persistence shows up as many samples of the same song type. RevBayes with `bounds` is included as a reference, since it uses the same data as sRanges.
+
+```{r sranges vs all parameters}
+
+sr_all <- do.call(rbind, lapply(leks, function(l) data.frame(lek = l, parameter = unname(par_labels[pars]),
+  sRanges = sapply(pars, function(p) ci(pooled[[l]][["BEAST2 sRanges"]][[p]])),
+  RevBayes_all = sapply(pars, function(p) ci(pooled[[l]][["RevBayes FBD, all"]][[p]])),
+  sRanges_vs_all = sapply(pars, function(p) sprintf("%+d%%", rel(l, "RevBayes FBD, all", "BEAST2 sRanges", p))),
+  bounds_vs_all = sapply(pars, function(p) sprintf("%+d%%", rel(l, "RevBayes FBD, all", "RevBayes FBD", p))),
+  row.names = NULL)))
+
+sr_all
+
+```
+
+Medians with 95% intervals, and differences between medians relative to RevBayes with `all`: sRanges (`sRanges_vs_all`) and RevBayes with `bounds` (`bounds_vs_all`). The sampling rate has a different meaning in each model: sampled years per lineage and year in FBD, and sampled range ends in sRanges.
+
+```{r sranges vs all trees}
+
+rb_all_support <- lapply(setNames(leks, leks), function(l) {
+  x <- c(type_clades(read_rb_trees(l, 1, "all")), type_clades(read_rb_trees(l, 2, "all")))
+  tapply(x, names(x), sum) / 2
+})
+
+support_vs_all <- lapply(setNames(leks, leks), function(l) {
+  s <- mean_support[[l]]
+  a <- rb_all_support[[l]]
+  names(a) <- gsub(paste0(l, "-"), "", names(a))
+  k <- union(rownames(s), names(a))
+  out <- data.frame(row.names = k, "RevBayes FBD, bounds" = s[k, "RevBayes FBD"], "RevBayes FBD, all" = as.numeric(a[k]),
+                    "BEAST2 sRanges" = s[k, "BEAST2 sRanges"], check.names = FALSE)
+  out[is.na(out)] <- 0
+  out
+})
+
+compare_support <- function(l, a, b) {
+  s <- support_vs_all[[l]]
+  data.frame(lek = l, comparison = paste(a, "vs", b), correlation = round(cor(s[[a]], s[[b]]), 3),
+             largest_difference = round(max(abs(s[[a]] - s[[b]])), 2))
+}
+
+do.call(rbind, lapply(leks, function(l) rbind(
+  compare_support(l, "BEAST2 sRanges", "RevBayes FBD, all"),
+  compare_support(l, "RevBayes FBD, bounds", "RevBayes FBD, all"),
+  compare_support(l, "RevBayes FBD, bounds", "BEAST2 sRanges"))))
+
+```
+
+Agreement in the support of clades of song types, combining both runs of each model.
+
+::: {.panel-tabset}
+
+```{r sranges vs all clade tables, results = "asis", echo = FALSE}
+
+for (l in leks) {
+  s <- support_vs_all[[l]]
+  s <- s[apply(s, 1, max) >= 0.2, , drop = FALSE]
+  s <- s[order(-apply(s, 1, max)), , drop = FALSE]
+  cat("\n\n## ", l, "\n\n", sep = "")
+  print(kable(data.frame(clade = rownames(s), round(s, 2), check.names = FALSE, row.names = NULL)))
+  cat("\n\n")
+}
+
+```
+
+:::
+
+Clades with at least 20% support in any of the three models.
+
+```{r sranges vs all text, echo = FALSE}
+
+sv <- function(l, p, col) sr_all[[col]][sr_all$lek == l & sr_all$parameter == par_labels[[p]]]
+cs <- function(l, a, b) compare_support(l, a, b)$correlation
+
+```
+
+- **HC1**: all three models agree on the trees (correlations of `r cs("HC1", "BEAST2 sRanges", "RevBayes FBD, all")` or more) and on most parameters
+- **BR1, parameters of the tree prior**: sRanges is closer to `all` than RevBayes with `bounds` is. The song loss rate differs from `all` by `r sv("BR1", "loss", "sRanges_vs_all")` in sRanges and by `r sv("BR1", "loss", "bounds_vs_all")` with `bounds`, and the origination rate by `r sv("BR1", "origination", "sRanges_vs_all")` and `r sv("BR1", "origination", "bounds_vs_all")`. So the higher loss rate of sRanges, compared with SA on `bounds`, matches what the intermediate years in `all` show
+- **BR1, trees**: sRanges does not get closer to `all`. Its clade support correlates `r cs("BR1", "BEAST2 sRanges", "RevBayes FBD, all")` with `all`, while `bounds` correlates `r cs("BR1", "RevBayes FBD, bounds", "RevBayes FBD, all")`. Some clades are intermediate in `all`: {D1 E3} has `r round(support_vs_all$BR1["D1 E3", "RevBayes FBD, bounds"], 2)` support with `bounds`, `r round(support_vs_all$BR1["D1 E3", "RevBayes FBD, all"], 2)` with `all` and `r round(support_vs_all$BR1["D1 E3", "BEAST2 sRanges"], 2)` with sRanges
+- **Rates of song change**: similar in all models, except a higher mean rate of change in sRanges for HC1 (`r sv("HC1", "clock", "sRanges_vs_all")`), with widely overlapping intervals
+
+Adding the intermediate years (`all`) and modelling song types as ranges (sRanges) both move the rates of song origination and loss in the same direction, away from `bounds`. They do not lead to the same trees, so the topology depends on how persistence is modelled.
+
 # Marginal likelihood: global vs relaxed clock
 
 The first version of the study chose the clock model with marginal likelihoods (stepping stone and path sampling in RevBayes). Here the same comparison is run in both programs, for both leks and datasets, with the FBD (SA) tree prior:
