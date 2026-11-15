@@ -9,3 +9,6 @@ archive/output/revbayes_output_in_single_R_object.RDS
 /_site/
 /.quarto/
 **/*.quarto_ipynb
+
+# RevBayes command history
+history.txt
