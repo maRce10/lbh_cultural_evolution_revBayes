@@ -31,7 +31,7 @@
 # ASSUMPTIONS - check against your files:
 #   1. Input file names (note the order of the parts differs between them):
 #        alignment: ./data/processed/nexus/<lek>_<align>_<times>_<historical>_alignment.nex
-#        taxa:      ./data/processed/historical/<lek>_taxa_<times>_<historical>.tsv
+#        taxa:      ./data/processed/taxa/<lek>_taxa_<times>_<historical>.tsv
 #   2. Taxa files are tab-separated with a header line and the taxon name in
 #      the first column; names end in the 4-digit sampling year (BR1-A1-2014).
 #   3. The control scripts are ./source/Control_ML_global.Rev and
@@ -45,13 +45,13 @@ set -uo pipefail   # error on unset variables; a pipeline fails if any part fail
                    # (no `set -e`: one failed run should not stop the whole loop)
 
 # ----------------------------- configuration --------------------------------
-RB_DIR="/programs/revbayes-1.4.2"
+RB_DIR="/programs/revbayes-1.3.0"
 RB_EXE="${RB_DIR}/rb-mpi"
 NPROC=32                                     # MPI processes per run
-MODEL_DIR="./source/lek_models_ML"           # where the generated Rev scripts go
+MODEL_DIR="./scripts/lek_models_ML"           # where the generated Rev scripts go
 ALIGN_DIR="./data/processed/nexus"
-TAXA_DIR="./data/processed/historical"
-CONTROL_DIR="./source"                       # holds Control_ML_<clock>.Rev
+TAXA_DIR="./data/processed/taxa"
+CONTROL_DIR="./scripts"                       # holds Control_ML_<clock>.Rev
 RB_OUT_DIR="./output/revbayes"               # RevBayes output (inside Rev scripts)
 OUT_DIR="./output/revbayes/marginal_likelihoods"
 RESUME="${RESUME:-0}"                        # 1 = skip runs with a finished log
