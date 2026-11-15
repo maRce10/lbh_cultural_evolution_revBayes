@@ -358,7 +358,7 @@ Each song type is aligned once, using a base alignment with a single row per son
 - **`all`**: all the years in which a song type was recorded
 - **`bounds`**: only the first and last year of each song type
 
-The two datasets therefore have identical aligned rows and differ only in the years included. There are three versions of the historical records: `recent` includes recordings after 2000, `full` also includes the earlier ones, for the three leks that have them, and `none` has only the song types of the last year of sampling, aligned on their own, for the leks with more than 3 song types in that year.
+The two datasets therefore have identical aligned rows and differ only in the years included. There are three versions of the historical records: `recent` includes recordings after 2000, `full` also includes the earlier ones, for the three leks that have them, and `none` has only the song types of the last year of sampling, aligned on their own, for the leks with more than 3 song types in that year. As these are the extant song types, this dataset is called `extant_none`, so all file names have the same four parts: lek, strategy, dataset and historical records.
 
 The base alignment is not analyzed on its own: as it counts each song type only in its first year, it misses song types that persist until the last year of sampling. This would contradict the assumption that all songs present in that year were sampled. Both `all` and `bounds` keep the same songs in the last year:
 
@@ -411,14 +411,14 @@ On average, repeatability is `r round(mean(prank_sel$split_half_central), 2)` fo
 
 ## Results
 
-The base and `none` alignments of each strategy, with their similarity to the MAFFT-optimal alignment:
+The base and `extant_none` alignments of each strategy, with their similarity to the MAFFT-optimal alignment:
 
 ```{r alignment results}
 
 aln_res <- read.csv(file.path(aln_dir, "alignment_results.csv"), stringsAsFactors = FALSE)
-direct <- aln_res[aln_res$set %in% c("early_recent", "early_full", "none"), ]
+direct <- aln_res[aln_res$set %in% c("early_recent", "early_full", "extant_none"), ]
 sets <- unique(direct[, c("lek", "set")])
-sets <- sets[order(factor(sets$set, c("early_recent", "early_full", "none")), sets$lek), ]
+sets <- sets[order(factor(sets$set, c("early_recent", "early_full", "extant_none")), sets$lek), ]
 
 # aligned pairs of states, as integer keys: state r of song i aligned with state s of song j
 pairs_of <- function(a) {
@@ -511,7 +511,7 @@ for (l in paper_leks) {
 
 ## Nexus files
 
-The datasets are saved as nexus files for RevBayes (`scripts/write_nexus.R`), with `symbols="dfpsu"` and PRANK alignments converted back to song states. There is one file per lek, strategy and dataset, for a total of 57. Each has a matching taxon file in `data/processed/taxa/` with the age of each taxon in years before the last year of sampling (one file per lek and dataset, shared by the three strategies):
+The datasets are saved as nexus files for RevBayes (`scripts/write_nexus.R`), with `symbols="dfpsu"` and PRANK alignments converted back to song states. There is one file per lek, strategy and dataset, for a total of 57. Each has a matching taxon file in `data/processed/taxa/` with the age of each taxon in years before the last year of sampling (`min_age` and `max_age`, with the same value) (one file per lek and dataset, shared by the three strategies):
 
 ```{r nexus files}
 

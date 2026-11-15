@@ -3,7 +3,7 @@
 # Follows archive/scripts/aligning_song_types.Rmd (first version of the study), using one sequence per song type
 # (song_sequences/song_type_sequence) and the same 57 alignments:
 #   strategies: optimal (MAFFT, optimized scores), agnostic (MAFFT, same score for any mismatch), prank
-#   early_recent, early_full, none: aligned directly
+#   early_recent, early_full, extant_none: aligned directly
 #   all_recent, all_full: the remaining years are added to the early alignment. All years of a song type have
 #   the same sequence, so each year takes the aligned row of its song type (mafft --add realigns each copy
 #   on its own and can place identical songs in different columns or drop part of them)
@@ -90,7 +90,7 @@ write_bounds <- function(job) {
   output
 }
 
-fa <- list.files(seq_dir, pattern = "^song_seqs_(early_recent|early_full|none)_[A-Z0-9]+\\.fa$")
+fa <- list.files(seq_dir, pattern = "^song_seqs_(early_recent|early_full|extant_none)_[A-Z0-9]+\\.fa$")
 m <- regmatches(fa, regexec("^song_seqs_(.+)_([A-Z0-9]+)\\.fa$", fa))
 direct <- do.call(rbind, lapply(c("optimal", "agnostic", "prank"), function(s)
   data.frame(set = sapply(m, `[`, 2), lek = sapply(m, `[`, 3), strategy = s, stringsAsFactors = FALSE)))

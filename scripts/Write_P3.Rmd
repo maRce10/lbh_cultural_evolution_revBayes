@@ -26,7 +26,7 @@ model.names <- gsub(pattern = "_[0-9]{6}", replacement = "\\", x = runs)
 analysis.names <- gsub(pattern = "([a-z,_,.,A-Z,1]*)([0-9]{6})", replacement = "\\2", x = runs)
 
 # dataset names are the model names without the clock model
-# (<lek>_<strategy>_<dataset>_<historical> or <lek>_<strategy>_none)
+# (<lek>_<strategy>_<dataset>_<historical>, with extant_none for the models without historical records)
 dat.names <- sub("_(global|relaxed)$", "", model.names)
 ```
 

@@ -12,7 +12,7 @@ Naming in the first version, and the equivalent in the current analyses:
 |:---|:---|
 | `old` (historical records including those before 2000) | `full` |
 | `new` (records after 2000) | `recent` |
-| `no.fossils` (only the song types of the last year of sampling) | `none` |
+| `no.fossils` (only the song types of the last year of sampling) | `extant_none` |
 | `early` (first year of each song type) | `bounds` (first and last year); `early` is only the base alignment |
 | `data/processed/nexus/`, `data/processed/fossils/` (now in `archive/`) | `data/processed/nexus/`, `data/processed/taxa/` |
 | `all.equal` (MAFFT alignment with the same score for any mismatch) | `agnostic` |

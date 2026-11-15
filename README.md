@@ -14,7 +14,7 @@ evolutionary patterns
 **Website:** [Modelling birdsong cultural
 evolution](https://marce10.github.io/lbh_cultural_evolution_revBayes/)
 
-*Updated on 2026-11-15 10:26:03.706776*
+*Updated on 2026-11-15 11:15:36.438957*
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -84,8 +84,11 @@ There are three alignment strategies:
 Each song type is aligned once, and the datasets are built from that
 alignment, so `all` and `bounds` have identical aligned rows:
 
-Datasets combine the years of each song type (`all` or `bounds`) with
-the historical records used (`full`, `recent` or `none`):
+Datasets combine the years of each song type (`all`, `bounds`, or
+`extant` for only the song types of the last year) with the historical
+records used (`full`, `recent` or `none`), so all names have four parts:
+`<lek>_<strategy>_<dataset>_<historical>`
+(e.g. `TR1_prank_bounds_recent` or `TR1_prank_extant_none`):
 
 | Dataset         | Songs included                                                          | Leks                    | Nexus files (× 3 strategies) | RevBayes models (× 2 clocks) |
 | :-------------- | :---------------------------------------------------------------------- | :---------------------- | ---------------------------: | ---------------------------: |
@@ -93,13 +96,13 @@ the historical records used (`full`, `recent` or `none`):
 | `bounds_recent` | First and last year of each song type, recordings after 2000            | BR1, CCE, HC1, SUR, TR1 |                           15 |                           30 |
 | `all_full`      | All years, including recordings before 2000                             | CCE, HC1, SUR           |                            9 |                           18 |
 | `bounds_full`   | First and last year of each song type, including recordings before 2000 | CCE, HC1, SUR           |                            9 |                           18 |
-| `none`          | Song types in the last year of sampling (no historical records)         | BR1, SUR, TR1           |                            9 |                           18 |
+| `extant_none`   | Song types in the last year of sampling (no historical records)         | BR1, SUR, TR1           |                            9 |                           18 |
 | **Total**       |                                                                         |                         |                       **57** |                      **114** |
 
 The historical records were named `new` (now `recent`), `old` (now
-`full`) and `no.fossils` (now `none`) in the first version of the study.
-Files named `early` (only the first year of each song type) are base
-alignments and are not analyzed.
+`full`) and `no.fossils` (now `extant_none`) in the first version of the
+study. Files named `early` (only the first year of each song type) are
+base alignments and are not analyzed.
 
 `bounds` replaces `early` from the first version of the study. `early`
 misses song types that persist until the last year of sampling, which
@@ -108,13 +111,13 @@ conflicts with assuming that all songs in that year were sampled (rho =
 
 Output files and scripts:
 
-| Output                                                                                                                                                         | Location                                 | Script                           |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------- | :------------------------------- |
-| Nexus files for RevBayes: `<lek>_<strategy>_<dataset>_alignment.nex`                                                                                           | `data/processed/nexus/`                  | `scripts/write_nexus.R`          |
-| Taxon files for RevBayes (columns `taxon` and `age`, in years before the last year of sampling): `<lek>_<dataset>_taxa.tsv`, the same for the three strategies | `data/processed/taxa/`                   | `scripts/write_nexus.R`          |
-| Alignments, scoring matrices and results                                                                                                                       | `data/processed/alignments/`             | `scripts/align_song_types.R`     |
-| PRANK runs and selection                                                                                                                                       | `data/processed/alignments/prank_seeds/` | `scripts/prank_seeds.R`          |
-| MAFFT score optimization                                                                                                                                       | `data/processed/mafft_optimization/`     | `scripts/optimize_mafft_costs.R` |
+| Output                                                                                                                                                                                                                                         | Location                                 | Script                           |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------- | :------------------------------- |
+| Nexus files for RevBayes: `<lek>_<strategy>_<dataset>_<historical>_alignment.nex`                                                                                                                                                              | `data/processed/nexus/`                  | `scripts/write_nexus.R`          |
+| Taxon files for RevBayes (columns `taxon`, `min_age` and `max_age`, with the same value, in years before the last year of sampling; works in RevBayes 1.3 and 1.4): `<lek>_<dataset>_<historical>_taxa.tsv`, the same for the three strategies | `data/processed/taxa/`                   | `scripts/write_nexus.R`          |
+| Alignments, scoring matrices and results                                                                                                                                                                                                       | `data/processed/alignments/`             | `scripts/align_song_types.R`     |
+| PRANK runs and selection                                                                                                                                                                                                                       | `data/processed/alignments/prank_seeds/` | `scripts/prank_seeds.R`          |
+| MAFFT score optimization                                                                                                                                                                                                                       | `data/processed/mafft_optimization/`     | `scripts/optimize_mafft_costs.R` |
 
 ## Next steps
 
@@ -140,16 +143,18 @@ redone** with the new 5 ms, 5-state sequences, in this order.
     file names (e.g. `BR1_optimal_bounds_recent_alignment.nex` and
     `BR1_bounds_recent_taxa.tsv`). The scripts of the first version are
     in `archive/scripts/`
-  - [ ] Update the base RevBayes files for RevBayes 1.4.2: `dnFBDP`
-    instead of `dnFBDRP` in `scripts/model_FBDP.Rev`, and taxon files
-    with an `age` column (as in `scripts/revbayes_beast2_comparison/`)
+  - [ ] Choose the RevBayes version for all models. The RevBayes and
+    BEAST2 comparison used RevBayes 1.4.2, where `dnFBDRP` was removed:
+    with 1.4, use `dnFBDP` in `scripts/model_FBDP.Rev` (as in
+    `scripts/revbayes_beast2_comparison/model_FBDP.Rev`). The taxon
+    files work in both versions
   - [ ] Change the GTR model from 6 to 5 states, which means 5
     stationary frequencies and 10 exchangeability rates
     (`scripts/model_GTRG.Rev`, `scripts/none/model_GTRG_BD.Rev`)
   - [ ] Confirm that rho = 1 and the treatment of gaps still fit the new
     data (about half of each alignment is gaps)
   - [ ] Rerun all 114 models (`scripts/trees_with_revbayes.Rmd`),
-    including those with no historical records (`none`)
+    including those with no historical records (`extant_none`)
   - [ ] Rerun the posterior predictions (P3; `scripts/Write_P3.Rmd`,
     `scripts/run_P3_*.sh`)
 

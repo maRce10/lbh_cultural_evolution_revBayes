@@ -1,14 +1,16 @@
 # Convert the 5 ms song alignments to nexus files for RevBayes, with the format used in the previous study,
-# and write the matching taxon files (taxon and age in years before the last year of sampling of the lek).
+# and write the matching taxon files: taxon, min_age and max_age (the same value, in years before the last year of
+# sampling of the lek). This format works in RevBayes 1.3 and 1.4 (1.4 also accepts a single age column, but not
+# both).
 # Only the sets to be analyzed are written (early is only the base alignment):
 #   dataset: all (every year of each song type) or bounds (first and last year of each song type)
 #   historical records: full (including recordings before 2000), recent (after 2000) or none (only the song
-#   types of the last year of sampling)
+#   types of the last year of sampling, dataset extant)
 #
 # File names:
-#   nexus: data/processed/nexus/<lek>_<strategy>_<dataset>_<historical>_alignment.nex, or
-#          <lek>_<strategy>_none_alignment.nex
-#   taxa:  data/processed/taxa/<lek>_<dataset>_<historical>_taxa.tsv, or <lek>_none_taxa.tsv
+#   nexus: data/processed/nexus/<lek>_<strategy>_<dataset>_<historical>_alignment.nex, with extant_none for the
+#          models without historical records
+#   taxa:  data/processed/taxa/<lek>_<dataset>_<historical>_taxa.tsv
 #          (the same for the three alignment strategies)
 #
 # Run from the project root, after scripts/align_song_types.R:
@@ -27,7 +29,7 @@ read_fa <- function(file) {
   setNames(as.vector(s), sub("^>", "", a[starts]))
 }
 
-files <- list.files(in_dir, pattern = "_(all_recent|all_full|bounds_recent|bounds_full|none)_alignment\\.fa$", full.names = TRUE)
+files <- list.files(in_dir, pattern = "_(all_recent|all_full|bounds_recent|bounds_full|extant_none)_alignment\\.fa$", full.names = TRUE)
 
 res <- do.call(rbind, lapply(files, function(f) {
   aln <- read_fa(f)
@@ -53,7 +55,8 @@ last_year <- tapply(unlist(lapply(strsplit(res$taxa, " "), year)), rep(res$lek, 
 for (k in split(res, list(res$lek, res$set), drop = TRUE)) {
   if (length(unique(k$taxa)) != 1) stop("different taxa among strategies: ", k$lek[1], " ", k$set[1])
   taxa <- strsplit(k$taxa[1], " ")[[1]]
-  writeLines(c("taxon\tage", paste(taxa, last_year[[k$lek[1]]] - year(taxa), sep = "\t")),
+  age <- last_year[[k$lek[1]]] - year(taxa)
+  writeLines(c("taxon\tmin_age\tmax_age", paste(taxa, age, age, sep = "\t")),
              file.path(taxa_dir, paste0(k$lek[1], "_", k$set[1], "_taxa.tsv")))
 }
 

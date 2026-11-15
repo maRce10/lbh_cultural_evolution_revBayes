@@ -21,7 +21,7 @@ read_fa <- function(file) {
   setNames(as.vector(s), sub("^>", "", a[starts]))
 }
 
-fa <- list.files(seq_dir, pattern = "^song_seqs_(early_recent|early_full|none)_[A-Z0-9]+_prank\\.fa$")
+fa <- list.files(seq_dir, pattern = "^song_seqs_(early_recent|early_full|extant_none)_[A-Z0-9]+_prank\\.fa$")
 jobs <- expand.grid(file = fa, seed = seq_len(n_seeds), stringsAsFactors = FALSE)
 
 runs_file <- file.path(out_dir, "prank_seed_runs.RDS")

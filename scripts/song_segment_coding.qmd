@@ -460,7 +460,7 @@ head(by_type[, c("song.type", "n_recordings", "length", "sequence")])
 
 ## FASTA files for alignment
 
-FASTA files are saved in `data/processed/song_sequences`. For each lek, taxa (song type x year) are split by historical records: `full` (all recordings, including those before 2000), `recent` (recordings after 2000) and `none` (only the song types of the last year of sampling). `full` and `recent` are further split into `early` (first year of each song type) and `rest` (the remaining years), so the sets are `early_full`, `rest_full`, `early_recent`, `rest_recent` and `none`. `full` is only written for the leks with recordings before 2000, and `none` for the leks with more than 3 song types in the last year.
+FASTA files are saved in `data/processed/song_sequences`. For each lek, taxa (song type x year) are split by historical records: `full` (all recordings, including those before 2000), `recent` (recordings after 2000) and `none` (only the song types of the last year of sampling). `full` and `recent` are further split into `early` (first year of each song type) and `rest` (the remaining years), so the sets are `early_full`, `rest_full`, `early_recent`, `rest_recent` and `extant_none` (`extant` as only extant song types are included). `full` is only written for the leks with recordings before 2000, and `extant_none` for the leks with more than 3 song types in the last year.
 
 Each set comes in two formats:
 
@@ -513,12 +513,12 @@ rest_full <- all_full[!all_full$taxon %in% early_full$taxon, ]
 rest_recent <- all_recent[!all_recent$taxon %in% early_recent$taxon, ]
 none <- do.call(rbind, lapply(split(all_full, all_full$lek), function(z) z[z$year == max(z$year), ]))
 
-sets <- list(early_full = early_full, rest_full = rest_full, early_recent = early_recent, rest_recent = rest_recent, none = none)
+sets <- list(early_full = early_full, rest_full = rest_full, early_recent = early_recent, rest_recent = rest_recent, extant_none = none)
 n_files <- 0
 for (i in sel_leks) for (set in names(sets)) {
   z <- sets[[set]][sets[[set]]$lek == i, ]
   if (grepl("full", set) && !any(all_full$year[all_full$lek == i] < 2000)) next
-  if (set == "none" && nrow(z) <= 3) next
+  if (set == "extant_none" && nrow(z) <= 3) next
   if (!nrow(z)) next
   for (v in c("song_type_sequence", "year_specific_sequence")) {
     sq <- if (v == "song_type_sequence") z$seq_song_type else z$seq_year

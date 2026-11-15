@@ -16,9 +16,9 @@ editor_options:
   chunk_output_type: console
 ---
 
-Write and run the RevBayes scripts of the 114 models: 3 alignment strategies, the datasets of `data/processed/nexus/` (`all` and `bounds` with `full` or `recent` historical records, and `none`) and 2 clock models (`global` and `relaxed`).
+Write and run the RevBayes scripts of the 114 models: 3 alignment strategies, the datasets of `data/processed/nexus/` (`all` and `bounds` with `full` or `recent` historical records, and `extant_none`, the song types of the last year without historical records) and 2 clock models (`global` and `relaxed`).
 
-Model names follow the nexus files: `<lek>_<strategy>_<dataset>_<historical>_<clock>` (e.g. `BR1_optimal_bounds_recent_relaxed`) and `<lek>_<strategy>_none_<clock>` for the models without historical records. The taxon files (`data/processed/taxa/`) are written by `scripts/write_nexus.R`. The Rev scripts are written to `scripts/models/` and the results to `output/revbayes/`.
+Model names follow the nexus files: `<lek>_<strategy>_<dataset>_<historical>_<clock>` (e.g. `BR1_optimal_bounds_recent_relaxed`) (`<dataset>_<historical>` is `extant_none` for the models without historical records, e.g. `TR1_prank_extant_none_global`). The taxon files (`data/processed/taxa/`) are written by `scripts/write_nexus.R`. The Rev scripts are written to `scripts/models/` and the results to `output/revbayes/`.
 
 The previous version of this file, with the names of the first version of the study, is in the git history.
 
@@ -77,7 +77,7 @@ out_dir <- "./output/revbayes"
 dir.create(model_dir, showWarnings = FALSE)
 dir.create(out_dir, showWarnings = FALSE)
 
-nex <- list.files(nexus_dir, pattern = "_none_alignment\\.nex$")
+nex <- list.files(nexus_dir, pattern = "_extant_none_alignment\\.nex$")
 grd <- expand.grid(data = sub("_alignment\\.nex$", "", nex), clock = c("global", "relaxed"), stringsAsFactors = FALSE)
 grd$lek <- sub("_.*", "", grd$data)
 grd$output <- paste(grd$data, grd$clock, sep = "_")
@@ -86,7 +86,7 @@ done <- unique(sub("_[0-9]{6}_posterior\\.var$", "", list.files(out_dir, pattern
 grd <- grd[!grd$output %in% done, , drop = FALSE]
 
 for (x in seq_len(nrow(grd))) {
-  taxa_file <- file.path(taxa_dir, paste0(grd$lek[x], "_none_taxa.tsv"))
+  taxa_file <- file.path(taxa_dir, paste0(grd$lek[x], "_extant_none_taxa.tsv"))
   taxa <- read.delim(taxa_file)
   last_year <- paste0("clade(", paste0('"', taxa$taxon, '"', collapse = ", "), ")")
 
