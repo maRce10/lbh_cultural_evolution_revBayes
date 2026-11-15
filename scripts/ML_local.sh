@@ -13,7 +13,7 @@ leks=("BR1" "CCE" "HC1" "SUR" "CCE")
 align=("agnostic" "optimal" "prank")
 
 #list of fossils
-taxa_file=("new" "old")
+fossils=("new" "old")
 
 #list of fossil times
 times=("all" "early")

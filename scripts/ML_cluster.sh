@@ -21,7 +21,7 @@ leks=("TR1") # Forgot TR1 and instead repeated "CCE"
 align=("agnostic" "optimal" "prank")
 
 #list of fossils
-taxa_file=("new" "old")
+fossils=("new" "old")
 
 #list of fossil times
 times=("all" "early")
