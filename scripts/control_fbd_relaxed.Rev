@@ -1,0 +1,40 @@
+################################################################################
+#
+# RevBayes script: Cultural evolution under the fossilized birth-death model
+#
+# This file: Runs the full MCMC ...
+#
+# authors: B. Willink, M. Araya
+#
+# Basesd on: Total-evidence dating under the fossilized birth-death model
+#
+# authors: Tracy A. Heath, Walker C. Pett, April M. Wright
+################################################################################
+
+#######################
+# Reading in the Data #
+#######################
+# Import the full list of songs (including current and "fossil" songs) #
+       taxa <- readTaxonData(taxa_file)
+
+# Import the song sequence matrix #
+        song <- readDiscreteCharacterData(alignment)
+
+## helpers
+n_taxa <- taxa.size()
+
+moves = VectorMoves()
+
+# Load the model files
+
+source("./scripts/model_FBDP.Rev") # FBD tree prior
+
+source("./scripts/model_clock_relaxed.Rev") # UExp relaxed clock
+
+source("./scripts/model_GTRG.Rev") # Molecular substitution model (GTR + G)
+
+# for SUR and CCE
+source("./scripts/MCMC_long.Rev") # Run MCMC
+
+# for the rest
+# source("./scripts/MCMC_short.Rev") # Run MCMC

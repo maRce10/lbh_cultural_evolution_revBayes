@@ -3,9 +3,9 @@ project:
   output-dir: _site
   render:
     - index.qmd
-    - source/song_segment_coding_5ms.qmd
-    - source/song_alignment_5ms.qmd
-    - source/revbayes_beast2_comparison.qmd
+    - scripts/song_segment_coding.qmd
+    - scripts/song_alignment.qmd
+    - scripts/revbayes_beast2_comparison.qmd
 
 execute:
   freeze: auto
@@ -21,11 +21,11 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: source/song_segment_coding_5ms.qmd
+      - href: scripts/song_segment_coding.qmd
         text: Song segmenting
-      - href: source/song_alignment_5ms.qmd
+      - href: scripts/song_alignment.qmd
         text: Song alignment
-      - href: source/revbayes_beast2_comparison.qmd
+      - href: scripts/revbayes_beast2_comparison.qmd
         text: Compare RevBayes and BEAST2
     right:
       - icon: github

@@ -1,0 +1,33 @@
+<itsabeastystatewerein version='2.0' sample='50000000'>
+<statenode id='tree'>((((((1[&amp;orientation=ancestor]:2.0,0[&amp;orientation=ancestor]:0.0)9[&amp;orientation=ancestor]:0.29263780560280095,7[&amp;orientation=descendant]:0.29263780560280095)14[&amp;orientation=ancestor]:0.8323777221678896,(3[&amp;orientation=descendant]:2.0,2[&amp;orientation=descendant]:0.0)13[&amp;orientation=descendant]:1.1250155277706906)16[&amp;orientation=ancestor]:0.6234356608839855,8[&amp;orientation=descendant]:1.748451188654676)11[&amp;orientation=ancestor]:0.5778662254943177,(5[&amp;orientation=descendant]:2.0,4[&amp;orientation=descendant]:0.0)12[&amp;orientation=descendant]:2.3263174141489937)15[&amp;orientation=ancestor]:2.0293077243967472,6[&amp;orientation=descendant]:4.355625138545741)10[&amp;orientation=ancestor]:0.0</statenode>
+<statenode id='origin'>origin[1 1] (0.0,1000.0): 8.763833723062014 </statenode>
+<statenode id='birth'>birth[1 1] (0.0,Infinity): 0.2544685743253798 </statenode>
+<statenode id='death'>death[1 1] (0.0,Infinity): 0.051064398430030265 </statenode>
+<statenode id='psi'>psi[1 1] (0.0,Infinity): 0.465141577389361 </statenode>
+<statenode id='clockMean'>clockMean[1 1] (0.0,Infinity): 0.041301780772112606 </statenode>
+<statenode id='rateCategories'>rateCategories[16 1] (0,15): 0 9 15 2 11 10 9 12 15 14 3 15 13 15 3 14 </statenode>
+<statenode id='alpha'>alpha[1 1] (0.001,1000.0): 0.9646688261563292 </statenode>
+<statenode id='er'>er[10 1] (0.0,1.0): 0.005770344323558045 0.2730618350614481 0.07046083405499405 0.26616511172551455 0.007683661405361336 0.004216411219348429 0.029304585470093812 2.1740266786538648E-4 0.27986357331270983 0.06325624075910444 </statenode>
+<statenode id='sf'>sf[5 1] (0.0,1.0): 0.24030229890393173 0.14224548638018147 0.23642531353071372 0.15645999642065422 0.22456690476453695 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"unknown","p":"NaN","accept":776848,"reject":4934918,"acceptFC":776528,"rejectFC":4932889,"rejectIv":812947,"rejectOp":570825},
+{"id":"unknown","p":"NaN","accept":2857030,"reject":0,"acceptFC":2855817,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":0,"reject":2855953,"acceptFC":0,"rejectFC":2854782,"rejectIv":2855953,"rejectOp":2855953},
+{"id":"unknown","p":"NaN","accept":3610985,"reject":2105053,"acceptFC":3609464,"rejectFC":2104167,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.5361879589139967,"accept":610456,"reject":2245805,"acceptFC":609458,"rejectFC":2245646,"rejectIv":1523181,"rejectOp":420787},
+{"id":"unknown","p":0.4576379381276158,"accept":273049,"reject":1156229,"acceptFC":272515,"rejectFC":1156141,"rejectIv":956128,"rejectOp":292127},
+{"id":"unknown","p":0.42884935215158865,"accept":348147,"reject":1079043,"acceptFC":347756,"rejectFC":1078810,"rejectIv":255405,"rejectOp":0},
+{"id":"unknown","p":0.2042649541131632,"accept":383792,"reject":1045541,"acceptFC":383305,"rejectFC":1045443,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.17693665147160945,"accept":391219,"reject":1036510,"acceptFC":390761,"rejectFC":1036364,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.20489833577033645,"accept":375775,"reject":1054917,"acceptFC":375312,"rejectFC":1054805,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.2856712914487915,"accept":366061,"reject":1061797,"acceptFC":365678,"rejectFC":1061618,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.18910035154670363,"accept":376327,"reject":1048698,"acceptFC":375836,"rejectFC":1048600,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":3.3684955259712264,"accept":177314,"reject":5539881,"acceptFC":175456,"rejectFC":5539390,"rejectIv":5289894,"rejectOp":5289894},
+{"id":"unknown","p":0.632996737760498,"accept":1049352,"reject":4661910,"acceptFC":1047396,"rejectFC":4661531,"rejectIv":1800234,"rejectOp":1800234},
+{"id":"unknown","p":"NaN","accept":1603977,"reject":1256631,"acceptFC":1603322,"rejectFC":1256091,"rejectIv":1111040,"rejectOp":1111040},
+{"id":"unknown","p":"NaN","accept":1449986,"reject":1407971,"acceptFC":1449413,"rejectFC":1407392,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":1887275,"reject":971551,"acceptFC":1886494,"rejectFC":971090,"rejectIv":0,"rejectOp":0}
+]}
+-->

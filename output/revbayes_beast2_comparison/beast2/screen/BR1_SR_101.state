@@ -1,0 +1,33 @@
+<itsabeastystatewerein version='2.0' sample='50000000'>
+<statenode id='tree'>(((5[&amp;orientation=ancestor]:3.1279180004923215,((4[&amp;orientation=ancestor]:2.9612186225155797,((2[&amp;orientation=ancestor]:1.2114961812269596,14[&amp;orientation=descendant]:1.2114961812269596)32[&amp;orientation=ancestor]:0.20265574422395471,16[&amp;orientation=descendant]:1.4141519254509143)20[&amp;orientation=descendant]:1.5470666970646654)26[&amp;orientation=descendant]:0.03878137748442034,3[&amp;orientation=descendant]:0.0)27[&amp;orientation=descendant]:0.1279180004923215)28[&amp;orientation=ancestor]:2.719154455871123,15[&amp;orientation=descendant]:5.847072456363445)23[&amp;orientation=ancestor]:3.583261924702957,((((7[&amp;orientation=ancestor]:1.1671241652157267,(9[&amp;orientation=descendant]:1.0,8[&amp;orientation=descendant]:0.0)19[&amp;orientation=descendant]:1.1671241652157267)22[&amp;orientation=ancestor]:0.8328758347842733,6[&amp;orientation=ancestor]:0.0)29[&amp;orientation=ancestor]:1.9059627041053666,((1[&amp;orientation=ancestor]:3.0,0[&amp;orientation=ancestor]:0.0)30[&amp;orientation=ancestor]:0.06823485725698353,10[&amp;orientation=descendant]:2.0682348572569835)18[&amp;orientation=descendant]:1.837727846848383)21[&amp;orientation=ancestor]:0.12568183338988703,(11[&amp;orientation=ancestor]:1.0316104545113283,(13[&amp;orientation=descendant]:2.0,12[&amp;orientation=descendant]:0.0)17[&amp;orientation=descendant]:0.03161045451132827)25[&amp;orientation=descendant]:3.0000340829839254)31[&amp;orientation=descendant]:4.398689843571148)24[&amp;orientation=ancestor]:0.0</statenode>
+<statenode id='origin'>origin[1 1] (0.0,1000.0): 10.90132312856286 </statenode>
+<statenode id='birth'>birth[1 1] (0.0,Infinity): 0.2525451871875572 </statenode>
+<statenode id='death'>death[1 1] (0.0,Infinity): 0.0742183072581095 </statenode>
+<statenode id='psi'>psi[1 1] (0.0,Infinity): 0.2186549753234263 </statenode>
+<statenode id='clockMean'>clockMean[1 1] (0.0,Infinity): 0.04489296590642099 </statenode>
+<statenode id='rateCategories'>rateCategories[32 1] (0,31): 24 6 27 9 3 4 12 3 23 20 16 0 25 1 31 0 22 14 5 25 31 4 4 29 5 30 20 23 21 4 10 15 </statenode>
+<statenode id='alpha'>alpha[1 1] (0.001,1000.0): 1.6340573608253768 </statenode>
+<statenode id='er'>er[10 1] (0.0,1.0): 0.01325916189665324 0.07974052877420673 0.01799185217808113 0.09934211837771184 0.07319497863333754 0.09314852464827438 8.573326654603506E-4 7.386680202098334E-4 0.5679866434230777 0.053740191382989966 </statenode>
+<statenode id='sf'>sf[5 1] (0.0,1.0): 0.23827702206640716 0.2901185136286582 0.13299470354634124 0.141752280111495 0.196857480647084 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"unknown","p":"NaN","accept":546829,"reject":5169540,"acceptFC":546653,"rejectFC":5167386,"rejectIv":420048,"rejectOp":284959},
+{"id":"unknown","p":"NaN","accept":2854453,"reject":0,"acceptFC":2853284,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":318,"reject":2853653,"acceptFC":318,"rejectFC":2852450,"rejectIv":2846396,"rejectOp":2846396},
+{"id":"unknown","p":"NaN","accept":3654921,"reject":2060426,"acceptFC":3653409,"rejectFC":2059566,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.28066576356340417,"accept":161088,"reject":2696927,"acceptFC":160203,"rejectFC":2696644,"rejectIv":2571568,"rejectOp":2092613},
+{"id":"unknown","p":0.4920837131882016,"accept":279927,"reject":1148587,"acceptFC":279423,"rejectFC":1148514,"rejectIv":926527,"rejectOp":267828},
+{"id":"unknown","p":0.474360252922752,"accept":362200,"reject":1067475,"acceptFC":361895,"rejectFC":1067181,"rejectIv":281714,"rejectOp":0},
+{"id":"unknown","p":0.2678852647131132,"accept":368140,"reject":1058448,"acceptFC":367677,"rejectFC":1058337,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.17104024756156244,"accept":373978,"reject":1055902,"acceptFC":373467,"rejectFC":1055809,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.22304581486043584,"accept":367491,"reject":1063261,"acceptFC":366997,"rejectFC":1063147,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.36090474772857656,"accept":358378,"reject":1069423,"acceptFC":357962,"rejectFC":1069242,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":0.19494712567350206,"accept":372862,"reject":1057845,"acceptFC":372352,"rejectFC":1057744,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":2.576197461408166,"accept":150755,"reject":5565188,"acceptFC":149221,"rejectFC":5564375,"rejectIv":5167126,"rejectOp":5167126},
+{"id":"unknown","p":0.5183325430532848,"accept":980801,"reject":4732290,"acceptFC":978917,"rejectFC":4731857,"rejectIv":1438034,"rejectOp":1438034},
+{"id":"unknown","p":"NaN","accept":1770124,"reject":1085220,"acceptFC":1769397,"rejectFC":1084806,"rejectIv":1016597,"rejectOp":1016597},
+{"id":"unknown","p":"NaN","accept":1656768,"reject":1200968,"acceptFC":1656067,"rejectFC":1200476,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":2052917,"reject":802898,"acceptFC":2052028,"rejectFC":802573,"rejectIv":0,"rejectOp":0}
+]}
+-->

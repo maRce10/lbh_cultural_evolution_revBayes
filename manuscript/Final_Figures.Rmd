@@ -62,7 +62,7 @@ fig_cols <- viridis::mako(3, begin = 0.2, end = 0.8, direction = -1)
 ## Historical sampling pannel
 
 ```{r fig1d}
-fs <- read.csv("./data/processed/fossil_series.csv", header = T, sep = ",")
+fs <- read.csv("./data/processed/sampling_years_by_lek.csv", header = T, sep = ",")
 
 pal <- mako(10)
 

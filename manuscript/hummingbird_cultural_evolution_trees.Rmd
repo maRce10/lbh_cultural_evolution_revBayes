@@ -183,7 +183,7 @@ lapply(x, function(y) {
 
 <!--- This is Fig. 1d
 ```{r, echo=FALSE}
-fs <- read.csv("../data/processed/fossil_series.csv", header = T, sep = ",")
+fs <- read.csv("../data/processed/sampling_years_by_lek.csv", header = T, sep = ",")
 
 require(ggplot2)
 require(viridis)

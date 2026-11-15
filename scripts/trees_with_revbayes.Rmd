@@ -1,0 +1,133 @@
+---
+title: <center><font size="6"><b>Tree estimation with Revbayes</b></font></center>
+subtitle: <center><font size="4"><b>Long-billed hermit song cultural evolution</b></font></center>
+author: <center><font size="4"><a href="https://marce10.github.io/">Marcelo Araya-Salas, PhD</a></font></center>
+date: <center>`r format(Sys.Date(), "%d-%m-%Y")`</center>
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+fontsize: 12pt
+editor_options:
+  chunk_output_type: console
+---
+
+Write and run the RevBayes scripts of the 114 models: 3 alignment strategies, the datasets of `data/processed/nexus/` (`all` and `bounds` with `full` or `recent` historical records, and `none`) and 2 clock models (`global` and `relaxed`).
+
+Model names follow the nexus files: `<lek>_<strategy>_<dataset>_<historical>_<clock>` (e.g. `BR1_optimal_bounds_recent_relaxed`) and `<lek>_<strategy>_none_<clock>` for the models without historical records. The taxon files (`data/processed/taxa/`) are written by `scripts/write_nexus.R`. The Rev scripts are written to `scripts/models/` and the results to `output/revbayes/`.
+
+The previous version of this file, with the names of the first version of the study, is in the git history.
+
+# Models with historical records (fossilized birth-death)
+
+```{r revbayes models with historical records, eval = FALSE, echo = TRUE}
+
+nexus_dir <- "./data/processed/nexus"
+taxa_dir <- "./data/processed/taxa"
+model_dir <- "./scripts/models"
+out_dir <- "./output/revbayes"
+dir.create(model_dir, showWarnings = FALSE)
+dir.create(out_dir, showWarnings = FALSE)
+
+nex <- list.files(nexus_dir, pattern = "_(all|bounds)_(full|recent)_alignment\\.nex$")
+grd <- expand.grid(data = sub("_alignment\\.nex$", "", nex), clock = c("global", "relaxed"), stringsAsFactors = FALSE)
+grd$lek <- sub("_.*", "", grd$data)
+grd$set <- sub("^[A-Z0-9]+_[a-z]+_", "", grd$data)
+grd$output <- paste(grd$data, grd$clock, sep = "_")
+
+# skip models with results
+done <- unique(sub("_[0-9]{6}_posterior\\.var$", "", list.files(out_dir, pattern = "posterior\\.var$")))
+grd <- grd[!grd$output %in% done, , drop = FALSE]
+
+for (x in seq_len(nrow(grd))) {
+  taxa_file <- file.path(taxa_dir, paste0(grd$lek[x], "_", grd$set[x], "_taxa.tsv"))
+
+  # songs of the last year of sampling
+  taxa <- read.delim(taxa_file)
+  last_year <- paste0("clade(", paste0('"', taxa$taxon[taxa$age == 0], '"', collapse = ", "), ")")
+
+  templ <- readLines("./scripts/template.Rev")
+  templ[1] <- gsub("aligment.name", file.path(nexus_dir, paste0(grd$data[x], "_alignment.nex")), templ[1])
+  templ[2] <- gsub("tsv.file", taxa_file, templ[2])
+  templ[4] <- gsub("output.base.name", file.path(out_dir, grd$output[x]), templ[4])
+  templ[10] <- gsub("LAST.SONG.TYPES", last_year, templ[10])
+  templ[12] <- sprintf('source("./scripts/control_fbd_%s.Rev")', grd$clock[x])
+
+  rev_file <- file.path(model_dir, paste0(grd$output[x], ".Rev"))
+  writeLines(templ, con = rev_file)
+
+  system(paste("mpirun -np 10 ~/revbayes-master/projects/cmake/rb-mpi", rev_file))
+  print(paste(grd$output[x], "done,", nrow(grd) - x, "models left"))
+}
+
+```
+
+# Models without historical records (birth-death)
+
+```{r revbayes models without historical records, eval = FALSE, echo = TRUE}
+
+nexus_dir <- "./data/processed/nexus"
+taxa_dir <- "./data/processed/taxa"
+model_dir <- "./scripts/models"
+out_dir <- "./output/revbayes"
+dir.create(model_dir, showWarnings = FALSE)
+dir.create(out_dir, showWarnings = FALSE)
+
+nex <- list.files(nexus_dir, pattern = "_none_alignment\\.nex$")
+grd <- expand.grid(data = sub("_alignment\\.nex$", "", nex), clock = c("global", "relaxed"), stringsAsFactors = FALSE)
+grd$lek <- sub("_.*", "", grd$data)
+grd$output <- paste(grd$data, grd$clock, sep = "_")
+
+done <- unique(sub("_[0-9]{6}_posterior\\.var$", "", list.files(out_dir, pattern = "posterior\\.var$")))
+grd <- grd[!grd$output %in% done, , drop = FALSE]
+
+for (x in seq_len(nrow(grd))) {
+  taxa_file <- file.path(taxa_dir, paste0(grd$lek[x], "_none_taxa.tsv"))
+  taxa <- read.delim(taxa_file)
+  last_year <- paste0("clade(", paste0('"', taxa$taxon, '"', collapse = ", "), ")")
+
+  templ <- readLines("./scripts/template.Rev")
+  templ[1] <- gsub("aligment.name", file.path(nexus_dir, paste0(grd$data[x], "_alignment.nex")), templ[1])
+  templ[2] <- gsub("tsv.file", taxa_file, templ[2])
+  templ[4] <- gsub("output.base.name", file.path(out_dir, grd$output[x]), templ[4])
+  templ[10] <- gsub("LAST.SONG.TYPES", last_year, templ[10])
+  templ[12] <- sprintf('source("./scripts/none/control_bd_%s.Rev")', grd$clock[x])
+
+  rev_file <- file.path(model_dir, paste0(grd$output[x], ".Rev"))
+  writeLines(templ, con = rev_file)
+
+  system(paste("mpirun -np 10 ~/revbayes-master/projects/cmake/rb-mpi", rev_file))
+  print(paste(grd$output[x], "done,", nrow(grd) - x, "models left"))
+}
+
+```
+
+# Keep the most recent run of each model
+
+```{r move results to another folder, eval = FALSE, echo = TRUE}
+
+posteriors <- list.files(pattern = "posterior\\.var$", path = "./output/revbayes", full.names = TRUE)
+
+# model name and run ID (6 digits) of each run
+post_df <- data.frame(full_name = posteriors,
+                      model = sub("_[0-9]{6}_posterior\\.var$", "", basename(posteriors)),
+                      model_id = sub("^.*_([0-9]{6})_posterior\\.var$", "\\1", basename(posteriors)),
+                      mtime = file.info(posteriors)$mtime)
+
+# keep only the most recent one for each model
+last_models <- do.call(rbind, lapply(split(post_df, post_df$model), function(Y) Y[which.max(Y$mtime), , drop = FALSE]))
+
+files_to_copy <- list.files(pattern = paste(last_models$model_id, collapse = "|"), path = "./output/revbayes",
+                            full.names = TRUE, recursive = TRUE)
+
+dir.create("./output/most_recent_revbayes_models", showWarnings = FALSE)
+copy_res <- file.copy(from = files_to_copy, to = file.path("./output/most_recent_revbayes_models", basename(files_to_copy)),
+                      overwrite = TRUE)
+
+sum(copy_res)
+
+```

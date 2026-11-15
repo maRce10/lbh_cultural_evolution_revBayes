@@ -2,8 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-output/MCMC_diagnostic_plots/**
-output/revbayes_output_in_single_R_object.RDS
+archive/output/MCMC_diagnostic_plots/**
+archive/output/revbayes_output_in_single_R_object.RDS
 
 # rendered website (built and deployed by .github/workflows/publish.yml)
 /_site/
