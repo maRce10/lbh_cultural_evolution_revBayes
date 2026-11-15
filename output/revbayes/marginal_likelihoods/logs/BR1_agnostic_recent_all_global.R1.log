@@ -1,0 +1,30 @@
+
+RevBayes version (1.3.0)
+Build from master (rapture-3959-g44f423) on Wed Jun 18 11:45:19 AM EDT 2025
+MPI enabled: using 32 processes.
+
+Visit the website www.RevBayes.com for more information about RevBayes.
+
+RevBayes is free software released under the GPL license, version 3. Type 'license()' for details.
+
+To quit RevBayes type 'quit()' or 'q()'.
+
+
+>    Processing file "./scripts/lek_models_ML/BR1_agnostic_recent_all_global.Rev"
+   Processing file "./scripts/Control_ML_global.Rev"
+   Successfully read one character matrix from file './data/processed/nexus/BR1_agnostic_all_recent_alignment.nex'
+   Processing file "./scripts/model_FBDP.Rev"
+   Processing of file "./scripts/model_FBDP.Rev" completed
+   Processing file "./scripts/model_Global.Rev"
+   Processing of file "./scripts/model_Global.Rev" completed
+   Processing file "./scripts/model_GTRG.Rev"
+   Processing of file "./scripts/model_GTRG.Rev" completed
+   Processing file "./scripts/ML.Rev"
+
+Running burn-in phase of Power Posterior sampler for 5000 iterations.
+The simulator uses 24 different moves in a random move schedule with 233 moves per iteration
+
+
+Progress:
+0---------------25---------------50---------------75--------------100
+******************************************

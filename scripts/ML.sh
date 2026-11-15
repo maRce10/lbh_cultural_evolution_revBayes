@@ -6,7 +6,7 @@
 # RevBayes for every combination of:
 #     lek x alignment x historical record x sampling times x clock model x replicate
 #
-# STEP 1 - write the dataset-specific Rev scripts into ./source/lek_models_ML/,
+# STEP 1 - write the dataset-specific Rev scripts into ./scripts/lek_models_ML/,
 #          one per combination whose alignment and taxa files both exist.
 #          Each script records its input files and output name, the clade of
 #          extant song types (taxa sampled in the last year), and then sources
@@ -23,7 +23,7 @@
 #                   no extant taxa).
 #   timing.txt      total wall time and a per-run timing summary.
 #
-# USAGE (run from the project home directory, the one containing source/):
+# USAGE (run from the project home directory, the one containing scripts/ and data/):
 #   bash ML.sh                     # write the Rev scripts, then run everything
 #   GENERATE_ONLY=1 bash ML.sh     # only write the Rev scripts (to inspect them)
 #   RESUME=1 bash ML.sh            # skip runs that already finished
@@ -31,11 +31,12 @@
 # ASSUMPTIONS - check against your files:
 #   1. Input file names (note the order of the parts differs between them):
 #        alignment: ./data/processed/nexus/<lek>_<align>_<times>_<historical>_alignment.nex
-#        taxa:      ./data/processed/taxa/<lek>_taxa_<times>_<historical>.tsv
+#        taxa:      ./data/processed/taxa/<lek>_<times>_<historical>_taxa.tsv
+#      (set by align_name() and taxa_name() in the configuration section)
 #   2. Taxa files are tab-separated with a header line and the taxon name in
 #      the first column; names end in the 4-digit sampling year (BR1-A1-2014).
-#   3. The control scripts are ./source/Control_ML_global.Rev and
-#      ./source/Control_ML_Uexp.Rev.
+#   3. The control scripts are ./scripts/Control_ML_global.Rev and
+#      ./scripts/Control_ML_Uexp.Rev.
 #   4. The ML control script prints its estimates on labelled lines:
 #          print("SS_lnML", ss.marginal())
 #          print("PS_lnML", ps.marginal())
@@ -58,11 +59,17 @@ RESUME="${RESUME:-0}"                        # 1 = skip runs with a finished log
 GENERATE_ONLY="${GENERATE_ONLY:-0}"          # 1 = write Rev scripts, then stop
 
 leks=("BR1" "CCE" "HC1" "SUR" "TR1")
-aligns=("all.equal" "optimal" "prank")
+aligns=("agnostic" "optimal" "prank")
 historical=("recent" "full" "none")
 times=("all" "bounds" "extant")
 clocks=("global" "Uexp")
 reps=("R1" "R2" "R3")
+
+# Input file names. The alignments put the sampling times before the
+# historical record, in both the alignment and the taxa file names.
+# Change the order here if the naming changes again.
+align_name () { echo "${lek}_${aln}_${tim}_${hist}_alignment.nex"; }   # e.g. BR1_agnostic_all_recent_alignment.nex
+taxa_name ()  { echo "${lek}_${tim}_${hist}_taxa.tsv"; }               # e.g. BR1_all_recent_taxa.tsv
 
 # One fixed seed per replicate, so every run can be reproduced exactly.
 # The seed is set before the Rev script runs, so the random number `rv` in
@@ -116,8 +123,8 @@ for lek in "${leks[@]}"; do
   for hist in "${historical[@]}"; do
    for tim in "${times[@]}"; do
 
-     align_file="${ALIGN_DIR}/${lek}_${aln}_${tim}_${hist}_alignment.nex"
-     taxa_file="${TAXA_DIR}/${lek}_taxa_${tim}_${hist}.tsv"
+     align_file="${ALIGN_DIR}/$(align_name)"
+     taxa_file="${TAXA_DIR}/$(taxa_name)"
 
      # Not every combination exists: record why and move on
      if [[ ! -f "$align_file" ]]; then

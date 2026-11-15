@@ -27,10 +27,10 @@ moves = VectorMoves()
 
 # Load the model files
 
-source("./source/model_FBDP.Rev") # FBD tree prior
+source("./scripts/model_FBDP.Rev") # FBD tree prior
 
-source("./source/model_Global.Rev") # molecular clock global
+source("./scripts/model_Global.Rev") # molecular clock global
 
-source("./source/model_GTRG.Rev") # Molecular substitution model (GTR + G)
+source("./scripts/model_GTRG.Rev") # Molecular substitution model (GTR + G)
 
-source("./source/ML.Rev") # ML approximation
+source("./scripts/ML.Rev") # ML approximation
