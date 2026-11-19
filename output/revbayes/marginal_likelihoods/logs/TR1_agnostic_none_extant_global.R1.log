@@ -1,0 +1,78 @@
+
+RevBayes version (1.5.0-preview)
+Build from development (rapture-5625-g2c7135) on Mon Nov 16 09:40:49 AM EST 2026
+MPI enabled: using 32 processes.
+
+Visit the website www.RevBayes.com for more information about RevBayes.
+
+RevBayes is free software released under the GPL license, version 3. Type 'license()' for details.
+
+To quit RevBayes type 'quit()' or 'q()'.
+
+
+>    Processing file "./scripts/lek_models_ML/TR1_agnostic_none_extant_global.Rev"
+   Processing file "./scripts/Control_ML_global.Rev"
+   Successfully read one character matrix from file './data/processed/nexus/TR1_agnostic_extant_none_alignment.nex'
+   Processing file "./scripts/model_FBDP.Rev"
+   Processing of file "./scripts/model_FBDP.Rev" completed
+   Processing file "./scripts/model_Global.Rev"
+   Processing of file "./scripts/model_Global.Rev" completed
+   Processing file "./scripts/model_GTRG.Rev"
+   Processing of file "./scripts/model_GTRG.Rev" completed
+   Processing file "./scripts/ML.Rev"
+
+Running global pre-burnin phase of power posterior sampler for 5000 iterations.
+The simulator uses 24 different moves in a random move schedule with 233 moves per iteration
+
+
+Progress:
+0---------------25---------------50---------------75--------------100
+********************************************************************
+
+The 100 requested stones will be executed in 4 steps using 32 parallel workers as follows:
+
+Worker | Step 1 | Step 2 | Step 3 | Step 4
+-------|--------|--------|--------|--------
+     1 |      1 |      2 |      3 |
+     2 |      4 |      5 |      6 |
+     3 |      7 |      8 |      9 |
+     4 |     10 |     11 |     12 |
+     5 |     13 |     14 |     15 |
+     6 |     16 |     17 |     18 |
+     7 |     19 |     20 |     21 |
+     8 |     22 |     23 |     24 |     25
+     9 |     26 |     27 |     28 |
+    10 |     29 |     30 |     31 |
+    11 |     32 |     33 |     34 |
+    12 |     35 |     36 |     37 |
+    13 |     38 |     39 |     40 |
+    14 |     41 |     42 |     43 |
+    15 |     44 |     45 |     46 |
+    16 |     47 |     48 |     49 |     50
+    17 |     51 |     52 |     53 |
+    18 |     54 |     55 |     56 |
+    19 |     57 |     58 |     59 |
+    20 |     60 |     61 |     62 |
+    21 |     63 |     64 |     65 |
+    22 |     66 |     67 |     68 |
+    23 |     69 |     70 |     71 |
+    24 |     72 |     73 |     74 |     75
+    25 |     76 |     77 |     78 |
+    26 |     79 |     80 |     81 |
+    27 |     82 |     83 |     84 |
+    28 |     85 |     86 |     87 |
+    29 |     88 |     89 |     90 |
+    30 |     91 |     92 |     93 |
+    31 |     94 |     95 |     96 |
+    32 |     97 |     98 |     99 |    100
+
+Running power posterior analysis ...
+Stone pre-burnin: -, burnin: +, sampling phase: *
+Step 1 / 4		----------------------------------------++++++++++******************************
+Step 2 / 4		----------------------------------------++++++++++******************************
+Step 3 / 4		----------------------------------------++++++++++******************************
+Step 4 / 4		----------------------------------------++++++++++******************************
+
+SS_lnML	-144.3061
+PS_lnML	-144.2514
+# STATUS: ok

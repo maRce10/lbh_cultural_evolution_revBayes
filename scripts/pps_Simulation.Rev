@@ -1,24 +1,23 @@
 ################################################################################
 #
 # RevBayes script: Posterior data prediction for cultural evolution under the FBD
-# 
-# This file: Runs data simulation
+#
+# This file: Stage 2 - simulates one data set per (thinned) posterior sample.
+#
+# Expects (set by PPS.sh): mymodel, base_str, sim_dir, pps_thinning
 #
 # authors: B. Willink, M. Araya
 #
-# Basesd on: Bayesian model testing using posterior predictive simulation
-#
+# Based on: Bayesian model testing using posterior predictive simulation
 # authors: Lyndon M. Coghill, Sebastian Hoehna and Jeremy M. Brown
 ################################################################################
-## specify the model
-source(model_file_name)
 
-## read the trace
-trace = readStochasticVariableTrace("output/revbayes/" + model_name + "_" + analysis_name + "_posterior.var", delimiter=TAB)
+## read the posterior samples written by the MCMC stage
+trace = readStochasticVariableTrace(base_str + "_posterior.var", delimiter=TAB)
 
+## create and run the posterior predictive simulation
+pps = posteriorPredictiveSimulation(mymodel, directory=sim_dir, trace)
+pps.run(thinning=pps_thinning)
 
-## create posterior predictive simulation
-pps = posteriorPredictiveSimulation(mymodel, directory="output/revbayes/P3_sim/" + model_name + "_" + analysis_name + "_post_sims", trace)
-
-## run the posterior predictive simulation
-pps.run(thinning=2)
+# Mark the simulation as finished (PPS.sh checks for this file)
+write(file=base_str + ".sim_done", "done", append=FALSE)

@@ -1,0 +1,7 @@
+Started: Mon Nov 16 10:33:22 AM EST 2026
+Finished: Wed Nov 18 12:24:48 PM EST 2026
+Total wall time: 49:51:26 (179486 s)
+Runs completed: 342 | failed: 0 | skipped (resume): 0
+Combinations without input files: 156 (listed in ./output/revbayes/marginal_likelihoods/missing.txt)
+Per-run time (s): mean 525, min 87, max 2519 over 342 runs
+Per-run times for every dataset and replicate are in column 'seconds' of ./output/revbayes/marginal_likelihoods/ml_results.tsv

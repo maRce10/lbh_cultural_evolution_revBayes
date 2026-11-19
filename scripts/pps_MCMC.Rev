@@ -1,0 +1,38 @@
+################################################################################
+#
+# RevBayes script: Posterior data prediction for cultural evolution under the FBD
+#
+# This file: Stage 1 - posterior MCMC. Writes
+#     <base_str>.log             all parameters (convergence, parameter estimates)
+#     <base_str>.trees           sampled trees (tree summaries, figures)
+#     <base_str>_posterior.var   all stochastic variables (read by the simulation)
+#     <base_str>.mcmc_done       marker: the run finished
+#
+# Expects (set by PPS.sh): mymodel, moves, fbd_tree, base_str, state_name,
+#                          printgen, burnin_gens, run_gens
+#
+# authors: B. Willink, M. Araya
+################################################################################
+
+monitors = VectorMonitors()
+
+# 1. the full model
+monitors.append( mnModel(filename=base_str + ".log", printgen=printgen) )
+
+# 2. the trees
+monitors.append( mnFile(filename=base_str + ".trees", printgen=printgen, fbd_tree) )
+
+# 3. every stochastic variable, for the posterior predictive simulation
+monitors.append( mnStochasticVariable(filename=base_str + "_posterior.var", printgen=printgen) )
+
+# 4. progress in the log file
+monitors.append( mnScreen(printgen=10 * printgen) )
+
+mymcmc = mcmc(mymodel, monitors, moves)
+
+# Burn-in (tuning) phase, then the sampled run
+mymcmc.burnin(generations=burnin_gens, tuningInterval=400)
+mymcmc.run(generations=run_gens, checkpointInterval=10000, checkpointFile=state_name)
+
+# Mark the run as finished (PPS.sh checks for this file)
+write(file=base_str + ".mcmc_done", "done", append=FALSE)

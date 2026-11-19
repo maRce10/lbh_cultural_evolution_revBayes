@@ -46,7 +46,7 @@ set -uo pipefail   # error on unset variables; a pipeline fails if any part fail
                    # (no `set -e`: one failed run should not stop the whole loop)
 
 # ----------------------------- configuration --------------------------------
-RB_DIR="/programs/revbayes-1.3.0"
+RB_DIR="/programs/revbayes-v1.4.2"
 RB_EXE="${RB_DIR}/rb-mpi"
 NPROC=32                                     # MPI processes per run
 MODEL_DIR="./scripts/lek_models_ML"           # where the generated Rev scripts go

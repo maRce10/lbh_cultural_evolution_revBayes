@@ -1,0 +1,37 @@
+################################################################################
+#
+# RevBayes script: Cultural evolution under the fossilized birth-death model
+#
+# This file: Reads the data and builds the model (FBD + relaxed clock + GTR+G).
+#            It only DEFINES the model; it runs nothing. It is sourced both by
+#            the MCMC stage and by the simulation stage of the posterior
+#            predictive analysis, so both use exactly the same model.
+#
+# Expects (set by PPS.sh): alignment, fossils, clade_extant
+#
+# authors: B. Willink, M. Araya
+#
+# Based on: Total-evidence dating under the fossilized birth-death model
+# authors: Tracy A. Heath, Walker C. Pett, April M. Wright
+################################################################################
+
+# Import the full list of songs (current and historical) #
+taxa <- readTaxonData(fossils)
+
+# Import the song sequence matrix #
+song <- readDiscreteCharacterData(alignment)
+
+## helpers
+n_taxa <- taxa.size()
+
+moves = VectorMoves()
+
+# Model components
+source("./scripts/model_FBDP.Rev")  # FBD tree prior
+source("./scripts/model_UExp.Rev")  # relaxed clock (uncorrelated exponential)
+source("./scripts/model_GTRG.Rev")  # substitution model (GTR + G); the clamped
+                                    # data variable must be called phySong, because
+                                    # the simulated files are named after it
+
+# The model object
+mymodel = model(fbd_tree)
