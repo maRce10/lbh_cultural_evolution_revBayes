@@ -14,7 +14,7 @@ archive/output/revbayes_output_in_single_R_object.RDS
 history.txt
 
 # stepping stone output
-./output/revbayes/marginal_likelihoods/stones/
+output/revbayes/marginal_likelihoods/stones/
 
 # full pps output
-./output/revbayes/pps
+output/revbayes/pps/
