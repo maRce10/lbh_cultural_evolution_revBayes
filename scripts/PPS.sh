@@ -38,6 +38,7 @@ set -uo pipefail
 
 # ----------------------------- configuration --------------------------------
 RB_DIR="/programs/revbayes-v1.4.2"
+#RB_DIR="/programs/revbayes-mpi-1.2.1"
 RB_EXE="${RB_DIR}/rb-mpi"
 NPROC=8                                     # MPI processes per RevBayes run
 SCRIPT_DIR="./scripts"

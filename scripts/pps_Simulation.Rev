@@ -13,6 +13,8 @@
 ################################################################################
 
 ## read the posterior samples written by the MCMC stage
+trace = readStochasticVariableTrace(base_str + "_posterior.var", burnin=0.25, delimiter=TAB)
+# If v 1.4.2
 trace = readStochasticVariableTrace(base_str + "_posterior.var", delimiter=TAB)
 
 ## create and run the posterior predictive simulation

@@ -1,0 +1,4 @@
+lek	alignment	historical	times	clock	replicate	seed	SS_lnML	PS_lnML	seconds	status
+SUR	agnostic	full	all	global	R1	1101	-736.6564	-736.0657	2251	ok
+SUR	agnostic	full	all	global	R2	2202	-738.4732	-738.2938	2257	ok
+SUR	agnostic	full	all	global	R3	3303	-739.9449	-739.6197	2248	ok
